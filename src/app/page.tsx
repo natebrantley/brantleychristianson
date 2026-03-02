@@ -1,4 +1,5 @@
 import { Hero } from '@/components/Hero';
+import Image from 'next/image';
 import { Button } from '@/components/Button';
 import { IntelligenceHubs } from '@/components/IntelligenceHubs';
 import { BrokerGrid } from '@/components/BrokerGrid';
@@ -147,9 +148,12 @@ export default function HomePage() {
         <section className="section section--alt" aria-labelledby="guide-heading">
           <div className="container stack--xl condo-guide-section">
             <div className="home-condo-guide-banner">
-              <img
+              <Image
                 src={`${assetPaths.markets}/pdx_skyline_2.jpeg`}
                 alt="Portland condo skyline"
+                fill
+                sizes="(max-width: 768px) 100vw, 1200px"
+                className="object-cover"
               />
             </div>
             <header className="stack--md text-center mx-auto">
