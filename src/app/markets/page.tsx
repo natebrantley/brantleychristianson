@@ -23,18 +23,18 @@ export default function MarketsIndexPage() {
   return (
     <main>
       <Hero
-        title="Our markets"
-        lead="We serve the Portland metro and Southwest Washington—Oregon and Washington counties where we live and work."
+        title="Learn the markets we serve."
+        lead="Oregon and Washington metro areas where we live and work. Start here to understand neighborhoods, counties, and condo opportunities."
         variant="short"
         imageSrc={`${assetPaths.markets}/pdx_skyline_2.jpeg`}
         imageAlt=""
         priority
       >
-        <Button href="/contact" variant="white">
-          Get in touch
+        <Button href="/markets/oregon" variant="white">
+          Explore Oregon markets
         </Button>
-        <Button href="/brokers" variant="white">
-          Meet our brokers
+        <Button href="/markets/washington" variant="outline">
+          Explore Washington markets
         </Button>
       </Hero>
 

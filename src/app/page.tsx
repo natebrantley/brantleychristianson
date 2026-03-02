@@ -48,18 +48,18 @@ export default function HomePage() {
       />
       <main>
         <Hero
-          title="Fiercely Independent, Strategically Driven."
-          lead="Luxury real estate across Oregon and Washington. Your Pacific Northwest experts."
+          title="Condo intelligence for serious buyers and sellers."
+          lead="Specialized Pacific Northwest brokerage helping you compare buildings, understand the market, and move with confidence."
           variant="short"
           imageSrc={`${assetPaths.stock}/kitchen.jpeg`}
           imageAlt=""
           priority
         >
-          <Button href="/markets" variant="white">
-            View Markets
+          <Button href="/resources/portland-condo-guide" variant="white">
+            Find the right condo
           </Button>
-          <Button href="/contact" variant="white">
-            Contact
+          <Button href="/contact" variant="outline">
+            Talk to a broker
           </Button>
         </Hero>
 

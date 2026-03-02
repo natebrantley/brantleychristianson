@@ -7,7 +7,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary);
+  background:
+    radial-gradient(circle at top, rgba(var(--color-accent-rgb), 0.16) 0, transparent 55%),
+    var(--color-primary);
   padding-top: var(--header-height);
   padding-bottom: var(--space-xxl);
   /* Safe area for notched devices (iPhone X+, Safari) – only top so bg stays full-bleed */
@@ -71,13 +73,13 @@
 }
 @media (min-width: 768px) {
   .hero-content {
-    background: rgba(var(--color-primary-rgb), 0.18);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--hero-panel-bg);
+    backdrop-filter: blur(26px);
+    -webkit-backdrop-filter: blur(26px);
+    border: 1px solid var(--hero-panel-border);
     padding: var(--space-xxl);
     border-radius: var(--radius-lg);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-strong);
   }
 }
 

@@ -43,9 +43,45 @@ export default async function CityPage({ params }: PageProps) {
   const otherCities = getOtherCitiesInCounty(state, county, city);
 
   const isPortland = state === 'oregon' && county === 'multnomah' && city === 'portland';
+  const canonicalUrl = `https://brantleychristianson.com/markets/${state}/${county}/${city}`;
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Markets',
+        item: 'https://brantleychristianson.com/markets',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: stateMarket.name,
+        item: `https://brantleychristianson.com${stateHref}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: countyData.name,
+        item: `https://brantleychristianson.com${countyHref}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: cityData.name,
+        item: canonicalUrl,
+      },
+    ],
+  };
 
   return (
     <main className="city-page">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <Hero
         title={cityData.name}
         lead={

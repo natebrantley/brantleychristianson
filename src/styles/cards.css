@@ -29,9 +29,9 @@
 .card-item,
 .featured-listing-block,
 .property-card {
-  background: var(--color-light);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.08);
-  border-radius: var(--radius-md);
+  background: var(--theme-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-soft);
   display: flex;
@@ -134,8 +134,8 @@
   overflow: hidden;
   box-shadow: var(--shadow-soft);
   transition: transform 0.45s var(--ease-out-expo), box-shadow 0.45s var(--ease-out-expo);
-  background: var(--color-light);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+  background: var(--theme-surface);
+  border: 1px solid var(--border-subtle);
 }
 .property-card--condo:hover {
   transform: translateY(-6px);

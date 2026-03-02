@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
+
+interface ConsultationRequestBody {
+  name?: string;
+  email?: string;
+  phone?: string;
+  message?: string;
+  source?: string;
+  market?: string;
+  buildingName?: string;
+  buildingSlug?: string;
+}
 
 /**
  * POST /api/consultation
- * Adds the contact to Mailchimp audience (list) with merge fields.
+ * Adds/updates the contact in the Mailchimp audience with merge fields and tags.
  * Requires MAILCHIMP_API_KEY and MAILCHIMP_AUDIENCE_ID in env.
  */
 export async function POST(request: NextRequest) {
@@ -18,7 +30,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { name?: string; email?: string; phone?: string; message?: string };
+  let body: ConsultationRequestBody;
   try {
     body = await request.json();
   } catch {
@@ -35,7 +47,6 @@ export async function POST(request: NextRequest) {
   }
 
   const dc = apiKey.includes('-') ? apiKey.split('-').pop() : 'us2';
-  const url = `https://${dc}.api.mailchimp.com/3.0/lists/${audienceId}/members`;
 
   const mergeFields: Record<string, string> = {
     FNAME: name || '',
@@ -45,33 +56,62 @@ export async function POST(request: NextRequest) {
     mergeFields[messageMergeTag] = message;
   }
 
-  const res = await fetch(url, {
-    method: 'POST',
+  const subscriberHash = crypto.createHash('md5').update(email.toLowerCase()).digest('hex');
+  const memberUrl = `https://${dc}.api.mailchimp.com/3.0/lists/${audienceId}/members/${subscriberHash}`;
+
+  const memberRes = await fetch(memberUrl, {
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       email_address: email,
-      status: 'subscribed',
+      status_if_new: 'subscribed',
       merge_fields: mergeFields,
     }),
   });
 
-  const data = await res.json().catch(() => ({}));
+  const memberData = await memberRes.json().catch(() => ({}));
 
-  if (!res.ok) {
-    if (data.title === 'Member Exists') {
-      return NextResponse.json(
-        { error: 'This email is already on our list.' },
-        { status: 409 }
-      );
+  if (!memberRes.ok) {
+    console.error('Mailchimp member error:', memberRes.status, memberData);
+    const detail =
+      (memberData && (memberData.detail as string)) ||
+      'Failed to add or update contact';
+    return NextResponse.json({ error: detail }, { status: memberRes.status });
+  }
+
+  const tags: string[] = ['Consultation'];
+
+  if (body.source) {
+    tags.push(`Source: ${body.source}`);
+  }
+  if (body.market) {
+    tags.push(`Market: ${body.market}`);
+  }
+  if (body.buildingName) {
+    tags.push(`Building: ${body.buildingName}`);
+  }
+
+  if (tags.length > 0) {
+    const tagsUrl = `https://${dc}.api.mailchimp.com/3.0/lists/${audienceId}/members/${subscriberHash}/tags`;
+    const tagsRes = await fetch(tagsUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        tags: tags.map((name) => ({ name, status: 'active' as const })),
+      }),
+    });
+
+    if (!tagsRes.ok) {
+      const tagsData = await tagsRes.json().catch(() => ({}));
+      console.error('Mailchimp tags error:', tagsRes.status, tagsData);
+      // Do not surface tag errors to the user; contact was still captured.
     }
-    console.error('Mailchimp error:', res.status, data);
-    return NextResponse.json(
-      { error: data.detail || 'Failed to add contact' },
-      { status: res.status }
-    );
   }
 
   return NextResponse.json({ ok: true });

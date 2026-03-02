@@ -1,14 +1,19 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
+import { CondoMapSection } from '@/components/CondoMapSection';
+import { WalkScoreSection } from '@/components/WalkScoreSection';
+import { ConsultationForm } from '@/components/ConsultationForm';
+import { CondoImageWithFallback } from '@/components/CondoImageWithFallback';
+import { assetPaths } from '@/config/theme';
 import {
   getCondoBySlug,
   getCondoSlugs,
   getCondosInNeighborhood,
 } from '@/data/portland-condo-guide';
 import type { PortlandCondoEntry } from '@/data/portland-condo-guide-types';
+import { CONDITION_COLOR_LEGEND } from '@/data/portland-condo-guide-types';
 
 function formatPrice(n: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -49,14 +54,14 @@ export async function generateMetadata({ params }: PageProps) {
 function MarketIndicator({ colorCode }: { colorCode: PortlandCondoEntry['colorCode'] }) {
   const label =
     colorCode === 'GREEN'
-      ? 'Faster market'
+      ? 'Stronger financial position'
       : colorCode === 'YELLOW'
-        ? 'Moderate pace'
-        : 'Slower market';
+        ? 'Moderate cost'
+        : 'Higher cost / special assessment';
   return (
     <span
       className={`condo-detail-indicator condo-detail-indicator--${colorCode.toLowerCase()}`}
-      title={label}
+      title={CONDITION_COLOR_LEGEND[colorCode]}
     >
       <span className="condo-detail-indicator-dot" aria-hidden />
       {label}
@@ -86,10 +91,114 @@ function StatBlock({
   );
 }
 
+function OurTake({ condo }: { condo: PortlandCondoEntry }) {
+  const isGreen = condo.colorCode === 'GREEN';
+  const isRed = condo.colorCode === 'RED';
+
+  let headline: string;
+  let body: string;
+
+  if (isGreen) {
+    headline = 'Balanced costs with stronger financial footing.';
+    body =
+      'Based on HOA, taxes, and our value ratios, this building skews toward a stronger long-term financial position relative to peers. It can be a good fit for buyers who care about predictable carrying costs.';
+  } else if (isRed) {
+    headline = 'Higher carrying costs to weigh carefully.';
+    body =
+      'HOA, taxes, or special assessments are in a higher-cost band here. For the right buyer the amenities or location may justify the premium, but it is important to model monthly costs and risk over time.';
+  } else {
+    headline = 'Moderate costs with tradeoffs to consider.';
+    body =
+      'This building sits in the middle of the pack on ongoing costs. The decision often comes down to how you value the specific location, floor plans, and amenities versus nearby alternatives.';
+  }
+
+  return (
+    <div className="condo-detail-block condo-detail-ourtake">
+      <h3 className="condo-detail-block-title">Our take</h3>
+      <p className="condo-detail-ourtake-headline">{headline}</p>
+      <p className="condo-detail-ourtake-body">
+        {body} If you&apos;re considering {condo.name}, we recommend comparing it to a short list of
+        nearby buildings with different HOA levels and amenity mixes.
+      </p>
+    </div>
+  );
+}
+
 export default async function CondoBuildingPage({ params }: PageProps) {
   const { slug } = await params;
   const condo = getCondoBySlug(slug);
   if (!condo) notFound();
+
+  const canonicalUrl = `https://brantleychristianson.com/markets/oregon/pdx/condos/${slug}`;
+
+  const condoLd = {
+    '@context': 'https://schema.org',
+    '@type': ['Residence', 'Condominium'],
+    name: condo.name,
+    description: `${condo.name} condominium building in ${condo.neighborhood}, Portland, Oregon.`,
+    url: canonicalUrl,
+    image: condo.image,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: condo.address,
+      addressLocality: 'Portland',
+      addressRegion: 'OR',
+      addressCountry: 'US',
+    },
+    additionalProperty: [
+      { '@type': 'PropertyValue', name: 'Median price', value: condo.medianPrice },
+      {
+        '@type': 'PropertyValue',
+        name: 'Average monthly HOA',
+        value: condo.averageMonthlyHoa,
+      },
+      { '@type': 'PropertyValue', name: 'Year built', value: condo.yearBuilt },
+      { '@type': 'PropertyValue', name: 'Rent cap', value: condo.rentCap },
+    ],
+    aggregateOffer: {
+      '@type': 'AggregateOffer',
+      lowPrice: condo.lowestPrice,
+      highPrice: condo.highestPrice,
+      priceCurrency: 'USD',
+    },
+  };
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Markets',
+        item: 'https://brantleychristianson.com/markets',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Oregon',
+        item: 'https://brantleychristianson.com/markets/oregon',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: 'Portland',
+        item: 'https://brantleychristianson.com/markets/oregon/multnomah/portland',
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: 'Condo Guide',
+        item: 'https://brantleychristianson.com/resources/portland-condo-guide',
+      },
+      {
+        '@type': 'ListItem',
+        position: 5,
+        name: condo.name,
+        item: canonicalUrl,
+      },
+    ],
+  };
 
   const sameNeighborhood = getCondosInNeighborhood(condo.categoryId, condo.id);
   const guideHref = '/resources/portland-condo-guide';
@@ -98,20 +207,29 @@ export default async function CondoBuildingPage({ params }: PageProps) {
 
   return (
     <main className="condo-detail">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(condoLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <Hero
         title={condo.name}
         lead={`${condo.neighborhood} · ${condo.address}`}
         variant="condo"
         imageSrc={condo.image}
+        imageFallbackSrc={`${assetPaths.stock}/living.jpeg`}
         imageAlt={condo.name}
         priority
       >
-        <Button href="/contact" variant="white">
-          Get in touch
-        </Button>
-        <Button href={guideHref} variant="white">
-          Back to condo guide
-        </Button>
+          <Button href="#request-assistance" variant="white">
+            Request assistance
+          </Button>
+          <Button href={guideHref} variant="white">
+            Back to condo guide
+          </Button>
       </Hero>
 
       {/* Breadcrumb */}
@@ -286,13 +404,26 @@ export default async function CondoBuildingPage({ params }: PageProps) {
                   />
                 </dl>
               </div>
+
+              {/* Our expert view */}
+              <OurTake condo={condo} />
+
+              {/* Location & map */}
+              <div className="condo-detail-block">
+                <CondoMapSection address={condo.address} buildingName={condo.name} />
+              </div>
+
+              {/* Walk Score */}
+              <div className="condo-detail-block">
+                <WalkScoreSection address={condo.address} buildingName={condo.name} />
+              </div>
             </div>
 
             {/* Sidebar: quick facts card */}
             <aside className="condo-detail-sidebar" aria-label="Quick facts">
               <div className="condo-detail-card">
                 <div className="condo-detail-card-image-wrap">
-                  <Image
+                  <CondoImageWithFallback
                     src={condo.image}
                     alt=""
                     width={400}
@@ -302,7 +433,7 @@ export default async function CondoBuildingPage({ params }: PageProps) {
                   />
                   <span
                     className={`condo-detail-indicator condo-detail-indicator--${condo.colorCode.toLowerCase()} condo-detail-indicator--badge`}
-                    title="Market pace"
+                    title={CONDITION_COLOR_LEGEND[condo.colorCode]}
                   >
                     <span className="condo-detail-indicator-dot" aria-hidden />
                   </span>
@@ -354,7 +485,7 @@ export default async function CondoBuildingPage({ params }: PageProps) {
                   <article className="condo-guide-card">
                     <Link href={c.url} className="condo-guide-card-link">
                       <span className="condo-guide-card-image-wrap">
-                        <Image
+                        <CondoImageWithFallback
                           src={c.image}
                           alt=""
                           width={400}
@@ -364,7 +495,7 @@ export default async function CondoBuildingPage({ params }: PageProps) {
                         />
                         <span
                           className={`condo-guide-color condo-guide-color--${c.colorCode.toLowerCase()}`}
-                          title={`Market: ${c.colorCode}`}
+                          title={CONDITION_COLOR_LEGEND[c.colorCode]}
                         />
                       </span>
                       <div className="condo-guide-card-body">
@@ -401,6 +532,37 @@ export default async function CondoBuildingPage({ params }: PageProps) {
         </section>
       )}
 
+      {/* Request assistance */}
+      <section
+        id="request-assistance"
+        className="section section--alt"
+        aria-labelledby="request-assistance-heading"
+      >
+        <div className="container container-narrow stack--xl">
+          <header className="stack--md text-center mx-auto">
+            <p className="section-tag">Get help</p>
+            <h2 id="request-assistance-heading" className="section-title">
+              Request assistance
+            </h2>
+            <p className="section-lead mx-auto">
+              Interested in buying or selling at {condo.name}? A BCRE broker who works this
+              neighborhood will follow up (typically within one business day) to unpack the data,
+              compare nearby buildings, and talk through next steps.
+            </p>
+          </header>
+          <div className="consultation-form-wrap">
+            <ConsultationForm
+              initialMessage={`I'm considering ${condo.name} at ${condo.address}, ${condo.neighborhood}. Please help me evaluate this building and 2–3 comparable options, and let me know what I should be thinking about as a buyer or seller.`}
+              submitLabel="Request assistance"
+              source="condo-detail"
+              market="portland-or"
+              buildingName={condo.name}
+              buildingSlug={slug}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="section section--cta" aria-label="Get in touch">
         <div className="container text-center stack--md">
@@ -408,11 +570,10 @@ export default async function CondoBuildingPage({ params }: PageProps) {
             Interested in {condo.name}?
           </h2>
           <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Our brokers know Portland condos. We can help you buy or sell in{' '}
-            {condo.neighborhood} and across the metro area.
+            Our brokers know Portland condos. Request assistance above or get in touch for a conversation.
           </p>
-          <Button href="/contact" variant="white">
-            Get in touch
+          <Button href="#request-assistance" variant="white">
+            Request assistance
           </Button>
         </div>
       </section>

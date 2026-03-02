@@ -9,18 +9,20 @@
   justify-content: center;
   font-family: var(--font-headings);
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: var(--button-font-size);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 1rem 2rem;
-  min-height: 48px;
+  min-height: var(--button-height);
   min-width: 48px;
   border: 2px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--button-radius);
   text-decoration: none;
   cursor: pointer;
   transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s var(--ease-out-expo), background-color 0.4s var(--ease-out-expo), border-color 0.4s var(--ease-out-expo), color 0.4s var(--ease-out-expo);
   -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
 }
 @media (min-width: 768px) {
   .button,
@@ -40,14 +42,34 @@
 .button--outline:hover:not(:disabled),
 .button--white:hover:not(:disabled) {
   transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(var(--color-primary-rgb), 0.15);
+  box-shadow: var(--shadow-hover);
+}
+
+.button::before,
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.3), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out-expo);
+  pointer-events: none;
+}
+.button:hover::before,
+.btn:hover::before {
+  opacity: 1;
 }
 
 .btn-primary,
 .button--primary {
-  background: var(--color-accent);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--color-accent-rgb), 1),
+    rgba(244, 215, 148, 1)
+  );
   color: var(--color-primary);
   border-color: var(--color-accent);
+  box-shadow: var(--shadow-strong);
 }
 .btn-primary:hover,
 .button--primary:hover:not(:disabled) {

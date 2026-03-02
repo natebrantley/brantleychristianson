@@ -1,0 +1,42 @@
+'use client';
+
+import { useEffect } from 'react';
+import { Hero } from '@/components/Hero';
+import { Button } from '@/components/Button';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Surface unexpected errors in the console for easier debugging.
+    // eslint-disable-next-line no-console
+    console.error(error);
+  }, [error]);
+
+  return (
+    <main>
+      <Hero
+        title="Something went wrong."
+        lead="An unexpected error occurred. You can try again, or head back to the home page."
+        variant="short"
+        priority={false}
+      >
+        <Button href="/" variant="white">
+          Back to home
+        </Button>
+        <button
+          type="button"
+          className="button button--outline"
+          onClick={() => reset()}
+        >
+          Try again
+        </button>
+      </Hero>
+    </main>
+  );
+}
+

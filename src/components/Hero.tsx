@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 
 export type HeroVariant = 'fullscreen' | 'half' | 'short' | 'condo';
@@ -8,10 +9,11 @@ export interface HeroProps {
   title: string;
   lead?: string;
   variant?: HeroVariant;
-  /** Optional background image – use native <picture> for art direction or Next Image for optimization */
+  /** Optional background image */
   imageSrc?: string;
+  /** Fallback image if imageSrc fails to load */
+  imageFallbackSrc?: string;
   imageAlt?: string;
-  /** For picture: multiple sources e.g. [{ srcSet: '/media/img/hero-mobile.jpg', media: '(max-width: 768px)' }, { srcSet: '/media/img/hero.jpg' }] */
   imageSources?: Array<{ srcSet: string; media?: string }>;
   children?: React.ReactNode;
   priority?: boolean;
@@ -22,16 +24,19 @@ export function Hero({
   lead,
   variant = 'fullscreen',
   imageSrc,
+  imageFallbackSrc,
   imageAlt = '',
   imageSources,
   children,
   priority = true,
 }: HeroProps) {
+  const [imgError, setImgError] = useState(false);
+  const effectiveSrc = (imageSrc && !imgError ? imageSrc : imageFallbackSrc) || imageSrc;
   const heroClass = ['hero', `hero--${variant}`].filter(Boolean).join(' ');
 
   return (
     <section className={heroClass} aria-label="Hero">
-      {imageSrc || (imageSources && imageSources.length > 0) ? (
+      {effectiveSrc || (imageSources && imageSources.length > 0) ? (
         imageSources && imageSources.length > 0 ? (
           <picture className="hero-media">
             {imageSources.map((s, i) => (
@@ -45,15 +50,16 @@ export function Hero({
             />
             <span className="hero-overlay" aria-hidden />
           </picture>
-        ) : imageSrc ? (
+        ) : effectiveSrc ? (
           <div className="hero-media">
             <Image
-              src={imageSrc}
+              src={effectiveSrc}
               alt={imageAlt}
               fill
               className="object-cover"
               priority={priority}
               sizes="100vw"
+              onError={() => imageFallbackSrc && setImgError(true)}
             />
             <span className="hero-overlay" aria-hidden />
           </div>

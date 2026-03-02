@@ -135,7 +135,8 @@ a:hover {
   }
 }
 .section--alt {
-  background: var(--color-light-alt);
+  background: var(--theme-surface-muted);
+  border-top: 1px solid var(--border-subtle);
 }
 .section--cta {
   padding: var(--space-xl) 0;
@@ -153,6 +154,12 @@ a:hover {
 }
 .section--cta .section-lead {
   color: rgba(255, 255, 255, 0.9);
+}
+.section + .section:not(.section--cta) {
+  border-top: 1px solid var(--border-subtle);
+}
+.section--cta + .section {
+  border-top: none;
 }
 
 .section-tag {

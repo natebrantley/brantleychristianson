@@ -1,22 +1,198 @@
+/* Section wrapper when condo guide is in a .section (page-level spacing) */
+@media (max-width: 639px) {
+  .condo-guide-section .container {
+    padding-top: var(--space-md);
+  }
+  .condo-guide-section .section-title {
+    text-align: center;
+  }
+  .condo-guide-section .section-lead {
+    text-align: center;
+  }
+}
+
 /* 2026 Portland Condo Guide resource */
+
+/* ----- Mobile-first: base = small screens ----- */
 .condo-guide {
   width: 100%;
+  max-width: 100%;
+}
+
+.condo-guide-intro {
+  margin-bottom: var(--space-md);
+  padding: var(--space-md) var(--space-md) var(--space-sm);
+  border-radius: var(--radius-lg);
+  background: var(--surface-tinted);
+  border: 1px solid var(--border-subtle);
+}
+
+.condo-guide-intro-text {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+}
+
+.condo-guide-personas {
+  margin: 0;
+  padding-left: 1.125rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.condo-guide-personas li {
+  margin: 0;
+}
+
+.condo-guide-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm) var(--space-md);
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  margin: 0 0 var(--space-md);
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.condo-guide-legend-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.condo-guide-legend-item .condo-guide-color {
+  position: static;
+  flex-shrink: 0;
 }
 
 .condo-guide-toolbar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-lg);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-md);
   margin-bottom: var(--space-xl);
   padding: var(--space-md) 0;
-  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.12);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .condo-guide-toolbar-group {
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-xs);
+}
+
+.condo-guide-toolbar-group .condo-guide-select {
+  width: 100%;
+  max-width: 100%;
+}
+
+.condo-guide-count {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.condo-guide-toolbar-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  align-items: flex-start;
+}
+
+.condo-guide-active-filters {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
+  font-size: 0.8125rem;
+}
+
+.condo-guide-active-label {
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.condo-guide-chip {
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(var(--color-primary-rgb), 0.06);
+  color: var(--color-primary);
+}
+
+.condo-guide-reset {
+  border: none;
+  background: none;
+  padding: 0;
+  margin-left: var(--space-xs);
+  font-size: 0.8125rem;
+  color: var(--color-accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.condo-guide-empty {
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-subtle);
+  background: var(--surface-tinted);
+  text-align: center;
+}
+
+.condo-guide-empty-title {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.condo-guide-empty-body {
+  margin: 0 0 var(--space-md);
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+}
+
+/* ----- Tablet and up ----- */
+@media (min-width: 640px) {
+  .condo-guide-legend {
+    justify-content: center;
+    gap: var(--space-md) var(--space-lg);
+    padding-bottom: var(--space-md);
+  }
+
+  .condo-guide-toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-lg);
+  }
+
+  .condo-guide-toolbar-group {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+
+  .condo-guide-toolbar-group .condo-guide-select {
+    width: auto;
+    max-width: none;
+  }
+
+  .condo-guide-count {
+    text-align: left;
+  }
+
+  .condo-guide-toolbar-summary {
+    margin-left: auto;
+    align-items: flex-end;
+    text-align: right;
+  }
 }
 
 .condo-guide-label {
@@ -34,7 +210,7 @@
   font-size: max(16px, 0.9375rem);
   padding: 0.625rem 2.25rem 0.625rem 0.75rem;
   min-height: 48px;
-  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background-color: var(--color-light);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230a2438' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
@@ -46,18 +222,10 @@
   -webkit-appearance: none;
   appearance: none;
 }
-@media (min-width: 400px) {
+@media (min-width: 640px) {
   .condo-guide-select {
     min-width: 180px;
   }
-}
-
-.condo-guide-count {
-  margin-left: auto;
-  font-size: 0.875rem;
-  color: var(--color-muted);
-  margin-top: 0;
-  margin-bottom: 0;
 }
 
 .condo-guide-grid {
@@ -66,11 +234,19 @@
   margin: 0;
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
+  justify-items: center;
+}
+@media (max-width: 639px) {
+  .condo-guide-grid {
+    padding-bottom: var(--space-sm);
+  }
 }
 @media (min-width: 640px) {
   .condo-guide-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xl);
+    justify-items: stretch;
   }
 }
 @media (min-width: 1024px) {
@@ -80,13 +256,26 @@
   }
 }
 
+.condo-guide-grid > li {
+  width: 100%;
+  max-width: 100%;
+}
+
 .condo-guide-card {
-  background: var(--color-light);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+  background: var(--theme-surface);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-soft);
   transition: box-shadow 0.35s var(--ease-out-expo), transform 0.35s var(--ease-out-expo);
+  width: 100%;
+}
+@media (max-width: 639px) {
+  .condo-guide-card {
+    border-radius: var(--radius-md);
+    max-width: 420px;
+    margin-inline: auto;
+  }
 }
 .condo-guide-card:hover {
   box-shadow: var(--shadow-hover);
@@ -131,7 +320,41 @@
 }
 
 .condo-guide-card-body {
-  padding: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+}
+@media (min-width: 640px) {
+  .condo-guide-card-body {
+    padding: var(--space-lg);
+  }
+}
+
+.condo-guide-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.condo-guide-card-thumb-wrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.condo-guide-card-thumb-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.condo-guide-card-title-block {
+  min-width: 0;
+  flex: 1;
 }
 
 .condo-guide-card-name {
@@ -141,6 +364,10 @@
   color: var(--color-primary);
   margin: 0 0 0.25rem;
   line-height: 1.25;
+}
+
+.condo-guide-card-title-block .condo-guide-card-neighborhood {
+  margin: 0;
 }
 
 .condo-guide-card-neighborhood {
@@ -153,15 +380,20 @@
 .condo-guide-card-address {
   font-size: 0.8125rem;
   color: var(--color-muted);
-  margin: 0 0 var(--space-md);
+  margin: 0 0 var(--space-sm);
 }
 
 .condo-guide-card-stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-xs) var(--space-md);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-xs) var(--space-sm);
   margin: 0 0 var(--space-sm);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+}
+@media (min-width: 380px) {
+  .condo-guide-card-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 .condo-guide-card-stats dt {
   color: var(--color-muted);
@@ -172,6 +404,7 @@
   font-weight: 700;
   color: var(--color-primary);
   margin: 0;
+  word-break: break-word;
 }
 
 .condo-guide-card-amenities {

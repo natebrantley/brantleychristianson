@@ -1,12 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/Button';
+import { trackEvent } from '@/lib/analytics';
 
-export function ConsultationForm() {
+interface ConsultationFormProps {
+  initialMessage?: string;
+  submitLabel?: string;
+  source?: string;
+  market?: string;
+  buildingName?: string;
+  buildingSlug?: string;
+}
+
+export function ConsultationForm({
+  initialMessage,
+  submitLabel = 'Request consultation',
+  source,
+  market,
+  buildingName,
+  buildingSlug,
+}: ConsultationFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    trackEvent('consultation_form_view', {
+      path: pathname,
+      source: source ?? null,
+      market: market ?? null,
+      building_name: buildingName ?? null,
+      building_slug: buildingSlug ?? null,
+    });
+  }, [pathname, source, market, buildingName, buildingSlug]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -14,29 +43,66 @@ export function ConsultationForm() {
     setLoading(true);
 
     const form = e.currentTarget;
-    const data = {
+    const payload = {
       name: (form.elements.namedItem('name') as HTMLInputElement).value,
       email: (form.elements.namedItem('email') as HTMLInputElement).value,
       phone: (form.elements.namedItem('phone') as HTMLInputElement).value,
       message: (form.elements.namedItem('message') as HTMLTextAreaElement).value,
+      source: source ?? 'contact-form',
+      market,
+      buildingName,
+      buildingSlug,
+      path: pathname,
     };
+
+    trackEvent('consultation_submit_attempt', {
+      path: pathname,
+      source: payload.source,
+      market: payload.market ?? null,
+      building_name: payload.buildingName ?? null,
+      building_slug: payload.buildingSlug ?? null,
+    });
 
     try {
       const res = await fetch('/api/consultation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const json = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         setError(json.error || 'Something went wrong. Please try again.');
         setLoading(false);
+        trackEvent('consultation_submit_error', {
+          path: pathname,
+          source: payload.source,
+          market: payload.market ?? null,
+          building_name: payload.buildingName ?? null,
+          building_slug: payload.buildingSlug ?? null,
+          status: res.status,
+        });
         return;
       }
+
       setSubmitted(true);
+      trackEvent('consultation_submit_success', {
+        path: pathname,
+        source: payload.source,
+        market: payload.market ?? null,
+        building_name: payload.buildingName ?? null,
+        building_slug: payload.buildingSlug ?? null,
+      });
     } catch {
       setError('Network error. Please try again.');
+      trackEvent('consultation_submit_error', {
+        path: pathname,
+        source: payload.source,
+        market: payload.market ?? null,
+        building_name: payload.buildingName ?? null,
+        building_slug: payload.buildingSlug ?? null,
+        network_error: true,
+      });
     } finally {
       setLoading(false);
     }
@@ -100,13 +166,14 @@ export function ConsultationForm() {
           id="consult-message"
           name="message"
           required
+          defaultValue={initialMessage}
           placeholder="Tell us about your real estate goals—buying, selling, or both—and your preferred market (e.g. Portland metro, SW Washington, coast, Mt. Hood)."
           rows={5}
           disabled={loading}
         />
       </div>
       <Button type="submit" variant="primary" disabled={loading}>
-        {loading ? 'Sending…' : 'Request consultation'}
+        {loading ? 'Sending…' : submitLabel}
       </Button>
     </form>
   );

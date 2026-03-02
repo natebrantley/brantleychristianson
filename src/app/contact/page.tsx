@@ -20,15 +20,15 @@ export default function ContactPage() {
   return (
     <main>
       <Hero
-        title="Get in touch"
-        lead="Request a consultation or connect with us. We're here to help."
+        title="Request a tailored condo or market consultation."
+        lead="Tell us whether you’re buying, selling, or just learning the market. We’ll connect you with a broker who fits your goals."
         variant="short"
         imageSrc={`${assetPaths.stock}/couch.jpeg`}
         imageAlt=""
         priority
       >
         <Button href="#consultation" variant="white">
-          Request consultation
+          Start your consultation
         </Button>
       </Hero>
 
@@ -80,7 +80,7 @@ export default function ContactPage() {
             </p>
           </header>
           <div className="consultation-form-wrap">
-            <ConsultationForm />
+            <ConsultationForm source="contact-page" market="multi-market" />
           </div>
         </div>
       </section>

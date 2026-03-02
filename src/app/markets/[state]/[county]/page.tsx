@@ -36,10 +36,40 @@ export default async function CountyPage({ params }: PageProps) {
   if (!stateMarket || !countyData) notFound();
 
   const stateHref = `/markets/${state}`;
+  const canonicalUrl = `https://brantleychristianson.com/markets/${state}/${county}`;
   const cities = countyData.cities;
+
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Markets',
+        item: 'https://brantleychristianson.com/markets',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: stateMarket.name,
+        item: `https://brantleychristianson.com${stateHref}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: countyData.name,
+        item: canonicalUrl,
+      },
+    ],
+  };
 
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <Hero
         title={countyData.name}
         lead={`Every city we serve in ${countyData.name}. Find your community and connect with a local BCRE broker.`}

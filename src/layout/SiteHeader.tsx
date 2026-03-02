@@ -7,12 +7,15 @@ import Image from 'next/image';
 import { assetPaths } from '@/config/theme';
 
 const LOGO_SRC = `${assetPaths.logos}/BCRE-White-Trans.png`;
+
 const NAV_LINKS = [
+  // Buyer journey: start with condo intelligence
+  { href: '/resources/portland-condo-guide', label: 'Find the right condo' },
+  // Market exploration for both buyers and sellers
   { href: '/markets', label: 'Markets' },
-  { href: '/resources/portland-condo-guide', label: 'Condo Guide' },
+  // Credibility and team
   { href: '/brokers', label: 'Brokers' },
   { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
 ];
 
 export function SiteHeader() {
@@ -67,6 +70,11 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
+            <li className="nav-list-cta">
+              <Link href="/contact" onClick={close} className="nav-link-cta">
+                Request consultation
+              </Link>
+            </li>
           </ul>
           <div className="nav-close-wrap">
             <button
