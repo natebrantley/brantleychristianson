@@ -1,0 +1,114 @@
+.card-grid,
+.cards,
+.featured-listing-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-xl);
+}
+@media (min-width: 768px) {
+  .card-grid,
+  .cards,
+  .featured-listing-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  }
+}
+
+.card,
+.card-item,
+.featured-listing-block,
+.property-card {
+  background: var(--color-light);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.45s var(--ease-out-expo), box-shadow 0.45s var(--ease-out-expo);
+}
+.card:hover,
+.card-item:hover,
+.featured-listing-block:hover,
+.property-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-title {
+  font-family: var(--font-headings);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--color-primary);
+}
+
+.card-meta {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  margin-bottom: 0.75rem;
+}
+
+.listing-card .listing-card-body,
+.featured-listing-block .listing-info {
+  padding: var(--space-lg);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.listing-location {
+  font-size: 0.8125rem;
+  color: var(--color-accent);
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.listing-address,
+.listing-tagline {
+  font-family: var(--font-headings);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem;
+}
+
+.listing-specs,
+.listing-details {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  margin-bottom: 0.75rem;
+}
+
+/* Featured listing: image + overlay "Explore Listing" */
+.featured-listing-block {
+  position: relative;
+}
+.featured-listing-block .listing-image-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--color-primary);
+}
+.featured-listing-block .listing-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+}
+.featured-listing-block .listing-explore-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--color-primary-rgb), 0.5);
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-out-expo);
+}
+.featured-listing-block:hover .listing-explore-overlay {
+  opacity: 1;
+}
+.featured-listing-block .listing-explore-overlay .button--white {
+  transform: translateY(0);
+}

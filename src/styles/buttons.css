@@ -1,0 +1,90 @@
+.button,
+.btn,
+.button--primary,
+.button--white,
+.button--outline,
+.button--text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-headings);
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 1.15rem 2.75rem;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s var(--ease-out-expo), background-color 0.4s var(--ease-out-expo), border-color 0.4s var(--ease-out-expo), color 0.4s var(--ease-out-expo);
+}
+.button:hover,
+.btn:hover,
+.button--primary:hover:not(:disabled),
+.button--outline:hover:not(:disabled),
+.button--white:hover:not(:disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(var(--color-primary-rgb), 0.15);
+}
+
+.btn-primary,
+.button--primary {
+  background: var(--color-accent);
+  color: var(--color-primary);
+  border-color: var(--color-accent);
+}
+.btn-primary:hover,
+.button--primary:hover:not(:disabled) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-light);
+}
+
+.btn-outline,
+.button--outline {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: rgba(var(--color-primary-rgb), 0.2);
+}
+.btn-outline:hover,
+.button--outline:hover:not(:disabled) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-light);
+}
+
+.button--white {
+  background: var(--color-light);
+  color: var(--color-primary);
+  border-color: var(--color-light);
+  box-shadow: var(--shadow-strong);
+}
+.button--white:hover:not(:disabled) {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-primary);
+}
+
+.button--text {
+  background: transparent;
+  color: var(--color-primary);
+  padding-inline: 0;
+  border: none;
+  letter-spacing: 0.05em;
+}
+.button--text::after {
+  content: "→";
+  margin-left: 8px;
+  transition: transform 0.3s var(--ease-out-expo);
+}
+.button--text:hover:not(:disabled) {
+  color: var(--color-accent);
+  transform: translateX(5px);
+  box-shadow: none;
+}
+
+.btn {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9375rem;
+}

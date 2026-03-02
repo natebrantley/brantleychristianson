@@ -1,0 +1,39 @@
+:root {
+  --color-primary: #0a2438;
+  --color-primary-rgb: 10, 36, 56;
+  --color-accent: #c5a059;
+  --color-accent-rgb: 197, 160, 89;
+  --color-light: #ffffff;
+  --color-dark: #000000;
+  --color-light-alt: #f9f9f9;
+  --color-muted: rgba(10, 36, 56, 0.65);
+
+  --font-body: Quasimoda, "Helvetica Neue", system-ui, sans-serif;
+  --font-headings: Tenso, "Helvetica Neue", system-ui, sans-serif;
+  --font-display: "Arno Pro Display", Georgia, serif;
+
+  --header-height: clamp(56px, 8vw, 72px);
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 20px;
+  --space-lg: 28px;
+  --space-xl: 36px;
+  --space-xxl: 48px;
+  --space-hero-offset: clamp(48px, 8vh, 80px);
+
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-strong: 0 10px 30px rgba(0, 0, 0, 0.2);
+  --shadow-hover: 0 20px 40px rgba(10, 36, 56, 0.15);
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  --transition-default: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --theme-bg: var(--color-light);
+  --theme-text: var(--color-primary);
+  --theme-accent: var(--color-accent);
+}

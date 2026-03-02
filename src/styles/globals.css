@@ -1,0 +1,182 @@
+/* BCRE Master Manifest – brantleychristianson.com
+   Design system: Fiercely Independent, Strategically Driven. Pacific Northwest luxury. */
+
+/* BCRE Master Manifest – brantleychristianson.com
+   Design system: Fiercely Independent, Strategically Driven. Pacific Northwest luxury. */
+
+@import './variables.css';
+@import './header.css';
+@import './footer.css';
+@import './hero.css';
+@import './cards.css';
+@import './buttons.css';
+@import './hubs.css';
+@import './forms.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-height) + var(--space-md));
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.95rem, 0.5vw + 0.8rem, 1.05rem);
+  line-height: 1.5;
+  color: var(--theme-text);
+  background: var(--theme-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+body.no-scroll {
+  overflow: hidden;
+}
+
+main {
+  flex: 1 0 auto;
+  min-height: 60vh;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-md);
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+a:hover {
+  color: var(--color-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: rgba(var(--color-accent-rgb), 0.25);
+  color: var(--color-primary);
+}
+
+/* ========== Layout: containers ========== */
+.container,
+.container-narrow,
+.container-grid {
+  width: 100%;
+  max-width: 1140px;
+  margin-inline: auto;
+  padding-inline: max(var(--space-md), env(safe-area-inset-left));
+}
+@media (min-width: 768px) {
+  .container,
+  .container-narrow,
+  .container-grid {
+    padding-inline: clamp(32px, 6vw, 80px);
+  }
+}
+@media (min-width: 1200px) {
+  .container,
+  .container-grid {
+    padding-inline: 60px;
+  }
+}
+
+.container-narrow {
+  max-width: 720px;
+}
+
+.container-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+@media (min-width: 768px) {
+  .container-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    gap: var(--space-lg);
+  }
+}
+
+/* ========== Sections & stack (Lobotomized Owl) ========== */
+.section {
+  padding: var(--space-xxl) 0;
+}
+
+.section-tag {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-accent);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+  color: var(--color-primary);
+}
+
+.section-lead {
+  font-size: 1.125rem;
+  color: var(--color-muted);
+  max-width: 56ch;
+  margin: 0 0 2rem;
+  line-height: 1.6;
+}
+
+[class*="stack--"] > * + * {
+  margin-top: var(--stack-gap, var(--space-md));
+}
+.stack--sm { --stack-gap: var(--space-sm); }
+.stack--md { --stack-gap: var(--space-md); }
+.stack--lg { --stack-gap: var(--space-lg); }
+.stack--xl { --stack-gap: var(--space-xl); }
+.stack--xxl { --stack-gap: var(--space-xxl); }
+
+/* ========== Utilities ========== */
+.text-center { text-align: center; }
+.mx-auto { margin-inline: auto; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.reveal-item {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+}
+.reveal-item.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
