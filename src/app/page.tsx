@@ -1,11 +1,9 @@
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { IntelligenceHubs } from '@/components/IntelligenceHubs';
-import { PropertyCard } from '@/components/PropertyCard';
 import { BrokerGrid } from '@/components/BrokerGrid';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
-import { condos } from '@/data/condos';
 import { agents } from '@/data/agents';
 
 const MARKETS = [
@@ -48,15 +46,15 @@ export default function HomePage() {
       />
       <main>
         <Hero
-          title="Condo intelligence for serious buyers and sellers."
-          lead="Specialized Pacific Northwest brokerage helping you compare buildings, understand the market, and move with confidence."
+          title="Strategic real estate for serious buyers and sellers."
+          lead="A fiercely independent Pacific Northwest brokerage helping you compare properties, understand the market, and move with confidence."
           variant="short"
           imageSrc={`${assetPaths.stock}/kitchen.jpeg`}
           imageAlt=""
           priority
         >
-          <Button href="/resources/portland-condo-guide" variant="white">
-            Find the right condo
+          <Button href="/markets" variant="white">
+            Explore our markets
           </Button>
           <Button href="/contact" variant="outline">
             Talk to a broker
@@ -85,38 +83,28 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="section section--alt" aria-labelledby="properties-heading">
-          <div className="container stack--xl">
+        <section className="section section--alt" aria-labelledby="guide-heading">
+          <div className="container stack--xl condo-guide-section">
+            <div className="home-condo-guide-banner">
+              <img
+                src={`${assetPaths.markets}/pdx_skyline_2.jpeg`}
+                alt="Portland condo skyline"
+              />
+            </div>
             <header className="stack--md text-center mx-auto">
-              <p className="section-tag">Distinctive properties</p>
-              <h2 id="properties-heading" className="section-title">
-                Featured Properties
+              <p className="section-tag">Resource</p>
+              <h2 id="guide-heading" className="section-title">
+                2026 Portland Condo Guide
               </h2>
               <p className="section-lead mx-auto">
-                Condominiums and buildings we know well.
+                Building-by-building data and commentary for Portland&apos;s condo market—HOA, taxes, prices, and our take on each building, updated for 2026.
               </p>
             </header>
-            <RevealSection className="property-grid property-grid--condos">
-              {condos.map((condo) => (
-                <PropertyCard
-                  key={condo.slug}
-                  name={condo.name}
-                  href={condo.href}
-                  imageSrc={condo.imageSrc}
-                  imageAlt={condo.name}
-                />
-              ))}
-            </RevealSection>
-            <p className="text-center" style={{ marginTop: 'var(--space-lg)' }}>
-              <Button href="/markets" variant="outline">
-                Explore properties
+            <RevealSection className="text-center">
+              <Button href="/resources/portland-condo-guide" variant="outline">
+                View the 2026 Portland Condo Guide
               </Button>
-              <span style={{ marginLeft: 'var(--space-md)' }}>
-                <Button href="/resources/portland-condo-guide" variant="text">
-                  2026 Portland Condo Guide
-                </Button>
-              </span>
-            </p>
+            </RevealSection>
           </div>
         </section>
 

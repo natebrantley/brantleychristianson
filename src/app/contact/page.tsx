@@ -20,7 +20,7 @@ export default function ContactPage() {
   return (
     <main>
       <Hero
-        title="Request a tailored condo or market consultation."
+        title="Request a tailored real estate or market consultation."
         lead="Tell us whether you’re buying, selling, or just learning the market. We’ll connect you with a broker who fits your goals."
         variant="short"
         imageSrc={`${assetPaths.stock}/couch.jpeg`}
@@ -32,7 +32,7 @@ export default function ContactPage() {
         </Button>
       </Hero>
 
-      <section className="section" aria-labelledby="social-heading">
+      <section id="social" className="section" aria-labelledby="social-heading">
         <div className="container stack--xl">
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Connect</p>

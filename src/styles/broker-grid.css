@@ -41,17 +41,17 @@
 
 .broker-card-image-wrap {
   position: relative;
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-full);
+  width: 88px;
+  height: 88px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   flex-shrink: 0;
   border: 2px solid rgba(var(--color-accent-rgb), 0.3);
 }
 @media (min-width: 768px) {
   .broker-card-image-wrap {
-    width: 100px;
-    height: 100px;
+    width: 112px;
+    height: 112px;
   }
 }
 

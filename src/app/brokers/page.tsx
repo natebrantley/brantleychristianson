@@ -15,8 +15,8 @@ export default function BrokersPage() {
   return (
     <main>
       <Hero
-        title="Meet the brokers behind our condo intelligence."
-        lead="Licensed in Oregon and Washington. Filter by location or language and find a broker who knows your buildings, your neighborhood, and your goals."
+        title="Proudly Serving OR & WA"
+        lead="Licensed in Oregon and Washington. Filter by location or language and find a broker who knows your markets, property types, and goals."
         variant="short"
         imageSrc={`${assetPaths.stock}/office.jpeg`}
         imageAlt=""

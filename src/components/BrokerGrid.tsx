@@ -23,9 +23,9 @@ export function BrokerGrid({ agents, maxItems = 8, showAllHref = '/brokers' }: B
                 <Image
                   src={agent.image}
                   alt=""
-                  width={120}
-                  height={120}
-                  sizes="120px"
+                  width={112}
+                  height={112}
+                  sizes="(max-width: 767px) 88px, 112px"
                   className="broker-card-img"
                   loading="lazy"
                 />

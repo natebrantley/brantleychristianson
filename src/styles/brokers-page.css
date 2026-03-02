@@ -6,14 +6,19 @@
 .brokers-toolbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-lg);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
   margin-bottom: var(--space-lg);
   padding: var(--space-md) 0;
   border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.12);
 }
 @media (min-width: 768px) {
   .brokers-toolbar {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
     margin-bottom: var(--space-xl);
   }
 }
@@ -21,13 +26,14 @@
 .brokers-toolbar-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--space-md);
+  justify-content: center;
 }
 
 .brokers-toolbar-filters {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 0 1 100%;
+  justify-content: center;
 }
 
 .brokers-toolbar-group {
@@ -82,8 +88,8 @@
   font-weight: 600;
   color: var(--color-primary);
   margin: 0;
-  margin-left: auto;
   padding-bottom: 2px;
+  text-align: center;
 }
 
 .brokers-loading {
@@ -160,6 +166,8 @@
   transition: box-shadow 0.35s var(--ease-out-expo), transform 0.35s var(--ease-out-expo);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 .broker-tile:hover {
   box-shadow: var(--shadow-hover);
@@ -173,13 +181,15 @@
   text-decoration: none;
   color: inherit;
   padding: var(--space-lg);
+  align-items: center;
+  text-align: center;
 }
 
 .broker-tile-image-wrap {
   position: relative;
-  width: 120px;
-  height: 120px;
-  border-radius: var(--radius-full);
+  width: 200px;
+  height: 280px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: var(--space-md);
   border: 2px solid rgba(var(--color-accent-rgb), 0.25);
@@ -216,11 +226,17 @@
   margin: 0 0 0.5rem;
 }
 
-.broker-tile-cities {
-  font-size: 0.8125rem;
-  color: var(--color-muted);
-  line-height: 1.4;
-  margin: 0 0 0.25rem;
+.broker-tile-license {
+  white-space: nowrap;
+}
+
+.broker-tile-license-state {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.broker-tile-license-separator {
+  margin: 0 0.25rem;
 }
 
 .broker-tile-languages {
@@ -253,4 +269,38 @@
 
 .broker-tile-phone {
   color: var(--color-primary);
+}
+
+.broker-detail-meta {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: var(--space-md) 0 0;
+}
+
+.broker-detail-meta-line {
+  display: block;
+}
+
+.broker-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  justify-content: center;
+}
+
+.broker-detail-language-cta {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: var(--color-light-alt);
+  border: 1px solid rgba(var(--color-accent-rgb), 0.25);
+  text-align: center;
+}
+
+.broker-detail-language-cta-text {
+  margin: 0 0 var(--space-sm);
+  font-size: 0.9375rem;
+  color: var(--color-muted);
 }

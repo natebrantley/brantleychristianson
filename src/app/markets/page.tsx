@@ -24,7 +24,7 @@ export default function MarketsIndexPage() {
     <main>
       <Hero
         title="Learn the markets we serve."
-        lead="Oregon and Washington metro areas where we live and work. Start here to understand neighborhoods, counties, and condo opportunities."
+        lead="Oregon and Washington metro areas where we live and work. Start here to understand neighborhoods, counties, and real estate opportunities across our service area."
         variant="short"
         imageSrc={`${assetPaths.markets}/pdx_skyline_2.jpeg`}
         imageAlt=""

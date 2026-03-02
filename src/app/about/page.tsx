@@ -13,8 +13,8 @@ export default function AboutPage() {
   return (
     <main>
       <Hero
-        title="A local, independent condo-focused brokerage."
-        lead="We serve Oregon and Washington with experienced brokers who specialize in condos and complex urban properties—no franchise, no corporate playbook."
+        title="A local, independent real estate brokerage."
+        lead="We serve Oregon and Washington with experienced brokers across residential, condos, and investment property—no franchise, no corporate playbook."
         variant="short"
         imageSrc={`${assetPaths.stock}/living.jpeg`}
         imageAlt=""

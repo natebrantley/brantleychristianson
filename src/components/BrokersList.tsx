@@ -7,39 +7,57 @@ import Link from 'next/link';
 import type { Agent } from '@/data/types';
 import { getBrokerCities, getBrokerLanguages } from '@/data/agents';
 
-export type BrokerSort = 'name-asc' | 'name-desc' | 'title' | 'license-or' | 'license-wa';
+export type BrokerSort = 'name-asc' | 'name-desc';
 
 const SORT_OPTIONS: { value: BrokerSort; label: string }[] = [
-  { value: 'name-asc', label: 'Name (A–Z)' },
-  { value: 'name-desc', label: 'Name (Z–A)' },
-  { value: 'title', label: 'Title' },
-  { value: 'license-or', label: 'Oregon first' },
-  { value: 'license-wa', label: 'Washington first' },
+  { value: 'name-asc', label: 'Name (A to Z)' },
+  { value: 'name-desc', label: 'Name (Z to A)' },
 ];
+
+function getLastName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts.length > 0 ? parts[parts.length - 1] : name;
+}
+
+function compareByLastName(a: Agent, b: Agent, direction: 1 | -1): number {
+  const aLast = getLastName(a.name);
+  const bLast = getLastName(b.name);
+  const cmp = aLast.localeCompare(bLast);
+  if (cmp !== 0) return direction * cmp;
+  return direction * a.name.localeCompare(b.name);
+}
+
+function formatLicense(license: string) {
+  const match = license.match(/^(OR|WA)\b(.*)$/i);
+  if (!match) return license;
+  const [, state, rest] = match;
+  return (
+    <>
+      <span className="broker-tile-license-state">{state.toUpperCase()}</span>
+      {rest}
+    </>
+  );
+}
+
+function formatLanguage(language: string): string {
+  const lower = language.toLowerCase();
+  switch (lower) {
+    case 'mandarin':
+      return '中文（普通话）';
+    case 'cantonese':
+      return '粵語';
+    default:
+      return language;
+  }
+}
 
 function sortAgents(agents: Agent[], sort: BrokerSort): Agent[] {
   const copy = [...agents];
   switch (sort) {
     case 'name-asc':
-      return copy.sort((a, b) => a.name.localeCompare(b.name));
+      return copy.sort((a, b) => compareByLastName(a, b, 1));
     case 'name-desc':
-      return copy.sort((a, b) => b.name.localeCompare(a.name));
-    case 'title':
-      return copy.sort((a, b) => a.title.localeCompare(b.title) || a.name.localeCompare(b.name));
-    case 'license-or':
-      return copy.sort((a, b) => {
-        const aOR = a.licenses.some((l) => l.toUpperCase().startsWith('OR')) ? 1 : 0;
-        const bOR = b.licenses.some((l) => l.toUpperCase().startsWith('OR')) ? 1 : 0;
-        if (bOR !== aOR) return bOR - aOR;
-        return a.name.localeCompare(b.name);
-      });
-    case 'license-wa':
-      return copy.sort((a, b) => {
-        const aWA = a.licenses.some((l) => l.toUpperCase().startsWith('WA')) ? 1 : 0;
-        const bWA = b.licenses.some((l) => l.toUpperCase().startsWith('WA')) ? 1 : 0;
-        if (bWA !== aWA) return bWA - aWA;
-        return a.name.localeCompare(b.name);
-      });
+      return copy.sort((a, b) => compareByLastName(a, b, -1));
     default:
       return copy;
   }
@@ -269,15 +287,18 @@ export function BrokersList({ agents }: BrokersListProps) {
                     <h2 className="broker-tile-name">{agent.name}</h2>
                     <p className="broker-tile-title">{agent.title}</p>
                     <p className="broker-tile-licenses">
-                      {agent.licenses.join(' · ')}
-                    </p>
-                    <p className="broker-tile-cities">
-                      {agent.cities.slice(0, 5).join(', ')}
-                      {agent.cities.length > 5 && ` +${agent.cities.length - 5}`}
+                      {agent.licenses.map((license, index) => (
+                        <span key={license} className="broker-tile-license">
+                          {formatLicense(license)}
+                          {index < agent.licenses.length - 1 && (
+                            <span className="broker-tile-license-separator"> · </span>
+                          )}
+                        </span>
+                      ))}
                     </p>
                     {agent.languages.length > 0 && (
                       <p className="broker-tile-languages">
-                        {agent.languages.join(', ')}
+                        {agent.languages.map(formatLanguage).join(', ')}
                       </p>
                     )}
                   </div>

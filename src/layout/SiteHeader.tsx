@@ -9,13 +9,10 @@ import { assetPaths } from '@/config/theme';
 const LOGO_SRC = `${assetPaths.logos}/BCRE-White-Trans.png`;
 
 const NAV_LINKS = [
-  // Buyer journey: start with condo intelligence
-  { href: '/resources/portland-condo-guide', label: 'Find the right condo' },
-  // Market exploration for both buyers and sellers
   { href: '/markets', label: 'Markets' },
-  // Credibility and team
   { href: '/brokers', label: 'Brokers' },
   { href: '/about', label: 'About' },
+  { href: '/contact#social', label: 'Social' },
 ];
 
 export function SiteHeader() {
@@ -72,7 +69,7 @@ export function SiteHeader() {
             ))}
             <li className="nav-list-cta">
               <Link href="/contact" onClick={close} className="nav-link-cta">
-                Request consultation
+                Request Consultation
               </Link>
             </li>
           </ul>
