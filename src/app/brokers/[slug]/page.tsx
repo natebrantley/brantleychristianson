@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/Button';
 import { agents, getAgentBySlug } from '@/data/agents';
+import { assetPaths } from '@/config/theme';
 import type { Agent } from '@/data/types';
 
 interface BrokerPageProps {
@@ -47,14 +48,24 @@ export default function BrokerProfilePage({ params }: BrokerPageProps) {
 
   return (
     <main>
-      <section className="section" aria-labelledby="broker-heading">
+      <div className="broker-hero-image">
+        <Image
+          src={`${assetPaths.stock}/couch.jpeg`}
+          alt=""
+          fill
+          className="broker-hero-image__img"
+          priority
+          sizes="100vw"
+        />
+      </div>
+
+      <section className="section broker-detail-section" aria-labelledby="broker-name-heading">
         <div className="container container-narrow stack--lg">
           <header className="stack--sm text-center">
-            <p className="section-tag">Broker</p>
-            <h1 id="broker-heading" className="section-title">
+            <h1 id="broker-name-heading" className="broker-detail-name">
               {agent.name}
             </h1>
-            <p className="section-lead">{agent.title}</p>
+            <p className="broker-detail-title">{agent.title}</p>
           </header>
 
           <article className="stack--lg">

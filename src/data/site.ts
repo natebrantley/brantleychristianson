@@ -8,8 +8,8 @@ export const site = {
   social: {
     instagram: 'https://instagram.com/brantleychristianson',
     facebook: 'https://facebook.com/brantleychristianson',
-    linkedin: 'https://linkedin.com/company/brantleychristianson',
-    youtube: '',
+    linkedin: 'https://www.linkedin.com/in/natebrantley',
+    youtube: 'https://www.youtube.com/playlist?list=PLOP2QethEH_UhmzoppTSSgZQlfO_CWxNL',
     twitter: '',
   },
 } as const;

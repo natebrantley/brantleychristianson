@@ -61,6 +61,67 @@ export default function HomePage() {
           </Button>
         </Hero>
 
+        <section className="section section--alt featured-listing" aria-labelledby="featured-listing-heading">
+          <div className="container stack--xl">
+            <header className="stack--md text-center mx-auto">
+              <p className="section-tag">Featured</p>
+              <h2 id="featured-listing-heading" className="section-title">
+                Featured Listing
+              </h2>
+            </header>
+            <article className="featured-listing__article">
+              <div className="featured-listing__video-wrap">
+                <iframe
+                  src="https://www.youtube.com/embed/tudKYUYCZfs"
+                  title="Featured listing – Camas School District residence"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="featured-listing__video"
+                />
+              </div>
+              <div className="featured-listing__content">
+                <p className="featured-listing__lead">
+                  Located in the Camas School District, this 2,582 SF residence features 4 bedrooms, a spacious upstairs bonus room, and backs to a private woodsy green space. The interior is finished with fresh paint, updated lighting, and updated kitchen cabinetry. Laminate flooring flows through the open main floor and into the primary suite.
+                </p>
+                <p>
+                  The backyard is designed for outdoor living, featuring a covered gazebo, hot tub, and firepit overlooking the greenbelt.
+                </p>
+                <dl className="featured-listing__specs">
+                  <dt>List Price</dt>
+                  <dd>$725,000</dd>
+                  <dt>Square Footage</dt>
+                  <dd>2,582 SF</dd>
+                  <dt>Bedrooms / Baths</dt>
+                  <dd>4 Bed + Bonus · 2.5 Bath</dd>
+                  <dt>New Roof</dt>
+                  <dd>Installed 2022</dd>
+                  <dt>Water Heater</dt>
+                  <dd>Tankless H2O Heater installed 2023</dd>
+                  <dt>Garage</dt>
+                  <dd>2-Car with EV Charger</dd>
+                  <dt>Warranty</dt>
+                  <dd>1-Year Home Warranty included</dd>
+                </dl>
+                <div className="featured-listing__location">
+                  <h3 className="featured-listing__subhead">Location Highlights</h3>
+                  <ul>
+                    <li>½ mile to Prune Hill Elementary</li>
+                    <li>5 minutes to 192nd Ave shopping & dining</li>
+                    <li>14 minutes to PDX Airport</li>
+                  </ul>
+                </div>
+                <p className="featured-listing__presented">
+                  <strong>Presented by</strong>{' '}
+                  <a href="/brokers/ashley">Ashley Christianson</a>, Brantley Christianson Real Estate
+                </p>
+                <p className="featured-listing__cta">
+                  <a href="/brokers/ashley" className="featured-listing__link">View Ashley&apos;s profile</a>
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+
         <section className="section" aria-labelledby="markets-heading">
           <div className="container stack--xl">
             <header className="stack--md text-center mx-auto">

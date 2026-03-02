@@ -2,18 +2,11 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { ConsultationForm } from '@/components/ConsultationForm';
 import { assetPaths } from '@/config/theme';
-import { site } from '@/data/site';
-
-const SOCIAL_LINKS = [
-  { label: 'Instagram', href: site.social.instagram, icon: 'Instagram' },
-  { label: 'Facebook', href: site.social.facebook, icon: 'Facebook' },
-  { label: 'LinkedIn', href: site.social.linkedin, icon: 'LinkedIn' },
-].filter((s) => s.href);
 
 export const metadata = {
   title: 'Contact | Brantley Christianson Real Estate',
   description:
-    'Get in touch with BCRE. Request a consultation or connect with us on social. Portland metro, SW Washington, the coast & Mt. Hood.',
+    'Get in touch with BCRE. Request a consultation with a broker in your Oregon or Washington market.',
 };
 
 export default function ContactPage() {
@@ -31,38 +24,6 @@ export default function ContactPage() {
           Start your consultation
         </Button>
       </Hero>
-
-      <section id="social" className="section" aria-labelledby="social-heading">
-        <div className="container stack--xl">
-          <header className="stack--md text-center mx-auto">
-            <p className="section-tag">Connect</p>
-            <h2 id="social-heading" className="section-title">
-              Follow BCRE
-            </h2>
-            <p className="section-lead mx-auto">
-              Stay in the loop on listings, market insights, and news from our team.
-            </p>
-          </header>
-          {SOCIAL_LINKS.length > 0 ? (
-            <nav className="social-links" aria-label="Social media">
-              <ul className="social-links-list">
-                {SOCIAL_LINKS.map(({ label, href }) => (
-                  <li key={label}>
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="social-link"
-                    >
-                      {label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ) : null}
-        </div>
-      </section>
 
       <section
         id="consultation"

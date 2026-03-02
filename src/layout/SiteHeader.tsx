@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { href: '/markets', label: 'Markets' },
   { href: '/brokers', label: 'Brokers' },
   { href: '/about', label: 'About' },
-  { href: '/contact#social', label: 'Social' },
+  { href: '/social', label: 'Social' },
 ];
 
 export function SiteHeader() {
