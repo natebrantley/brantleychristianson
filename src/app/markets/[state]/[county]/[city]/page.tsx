@@ -2,7 +2,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
-import { getCityBySlug, getAllCityPaths } from '@/data/markets';
+import { RevealSection } from '@/components/RevealSection';
+import {
+  getCityBySlug,
+  getAllCityPaths,
+  getOtherCitiesInCounty,
+} from '@/data/markets';
 
 interface PageProps {
   params: Promise<{ state: string; county: string; city: string }>;
@@ -17,9 +22,12 @@ export async function generateMetadata({ params }: PageProps) {
   const data = getCityBySlug(state, county, city);
   if (!data) return { title: 'City | BCRE' };
   const { city: cityData, county: countyData, state: stateMarket } = data;
+  const lead = cityData.tagline
+    ? `${cityData.tagline}. ${countyData.name}, ${stateMarket.name}.`
+    : `${countyData.name}, ${stateMarket.name} real estate.`;
   return {
     title: `${cityData.name} Real Estate | ${countyData.name} | BCRE`,
-    description: `${cityData.name}, ${countyData.name} ${stateMarket.name} real estate. ${cityData.tagline || ''} Connect with a BCRE broker.`.trim(),
+    description: `${cityData.name} real estate. ${lead} Connect with a BCRE broker who knows the area.`,
   };
 }
 
@@ -32,15 +40,22 @@ export default async function CityPage({ params }: PageProps) {
   const { city: cityData, county: countyData, state: stateMarket } = data;
   const stateHref = `/markets/${state}`;
   const countyHref = `/markets/${state}/${county}`;
+  const otherCities = getOtherCitiesInCounty(state, county, city);
+
+  const isPortland = state === 'oregon' && county === 'multnomah' && city === 'portland';
 
   return (
-    <main>
+    <main className="city-page">
       <Hero
         title={cityData.name}
-        lead={cityData.tagline ? `${cityData.tagline}. ${countyData.name}, ${stateMarket.name}.` : `${countyData.name}, ${stateMarket.name}.`}
+        lead={
+          cityData.tagline
+            ? `${cityData.tagline}. ${countyData.name}, ${stateMarket.name}.`
+            : `${countyData.name}, ${stateMarket.name}.`
+        }
         variant="short"
         imageSrc={countyData.imageSrc}
-        imageAlt={cityData.name}
+        imageAlt={`${cityData.name}, ${countyData.name}`}
         priority
       >
         <Button href={countyHref} variant="white">
@@ -51,26 +66,57 @@ export default async function CityPage({ params }: PageProps) {
         </Button>
       </Hero>
 
-      <section className="section" aria-labelledby="city-heading">
-        <div className="container container-narrow stack--xl">
+      {/* Breadcrumb */}
+      <section className="section city-page-breadcrumb" aria-label="Breadcrumb">
+        <div className="container">
           <nav className="breadcrumb" aria-label="Breadcrumb">
             <ol className="breadcrumb-list">
-              <li><Link href="/markets">Markets</Link></li>
-              <li><Link href={stateHref}>{stateMarket.name}</Link></li>
-              <li><Link href={countyHref}>{countyData.name}</Link></li>
+              <li>
+                <Link href="/markets">Markets</Link>
+              </li>
+              <li>
+                <Link href={stateHref}>{stateMarket.name}</Link>
+              </li>
+              <li>
+                <Link href={countyHref}>{countyData.name}</Link>
+              </li>
               <li aria-current="page">{cityData.name}</li>
             </ol>
           </nav>
+        </div>
+      </section>
+
+      {/* About this city & county */}
+      <section className="section" aria-labelledby="city-about-heading">
+        <div className="container container-narrow">
           <header className="stack--md text-center mx-auto">
-            <h2 id="city-heading" className="section-title">
-              {cityData.name}
+            <p className="section-tag">Local expertise</p>
+            <h2 id="city-about-heading" className="section-title">
+              {cityData.name} real estate
             </h2>
             <p className="section-lead mx-auto">
-              Our brokers know {cityData.name} and {countyData.name}. Whether you&apos;re buying or selling,
-              we bring local expertise and a client-first approach to every transaction.
+              {cityData.tagline && (
+                <>
+                  <strong>{cityData.name}</strong> — {cityData.tagline}.{' '}
+                </>
+              )}
+              {countyData.description}
             </p>
           </header>
-          <div className="text-center stack--md">
+
+          {isPortland && (
+            <div className="city-page-resource">
+              <p className="city-page-resource-lead">
+                Considering a condo in Portland? Explore our data-driven guide to
+                condominium buildings across the metro area.
+              </p>
+              <Button href="/resources/portland-condo-guide" variant="outline">
+                2026 Portland Condo Guide
+              </Button>
+            </div>
+          )}
+
+          <div className="text-center stack--md city-page-actions">
             <Button href="/contact" variant="primary">
               Connect with a broker in {cityData.name}
             </Button>
@@ -83,13 +129,60 @@ export default async function CityPage({ params }: PageProps) {
         </div>
       </section>
 
+      {/* Other cities in this county */}
+      {otherCities.length > 0 && (
+        <section
+          className="section section--alt"
+          aria-labelledby="more-cities-heading"
+        >
+          <div className="container stack--xl">
+            <header className="stack--md text-center mx-auto">
+              <h2 id="more-cities-heading" className="section-title">
+                More cities in {countyData.name}
+              </h2>
+              <p className="section-lead mx-auto">
+                Explore other communities we serve in {countyData.name}. Each
+                has its own character—and a BCRE broker who knows the area.
+              </p>
+            </header>
+            <RevealSection>
+              <ul className="city-grid city-page-grid" role="list">
+                {otherCities.map((c) => (
+                  <li key={c.slug}>
+                    <Link
+                      href={`/markets/${state}/${county}/${c.slug}`}
+                      className="city-card"
+                    >
+                      <span className="city-card-name">{c.name}</span>
+                      {c.tagline && (
+                        <span className="city-card-tagline">{c.tagline}</span>
+                      )}
+                      <span className="city-card-arrow" aria-hidden>
+                        →
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </RevealSection>
+            <p className="text-center">
+              <Button href={countyHref} variant="outline">
+                View all {countyData.cities.length} cities in {countyData.name}
+              </Button>
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* CTA */}
       <section className="section section--cta" aria-label="Get in touch">
         <div className="container text-center stack--md">
           <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
             Ready to find your place in {cityData.name}?
           </h2>
           <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Connect with a BCRE broker. We serve {countyData.name} and the greater {stateMarket.name} market.
+            Connect with a BCRE broker. We serve {countyData.name} and the
+            greater {stateMarket.name} market.
           </p>
           <Button href="/contact" variant="white">
             Get in touch

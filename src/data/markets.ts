@@ -180,3 +180,14 @@ export function getAllCityPaths(): { state: string; county: string; city: string
     )
   );
 }
+
+/** Other cities in the same county (for "Explore more" on city pages). Excludes the given city. */
+export function getOtherCitiesInCounty(
+  stateSlug: string,
+  countySlug: string,
+  excludeCitySlug: string
+): City[] {
+  const county = getCountyBySlug(stateSlug, countySlug);
+  if (!county) return [];
+  return county.cities.filter((c) => c.slug !== excludeCitySlug.toLowerCase());
+}

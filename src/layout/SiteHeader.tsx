@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useScrollState, useNavToggle } from '@/hooks/useScrollState';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -17,6 +18,15 @@ const NAV_LINKS = [
 export function SiteHeader() {
   const isScrolled = useScrollState(60);
   const { isOpen, toggle, close } = useNavToggle();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen, close]);
 
   return (
     <header
@@ -58,6 +68,16 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
+          <div className="nav-close-wrap">
+            <button
+              type="button"
+              onClick={close}
+              className="nav-close-btn"
+              aria-label="Close menu"
+            >
+              Close menu
+            </button>
+          </div>
         </nav>
       </div>
     </header>

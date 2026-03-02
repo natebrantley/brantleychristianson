@@ -150,10 +150,36 @@
     min-height: 48px;
     box-sizing: border-box;
   }
+  .nav-close-wrap {
+    margin-top: var(--space-xl);
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+  }
+  .nav-close-btn {
+    font-family: var(--font-headings);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.85);
+    background: none;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-md);
+    padding: var(--space-md) var(--space-lg);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .nav-close-btn:hover {
+    color: var(--color-light);
+    border-color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.08);
+  }
 }
 
 @media (min-width: 1024px) {
-  .site-nav {
-    display: flex;
+  .nav-close-wrap {
+    display: none;
   }
 }
