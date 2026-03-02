@@ -1,0 +1,82 @@
+/* Broker grid – team section on home */
+.broker-grid-wrap {
+  width: 100%;
+}
+
+.broker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-lg);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+@media (min-width: 640px) {
+  .broker-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (min-width: 1024px) {
+  .broker-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-xl);
+  }
+}
+
+.broker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  transition: background-color 0.3s ease, transform 0.3s var(--ease-out-expo);
+}
+.broker-card:hover {
+  background: rgba(var(--color-primary-rgb), 0.04);
+  transform: translateY(-2px);
+}
+
+.broker-card-image-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(var(--color-accent-rgb), 0.3);
+}
+@media (min-width: 768px) {
+  .broker-card-image-wrap {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+.broker-card-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.broker-card-name {
+  margin-top: var(--space-sm);
+  font-family: var(--font-headings);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.3;
+}
+.broker-card-title {
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  line-height: 1.3;
+}
+
+.broker-grid-cta {
+  margin-top: var(--space-xl);
+  text-align: center;
+}

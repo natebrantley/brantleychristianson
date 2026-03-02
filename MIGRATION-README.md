@@ -15,9 +15,22 @@ Luxury real estate brand site (Brantley Christianson Real Estate) migrated from 
 /public
   /media         All media (hosted at /media/ in the app)
     /img/brokers    Broker headshots
-    /img/listings   Listing images
-    /img/hubs       Region/hub images
+    /img/condos     Condo/building images
+    /img/hubs       Region hub images
+    /img/listings   Listing photos
+    /img/logos      BCRE logos
+    /img/markets    Market/region imagery (pdx.jpeg, pdx_skyline*, AdobeStock_*, camas_*, ridgefield_river, etc.)
+    /img/stock      Stock/interior photos
 ```
+
+**Media inventory (under `/public/media/img/`):**
+- **brokers/** – Headshots (28 files).
+- **condos/** – Building photos (e.g. eliot-tower, elizabeth, harrison, lexis, marshall-wells, ritz, casey).
+- **markets/** – Portland and regional imagery (pdx, pdx_skyline, AdobeStock, camas, ridgefield, Longview, Tualatin, etc.).
+- **hubs/** – Region hub images (add as needed).
+- **listings/** – Listing photos (add as needed).
+- **logos/** – BCRE-White-Navy, BCRE-White-Trans.
+- **stock/** – couch, kitchen, living, office, table.
 
 ## Core system
 
@@ -47,3 +60,12 @@ npm run dev
 ```
 
 Build: `npm run build`. Put all media in `public/media/` (e.g. `public/media/img/listings/`, `public/media/img/hubs/`, `public/media/img/brokers/`). Paths are centralized in `src/config/theme.ts` as `assetPaths`.
+
+## Deploy (Vercel)
+
+1. **Connect repo:** [Vercel](https://vercel.com) → Import Project → select `natebrantley/brantleychristianson`. Framework Preset: Next.js.
+2. **Environment variables:** In Project Settings → Environment Variables, add (for Production and Preview):
+   - `MAILCHIMP_API_KEY` – Mailchimp API key (e.g. `…-us2`)
+   - `MAILCHIMP_AUDIENCE_ID` – Mailchimp audience (list) ID  
+   Optional: `MAILCHIMP_MERGE_TAG_MESSAGE` (default `MMERGE3`) for the consultation message merge field.
+3. **Deploy:** Push to `master` (or your production branch) to trigger a new deployment.

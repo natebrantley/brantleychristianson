@@ -1,6 +1,7 @@
 .card-grid,
 .cards,
-.featured-listing-grid {
+.featured-listing-grid,
+.property-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-xl);
@@ -8,8 +9,19 @@
 @media (min-width: 768px) {
   .card-grid,
   .cards,
-  .featured-listing-grid {
+  .featured-listing-grid,
+  .property-grid {
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  }
+}
+.property-grid--condos {
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+@media (min-width: 768px) {
+  .property-grid--condos {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
   }
 }
 
@@ -112,3 +124,39 @@
 .featured-listing-block .listing-explore-overlay .button--white {
   transform: translateY(0);
 }
+
+/* Property card (condo / distinctive property) */
+.property-card--condo {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.45s var(--ease-out-expo), box-shadow 0.45s var(--ease-out-expo);
+  background: var(--color-light);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+}
+.property-card--condo:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+.property-card--condo .property-card-image-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  display: block;
+  background: var(--color-primary);
+}
+.property-card--condo .property-card-image-wrap img {
+  border-radius: 0;
+}
+.property-card--condo .property-card-title {
+  display: block;
+  padding: var(--space-md) var(--space-lg);
+  font-family: var(--font-headings);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+

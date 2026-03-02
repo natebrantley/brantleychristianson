@@ -1,38 +1,35 @@
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
-import { FeaturedListingCard } from '@/components/FeaturedListingCard';
 import { IntelligenceHubs } from '@/components/IntelligenceHubs';
-import { Stack } from '@/layout/Stack';
+import { PropertyCard } from '@/components/PropertyCard';
+import { BrokerGrid } from '@/components/BrokerGrid';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
+import { condos } from '@/data/condos';
+import { agents } from '@/data/agents';
 
-const FEATURED_LISTING = {
-  mlsId: '622083132',
-  href: '/listings/622083132',
-  imageSrc: `${assetPaths.listings}/listing-622083132.jpg`,
-  imageAlt: 'Featured property',
-  location: 'Portland, OR',
-  address: '1234 Luxury Lane',
-  tagline: 'Pacific Northwest estate with mountain views',
-  details: '4 bed · 5 bath · 3,200 sq ft',
-};
-
-const HUBS: Array<{ title: string; description?: string; href: string; imageSrc: string; imageAlt?: string }> = [
+const MARKETS = [
   {
     title: 'Oregon',
-    description: 'Explore Oregon luxury properties',
-    href: '/regions/oregon',
-    imageSrc: `${assetPaths.hubs}/oregon-hub.jpg`,
-    imageAlt: 'Oregon region',
+    description: 'Portland metro, the coast & Mt. Hood',
+    href: '/markets/oregon',
+    imageSrc: `${assetPaths.markets}/pdx.jpeg`,
+    imageAlt: 'Portland, Oregon',
   },
   {
     title: 'Washington',
-    description: 'Explore Washington luxury properties',
-    href: '/regions/washington',
-    imageSrc: `${assetPaths.hubs}/washington-hub.jpg`,
-    imageAlt: 'Washington region',
+    description: 'SW Washington, Vancouver & Clark County',
+    href: '/markets/washington',
+    imageSrc: `${assetPaths.stock}/office.jpeg`,
+    imageAlt: 'Southwest Washington',
   },
 ];
+
+export const metadata = {
+  title: 'Brantley Christianson Real Estate | Pacific Northwest',
+  description:
+    'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington.',
+};
 
 export default function HomePage() {
   const jsonLd = {
@@ -52,49 +49,105 @@ export default function HomePage() {
       <main>
         <Hero
           title="Fiercely Independent, Strategically Driven."
-          lead="Luxury real estate across the Pacific Northwest. Oregon and Washington's most distinctive properties."
-          variant="fullscreen"
+          lead="Luxury real estate across Oregon and Washington. Your Pacific Northwest experts."
+          variant="short"
+          imageSrc={`${assetPaths.stock}/kitchen.jpeg`}
+          imageAlt=""
           priority
         >
-          <Button href="/listings" variant="white">
-            View Listings
+          <Button href="/markets" variant="white">
+            View Markets
           </Button>
           <Button href="/contact" variant="white">
             Contact
           </Button>
         </Hero>
 
-        <section className="section" aria-labelledby="featured-heading">
+        <section className="section" aria-labelledby="markets-heading">
           <div className="container stack--xl">
             <header className="stack--md text-center mx-auto">
-              <p className="section-tag">Featured</p>
-              <h2 id="featured-heading" className="section-title">
-                Featured Listing
+              <p className="section-tag">Explore</p>
+              <h2 id="markets-heading" className="section-title">
+                Our Markets
               </h2>
               <p className="section-lead mx-auto">
-                MLS #622083132 — exceptional Pacific Northwest living.
+                Portland metro and Southwest Washington are at the heart of our service area. We also serve the Oregon coast and Mt. Hood.
               </p>
             </header>
-            <RevealSection className="featured-listing-grid">
-              <FeaturedListingCard {...FEATURED_LISTING} priority />
+            <RevealSection>
+              <IntelligenceHubs hubs={MARKETS} />
+            </RevealSection>
+            <p className="text-center" style={{ marginTop: 'var(--space-lg)' }}>
+              <Button href="/markets" variant="outline">
+                All markets
+              </Button>
+            </p>
+          </div>
+        </section>
+
+        <section className="section section--alt" aria-labelledby="properties-heading">
+          <div className="container stack--xl">
+            <header className="stack--md text-center mx-auto">
+              <p className="section-tag">Distinctive properties</p>
+              <h2 id="properties-heading" className="section-title">
+                Featured Properties
+              </h2>
+              <p className="section-lead mx-auto">
+                Condominiums and buildings we know well.
+              </p>
+            </header>
+            <RevealSection className="property-grid property-grid--condos">
+              {condos.map((condo) => (
+                <PropertyCard
+                  key={condo.slug}
+                  name={condo.name}
+                  href={condo.href}
+                  imageSrc={condo.imageSrc}
+                  imageAlt={condo.name}
+                />
+              ))}
+            </RevealSection>
+            <p className="text-center" style={{ marginTop: 'var(--space-lg)' }}>
+              <Button href="/markets" variant="outline">
+                Explore properties
+              </Button>
+              <span style={{ marginLeft: 'var(--space-md)' }}>
+                <Button href="/resources/portland-condo-guide" variant="text">
+                  2026 Portland Condo Guide
+                </Button>
+              </span>
+            </p>
+          </div>
+        </section>
+
+        <section className="section" aria-labelledby="team-heading">
+          <div className="container stack--xl">
+            <header className="stack--md text-center mx-auto">
+              <p className="section-tag">The team</p>
+              <h2 id="team-heading" className="section-title">
+                Our Brokers
+              </h2>
+              <p className="section-lead mx-auto">
+                Licensed in Oregon and Washington. Local expertise, exceptional service.
+              </p>
+            </header>
+            <RevealSection>
+              <BrokerGrid agents={agents} maxItems={8} showAllHref="/brokers" />
             </RevealSection>
           </div>
         </section>
 
-        <section className="section" aria-labelledby="hubs-heading">
-          <div className="container stack--xl">
-            <header className="stack--md text-center mx-auto">
-              <p className="section-tag">Regions</p>
-              <h2 id="hubs-heading" className="section-title">
-                Intelligence Hubs
-              </h2>
-              <p className="section-lead mx-auto">
-                Oregon and Washington luxury markets.
-              </p>
-            </header>
-            <RevealSection>
-              <IntelligenceHubs hubs={HUBS} />
-            </RevealSection>
+        <section className="section section--cta" aria-label="Get in touch">
+          <div className="container text-center stack--md">
+            <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
+              Ready to find your place?
+            </h2>
+            <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
+              Connect with a BCRE broker in your market.
+            </p>
+            <Button href="/contact" variant="white">
+              Get in touch
+            </Button>
           </div>
         </section>
       </main>

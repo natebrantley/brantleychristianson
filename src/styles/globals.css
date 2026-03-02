@@ -1,9 +1,6 @@
 /* BCRE Master Manifest – brantleychristianson.com
    Design system: Fiercely Independent, Strategically Driven. Pacific Northwest luxury. */
 
-/* BCRE Master Manifest – brantleychristianson.com
-   Design system: Fiercely Independent, Strategically Driven. Pacific Northwest luxury. */
-
 @import './variables.css';
 @import './header.css';
 @import './footer.css';
@@ -12,6 +9,10 @@
 @import './buttons.css';
 @import './hubs.css';
 @import './forms.css';
+@import './broker-grid.css';
+@import './contact.css';
+@import './brokers-page.css';
+@import './condo-guide.css';
 
 *,
 *::before,
@@ -22,7 +23,8 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
-  scroll-padding-top: calc(var(--header-height) + var(--space-md));
+  scroll-padding-top: calc(var(--header-height) + var(--space-md) + env(safe-area-inset-top, 0px));
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -36,9 +38,14 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
 }
 
 body.no-scroll {
@@ -118,7 +125,32 @@ a:hover {
 
 /* ========== Sections & stack (Lobotomized Owl) ========== */
 .section {
-  padding: var(--space-xxl) 0;
+  padding: var(--space-xl) 0;
+}
+@media (min-width: 768px) {
+  .section {
+    padding: var(--space-xxl) 0;
+  }
+}
+.section--alt {
+  background: var(--color-light-alt);
+}
+.section--cta {
+  padding: var(--space-xl) 0;
+  background: var(--color-primary);
+  color: var(--color-light);
+}
+@media (min-width: 768px) {
+  .section--cta {
+    padding: var(--space-xxl) 0;
+  }
+}
+.section--cta .section-title,
+.section--cta .section-lead {
+  color: var(--color-light);
+}
+.section--cta .section-lead {
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .section-tag {
@@ -132,19 +164,23 @@ a:hover {
 
 .section-title {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(1.75rem, 4.5vw, 3rem);
   font-weight: 600;
   line-height: 1.2;
   margin: 0 0 1rem;
   color: var(--color-primary);
 }
-
 .section-lead {
-  font-size: 1.125rem;
+  font-size: clamp(1rem, 1.5vw + 0.5rem, 1.125rem);
   color: var(--color-muted);
   max-width: 56ch;
   margin: 0 0 2rem;
   line-height: 1.6;
+}
+@media (max-width: 767px) {
+  .section-lead {
+    margin-bottom: 1.5rem;
+  }
 }
 
 [class*="stack--"] > * + * {
@@ -179,4 +215,18 @@ a:hover {
 .reveal-item.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* About page content */
+.about-content p {
+  margin: 0 0 1em;
+  line-height: 1.65;
+}
+.about-content p:last-child {
+  margin-bottom: 0;
+}
+.about-lead {
+  font-size: 1.125rem;
+  color: var(--theme-text);
+  line-height: 1.7;
 }

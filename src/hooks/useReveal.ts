@@ -9,10 +9,13 @@ const DEFAULT_OPTIONS: IntersectionObserverInit = {
 
 /**
  * Intersection observer for reveal-item animations (replaces bcre-engine.js reveal logic).
+ * Options are stabilized so passing a new object reference from parent does not reconnect the observer.
  */
 export function useReveal(options: Partial<IntersectionObserverInit> = {}) {
   const ref = useRef<HTMLElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const rootMargin = options.rootMargin ?? DEFAULT_OPTIONS.rootMargin;
+  const threshold = options.threshold ?? DEFAULT_OPTIONS.threshold;
 
   useEffect(() => {
     const el = ref.current;
@@ -25,12 +28,12 @@ export function useReveal(options: Partial<IntersectionObserverInit> = {}) {
           el.classList.add('is-visible');
         }
       },
-      { ...DEFAULT_OPTIONS, ...options }
+      { ...DEFAULT_OPTIONS, rootMargin, threshold }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [options.rootMargin, options.threshold]);
+  }, [rootMargin, threshold]);
 
   return { ref, isVisible };
 }

@@ -1,9 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 
-export type HeroVariant = 'fullscreen' | 'half' | 'condo';
+export type HeroVariant = 'fullscreen' | 'half' | 'short' | 'condo';
 
 export interface HeroProps {
   title: string;

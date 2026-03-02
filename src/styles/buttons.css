@@ -12,12 +12,27 @@
   font-size: 0.875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 1.15rem 2.75rem;
+  padding: 1rem 2rem;
+  min-height: 48px;
+  min-width: 48px;
   border: 2px solid transparent;
   border-radius: var(--radius-md);
   text-decoration: none;
   cursor: pointer;
   transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s var(--ease-out-expo), background-color 0.4s var(--ease-out-expo), border-color 0.4s var(--ease-out-expo), color 0.4s var(--ease-out-expo);
+  -webkit-tap-highlight-color: transparent;
+}
+@media (min-width: 768px) {
+  .button,
+  .btn,
+  .button--primary,
+  .button--white,
+  .button--outline,
+  .button--text {
+    padding: 1.15rem 2.75rem;
+    min-height: 0;
+    min-width: 0;
+  }
 }
 .button:hover,
 .btn:hover,
@@ -70,6 +85,7 @@
   background: transparent;
   color: var(--color-primary);
   padding-inline: 0;
+  min-width: 0;
   border: none;
   letter-spacing: 0.05em;
 }

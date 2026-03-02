@@ -45,7 +45,7 @@ export function FeaturedListingCard({
         </span>
       </Link>
       <div className="listing-info">
-        <span className="listing-location">MLS #{mlsId}</span>
+        <span className="listing-location">MLS #{mlsId}{location ? ` · ${location}` : ''}</span>
         <h2 className="listing-address listing-tagline">
           <Link href={href}>{address}</Link>
         </h2>

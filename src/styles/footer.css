@@ -2,6 +2,7 @@
   background: var(--color-primary);
   color: var(--color-light);
   padding-block: var(--space-xxl) var(--space-lg);
+  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
   font-size: 0.875rem;
   margin-top: auto;
 }
@@ -10,7 +11,7 @@
 .footer-inner {
   max-width: 1140px;
   margin-inline: auto;
-  padding-inline: var(--space-md);
+  padding-inline: max(var(--space-md), env(safe-area-inset-left)) max(var(--space-md), env(safe-area-inset-right));
 }
 
 .site-footer-inner p,

@@ -3,6 +3,16 @@
   text-align: left;
 }
 
+.form-error {
+  padding: var(--space-md);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: #b91c1c;
+  font-size: 0.9375rem;
+  margin-bottom: var(--space-md);
+}
+
 .form-group label {
   display: block;
   font-family: var(--font-headings);

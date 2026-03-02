@@ -1,0 +1,185 @@
+/* Brokers page – sortable list */
+.brokers-page {
+  width: 100%;
+}
+
+.brokers-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid rgba(var(--color-primary-rgb), 0.12);
+}
+@media (min-width: 768px) {
+  .brokers-toolbar {
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+  }
+}
+
+.brokers-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.brokers-toolbar-label {
+  font-family: var(--font-headings);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.brokers-select {
+  font-family: inherit;
+  font-size: max(16px, 0.9375rem);
+  padding: 0.625rem 2.25rem 0.625rem 0.75rem;
+  min-height: 48px;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+  border-radius: var(--radius-md);
+  background-color: var(--color-light);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%230a2438' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  color: var(--color-primary);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.brokers-count {
+  margin-left: auto;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.brokers-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+}
+@media (min-width: 768px) {
+  .brokers-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-xl);
+  }
+}
+@media (min-width: 1024px) {
+  .brokers-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.broker-tile {
+  background: var(--color-light);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow 0.35s var(--ease-out-expo), transform 0.35s var(--ease-out-expo);
+  display: flex;
+  flex-direction: column;
+}
+.broker-tile:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-4px);
+}
+
+.broker-tile-link {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  padding: var(--space-lg);
+}
+
+.broker-tile-image-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-md);
+  border: 2px solid rgba(var(--color-accent-rgb), 0.25);
+  flex-shrink: 0;
+}
+
+.broker-tile-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+}
+
+.broker-tile-name {
+  font-family: var(--font-headings);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 0.25rem;
+  line-height: 1.25;
+}
+
+.broker-tile-title {
+  font-size: 0.875rem;
+  color: var(--color-accent);
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.broker-tile-licenses {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+  margin: 0 0 0.5rem;
+}
+
+.broker-tile-cities {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  line-height: 1.4;
+  margin: 0 0 0.25rem;
+}
+
+.broker-tile-languages {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.broker-tile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid rgba(var(--color-primary-rgb), 0.08);
+  background: var(--color-light-alt);
+}
+
+.broker-tile-email,
+.broker-tile-phone {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.broker-tile-email:hover,
+.broker-tile-phone:hover {
+  color: var(--color-primary);
+}
+
+.broker-tile-phone {
+  color: var(--color-primary);
+}

@@ -2,10 +2,14 @@
 
 import { useScrollState, useNavToggle } from '@/hooks/useScrollState';
 import Link from 'next/link';
+import Image from 'next/image';
+import { assetPaths } from '@/config/theme';
 
+const LOGO_SRC = `${assetPaths.logos}/BCRE-White-Trans.png`;
 const NAV_LINKS = [
-  { href: '/', label: 'Home' },
-  { href: '/listings', label: 'Listings' },
+  { href: '/markets', label: 'Markets' },
+  { href: '/resources/portland-condo-guide', label: 'Condo Guide' },
+  { href: '/brokers', label: 'Brokers' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ];
@@ -20,8 +24,15 @@ export function SiteHeader() {
       aria-label="Site header"
     >
       <div className="site-header-inner container">
-        <Link href="/" className="site-logo" onClick={close}>
-          BCRE
+        <Link href="/" className="site-logo" onClick={close} aria-label="Brantley Christianson Real Estate – Home">
+          <Image
+            src={LOGO_SRC}
+            alt=""
+            width={160}
+            height={48}
+            priority
+            className="site-logo-img"
+          />
         </Link>
         <button
           type="button"

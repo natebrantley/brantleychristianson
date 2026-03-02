@@ -49,6 +49,14 @@ export const assetPaths = {
   listings: '/media/img/listings',
   /** Region/hub images: /media/img/hubs/{filename} */
   hubs: '/media/img/hubs',
+  /** Market/region imagery: /media/img/markets/{filename} */
+  markets: '/media/img/markets',
+  /** Stock/interior photos: /media/img/stock/{filename} */
+  stock: '/media/img/stock',
+  /** Condo/building images: /media/img/condos/{filename} */
+  condos: '/media/img/condos',
+  /** Logos: /media/img/logos/{filename} */
+  logos: '/media/img/logos',
 } as const;
 
 export type StackGap = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
