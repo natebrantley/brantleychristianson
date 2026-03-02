@@ -3,6 +3,7 @@ import { Button } from '@/components/Button';
 import { BrokersList } from '@/components/BrokersList';
 import { assetPaths } from '@/config/theme';
 import { agents } from '@/data/agents';
+import { Suspense } from 'react';
 
 export const metadata = {
   title: 'Our Brokers | Brantley Christianson Real Estate',
@@ -15,7 +16,7 @@ export default function BrokersPage() {
     <main>
       <Hero
         title="Our brokers"
-        lead="Licensed in Oregon and Washington. Local expertise, exceptional service."
+        lead="Licensed in Oregon and Washington. Filter by location or language and find your broker."
         variant="short"
         imageSrc={`${assetPaths.stock}/office.jpeg`}
         imageAlt=""
@@ -34,10 +35,12 @@ export default function BrokersPage() {
               Meet the BCRE team
             </h2>
             <p className="section-lead mx-auto">
-              Sort by name or license state. Click a broker to view their profile, or reach out directly by email or phone.
+              Filter by location (state or city) or language. Sort by name or license. Click a broker for their profile, or reach out by email or phone.
             </p>
           </header>
-          <BrokersList agents={agents} />
+          <Suspense fallback={<div className="brokers-loading" aria-busy="true">Loading brokers…</div>}>
+            <BrokersList agents={agents} />
+          </Suspense>
         </div>
       </section>
     </main>

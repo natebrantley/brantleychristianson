@@ -20,7 +20,7 @@ const MARKETS = [
     title: 'Washington',
     description: 'SW Washington, Vancouver & Clark County',
     href: '/markets/washington',
-    imageSrc: `${assetPaths.stock}/office.jpeg`,
+    imageSrc: `${assetPaths.markets}/camas_river.webp`,
     imageAlt: 'Southwest Washington',
   },
 ];
