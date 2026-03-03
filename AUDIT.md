@@ -1,6 +1,6 @@
 # Full Website Audit — Brantley Christianson Real Estate
 
-**Date:** March 2025  
+**Date:** March 2025 (updated March 2026)  
 **Scope:** Structure, routes, components, data, styles, SEO, accessibility, and issues.
 
 ---
@@ -199,6 +199,36 @@ All pages rely on the same design system; no page-specific CSS imports.
 
 ---
 
+## 11. Audit update — March 2026
+
+### Checks performed
+
+- **Build:** `npm run build` — ✅ Success (Next.js 16.1.6, 362 static pages).
+- **Dependencies:** `npm audit` — ✅ 0 vulnerabilities.
+- **Lint:** `next lint` may report "Invalid project directory provided" when run via `npm run lint` on some environments (Next CLI interprets the script name as a directory). TypeScript and build validate the codebase; run `npm run build` for a full check.
+- **Assets:** `public/media/img/` contains `markets/`, `stock/`, `condos/`. Folders `brokers/` and `logos/` are referenced in code but image files are not in the repo (add headshots and `BCRE-White-Trans.png` per READMEs in those folders, or deploy from CDN).
+
+### Fixes applied (March 2026)
+
+1. **Orphan file removed:** Root `css/main.css` (unused duplicate of design tokens) deleted; app uses `src/styles/globals.css` and `variables.css` only.
+2. **Asset structure documented:** Added `public/media/img/brokers/README.md` and `public/media/img/logos/README.md` so the expected paths and filenames are clear for deploy or future assets.
+
+### Current status
+
+| Area | Status |
+|------|--------|
+| Routes & structure | ✅ |
+| Layout & global UI | ✅ |
+| Components | ✅ |
+| Data & config | ✅ |
+| Styles | ✅ (single entry; orphan `css/main.css` removed) |
+| SEO & metadata | ✅ |
+| Accessibility | ✅ (meaningful `imageAlt` in use) |
+| Security headers | ✅ (X-Frame-Options, X-Content-Type-Options, Referrer-Policy) |
+| Static assets | ⚠️ Brokers and logos dirs present with READMEs; add images per README or deploy elsewhere. |
+
+---
+
 ## Summary
 
 | Area | Status | Notes |
@@ -207,7 +237,7 @@ All pages rely on the same design system; no page-specific CSS imports.
 | Layout & global UI | ✅ | Single layout, skip link, header/footer. |
 | Components | ✅ | Unused components removed (BrokerGrid, FeaturedListingCard, PropertyCard, MarketStack). |
 | Data & config | ✅ | Centralized markets, agents, site, theme; static generation used correctly. |
-| Styles | ✅ | Single entry, design tokens; dead broker-grid.css removed. |
+| Styles | ✅ | Single entry, design tokens; dead broker-grid.css removed; root css/main.css removed (Mar 2026). |
 | SEO & metadata | ✅ | Layout + per-page/dynamic metadata; JSON-LD where needed. |
 | Accessibility | ✅ | Meaningful `imageAlt` added on markets, brokers, resources, portland-condo-guide, error. |
 | State page consistency | ✅ | Washington state page rebuilt to match Oregon (breadcrumb + county stack, A–Z). |
@@ -217,4 +247,5 @@ All pages rely on the same design system; no page-specific CSS imports.
 2. Removed unused components and MarketStack; removed broker-grid.css.  
 3. Washington state page rebuilt with breadcrumb + city-stack (alphabetical counties).  
 4. Error page Hero given `imageSrc` and `imageAlt`.  
-5. TypeScript: optional `highlight`/`sub` in Portland components guarded with `'highlight' in item` / `'sub' in card`.
+5. TypeScript: optional `highlight`/`sub` in Portland components guarded with `'highlight' in item` / `'sub' in card`.  
+6. **March 2026:** Removed orphan `css/main.css`; added brokers/logos READMEs for asset expectations.
