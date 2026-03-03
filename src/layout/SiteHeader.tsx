@@ -67,11 +67,6 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
-            <li className="nav-list-cta">
-              <Link href="/contact" onClick={close} className="nav-link-cta">
-                Request Consultation
-              </Link>
-            </li>
           </ul>
           <div className="nav-close-wrap">
             <button
