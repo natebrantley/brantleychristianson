@@ -4,6 +4,8 @@ import { createClerkSupabaseClient } from '@/lib/supabase';
 import { isBrokerRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AgentsDashboardPage() {
   const { userId } = auth();
 

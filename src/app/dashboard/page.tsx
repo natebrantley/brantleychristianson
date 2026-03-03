@@ -3,11 +3,13 @@ import { auth } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient } from '@/lib/supabase';
 import { isBrokerRole } from '@/lib/roles';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardRouterPage() {
   const { userId } = auth();
 
   if (!userId) {
-    redirect('/');
+    redirect('/sign-in');
   }
 
   try {
