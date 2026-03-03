@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import {
+  repliersClient,
+  findClientByEmail,
+  createClient,
+  updateClient,
+  normalizePhoneForRepliers,
+  parseNameToFnameLname,
+} from '@/lib/repliers';
 
 interface ConsultationRequestBody {
   name?: string;
@@ -15,6 +23,7 @@ interface ConsultationRequestBody {
 /**
  * POST /api/consultation
  * Adds/updates the contact in the Mailchimp audience with merge fields and tags.
+ * If Repliers is configured, also creates or updates the Repliers client (best-effort).
  * Requires MAILCHIMP_API_KEY and MAILCHIMP_AUDIENCE_ID in env.
  */
 export async function POST(request: NextRequest) {
@@ -111,6 +120,42 @@ export async function POST(request: NextRequest) {
       const tagsData = await tagsRes.json().catch(() => ({}));
       console.error('Mailchimp tags error:', tagsRes.status, tagsData);
       // Do not surface tag errors to the user; contact was still captured.
+    }
+  }
+
+  // Repliers lead sync (best-effort; do not fail the request)
+  const repliers = repliersClient();
+  if (repliers) {
+    try {
+      const { fname, lname } = parseNameToFnameLname(name);
+      const phoneNormalized = phone ? normalizePhoneForRepliers(phone) : null;
+      const tags: string[] = ['Consultation'];
+      if (body.source) tags.push(`Source: ${body.source}`);
+      if (body.market) tags.push(`Market: ${body.market}`);
+      if (body.buildingName) tags.push(`Building: ${body.buildingName}`);
+
+      const existing = await findClientByEmail(repliers, email);
+      if (existing) {
+        await updateClient(repliers, existing.clientId, {
+          fname,
+          lname,
+          phone: phoneNormalized,
+          tags,
+        });
+      } else {
+        await createClient(repliers, {
+          agentId: repliers.agentId,
+          fname,
+          lname,
+          email,
+          phone: phoneNormalized,
+          tags,
+          externalId: subscriberHash,
+        });
+      }
+    } catch (err) {
+      console.error('Repliers lead sync error:', err);
+      // Do not return error to user; Mailchimp capture succeeded.
     }
   }
 
