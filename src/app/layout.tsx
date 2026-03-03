@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/next';
+import { ClerkProvider } from '@clerk/nextjs';
 import { SiteHeader } from '@/layout/SiteHeader';
 import { SiteFooter } from '@/layout/SiteFooter';
 import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE } from '@/config/site';
@@ -48,16 +49,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
-        {GA_MEASUREMENT_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="ga4-init" strategy="afterInteractive">
-              {`
+    <ClerkProvider>
+      <html lang="en">
+        <body>
+          {GA_MEASUREMENT_ID && (
+            <>
+              <Script
+                src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+                strategy="afterInteractive"
+              />
+              <Script id="ga4-init" strategy="afterInteractive">
+                {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
@@ -66,19 +68,20 @@ export default function RootLayout({
                   send_page_view: true,
                 });
               `}
-            </Script>
-          </>
-        )}
-        <a href="#main-content" className="skip-link">
-          Skip to main content
-        </a>
-        <SiteHeader />
-        <div id="main-content" tabIndex={-1}>
-          {children}
-        </div>
-        <SiteFooter />
-        <Analytics />
-      </body>
-    </html>
+              </Script>
+            </>
+          )}
+          <a href="#main-content" className="skip-link">
+            Skip to main content
+          </a>
+          <SiteHeader />
+          <div id="main-content" tabIndex={-1}>
+            {children}
+          </div>
+          <SiteFooter />
+          <Analytics />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

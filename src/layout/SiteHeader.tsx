@@ -1,6 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from '@clerk/nextjs';
 import { useScrollState, useNavToggle } from '@/hooks/useScrollState';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -67,6 +73,24 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
+            <li>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button type="button" className="btn btn-ghost">
+                    Sign in
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      avatarBox: 'w-8 h-8',
+                    },
+                  }}
+                />
+              </SignedIn>
+            </li>
           </ul>
           <div className="nav-close-wrap">
             <button
