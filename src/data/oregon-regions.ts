@@ -35,7 +35,7 @@ export const oregonRegions: OregonRegion[] = [
     name: 'Oregon Coast',
     slug: 'oregon-coast',
     description: 'From Astoria to Brookings. Clatsop, Columbia, Lincoln, Tillamook, Coos, and Curry counties.',
-    imageSrc: `${M}/pdx_skyline_2.jpeg`,
+    imageSrc: `${M}/AdobeStock_60907024.jpeg`,
     imageAlt: 'Oregon coast',
     countySlugs: ['clatsop', 'columbia', 'lincoln', 'tillamook', 'coos', 'curry'],
   },

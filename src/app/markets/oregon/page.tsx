@@ -45,7 +45,7 @@ export default function OregonMarketsPage() {
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Explore by region</p>
             <h2 id="regions-heading" className="section-title">
-              Oregon regions
+              Explore Oregon
             </h2>
             <p className="section-lead mx-auto">
               Click a region to see its counties and cities. We serve communities across the state.

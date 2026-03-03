@@ -12,12 +12,31 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image' },
 };
 
+const PILLARS = [
+  {
+    title: 'Local expertise',
+    text: 'Our brokers live and work in the communities they serve—no fly-in playbooks.',
+  },
+  {
+    title: 'Independent by design',
+    text: 'No franchise script. We advise with clarity and integrity, not corporate mandates.',
+  },
+  {
+    title: 'Client-first',
+    text: 'Your goals drive the strategy. We focus on outcomes that matter to you.',
+  },
+  {
+    title: 'Strategic focus',
+    text: 'Residential, condos, and investment property across Oregon and Washington.',
+  },
+];
+
 export default function AboutPage() {
   return (
-    <main>
+    <main className="about-page">
       <Hero
-        title="A local, independent real estate brokerage."
-        lead="We serve Oregon and Washington with experienced brokers across residential, condos, and investment property—no franchise, no corporate playbook."
+        title="Fiercely independent. Strategically driven."
+        lead="A Pacific Northwest real estate brokerage built on local expertise and a client-first approach. We serve Oregon and Washington—no franchise, no corporate playbook."
         variant="short"
         imageSrc={`${assetPaths.stock}/living.jpeg`}
         imageAlt="Living space in a Pacific Northwest home"
@@ -41,14 +60,24 @@ export default function AboutPage() {
           </header>
           <RevealSection className="stack--lg about-content">
             <p className="about-lead">
-              Brantley Christianson Real Estate is a local, independent real estate brokerage serving Oregon and Washington. We are not a national franchise—we are a Pacific Northwest firm built on local expertise and a client-first approach.
+              Brantley Christianson Real Estate is a local, independent brokerage serving Oregon and Washington. We are not a national franchise—we are a Pacific Northwest firm built on deep market knowledge and a commitment to exceptional service.
             </p>
+            <blockquote className="about-quote" cite="https://brantleychristianson.com">
+              <p className="about-quote__text">
+                Fiercely independent and strategically driven—we focus on what we do best: helping buyers and sellers navigate the Pacific Northwest with clarity, integrity, and results.
+              </p>
+            </blockquote>
             <p>
-              Our brokers live and work in the communities they serve: Portland metro, Southwest Washington (Vancouver, Clark County), the Oregon coast, Mt. Hood, and beyond. Licensed in Oregon, Washington, or both, they bring deep market knowledge and a commitment to exceptional service to every transaction.
+              Our brokers are licensed in Oregon, Washington, or both. They serve Portland metro, Southwest Washington (Vancouver, Clark County), the Oregon coast, Mt. Hood, the Willamette Valley, and beyond. Every transaction is guided by local expertise and a client-first approach.
             </p>
-            <p>
-              Fiercely independent and strategically driven, we focus on what we do best: helping buyers and sellers navigate the Pacific Northwest real estate market with clarity, integrity, and results.
-            </p>
+            <ul className="about-pillars" role="list">
+              {PILLARS.map((pillar) => (
+                <li key={pillar.title} className="about-pillar">
+                  <h3 className="about-pillar__title">{pillar.title}</h3>
+                  <p className="about-pillar__text">{pillar.text}</p>
+                </li>
+              ))}
+            </ul>
           </RevealSection>
         </div>
       </section>
@@ -61,7 +90,7 @@ export default function AboutPage() {
               Oregon & Washington
             </h2>
             <p className="section-lead mx-auto">
-              Portland metro and Southwest Washington dominate our service area. We also serve the Oregon coast and Mt. Hood.
+              From Portland and Vancouver to the coast, valley, and high desert. Explore the markets where our brokers live and work.
             </p>
           </header>
           <RevealSection className="text-center">
@@ -80,7 +109,7 @@ export default function AboutPage() {
               Our brokers
             </h2>
             <p className="section-lead mx-auto">
-              Licensed in Oregon and Washington. Local expertise, exceptional service.
+              Experienced agents who know their markets inside and out. Licensed in Oregon and Washington—ready to guide your next move.
             </p>
           </header>
           <RevealSection className="text-center">
@@ -97,7 +126,7 @@ export default function AboutPage() {
             Ready to work with us?
           </h2>
           <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Connect with a broker in your market.
+            Connect with a broker who knows your market.
           </p>
           <Button href="/contact" variant="white">
             Contact BCRE
