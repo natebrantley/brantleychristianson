@@ -4,26 +4,23 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
 import { oregonMarket } from '@/data/markets';
+import { oregonRegions } from '@/data/oregon-regions';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Oregon Real Estate',
   description:
-    'BCRE serves Portland metro, the Willamette Valley, the coast, Central and Eastern Oregon. Explore Oregon counties and cities and connect with a local broker.',
+    'BCRE serves Portland metro, the Willamette Valley, the coast, Central and Eastern Oregon. Explore Oregon regions and connect with a local broker.',
   openGraph: { url: '/markets/oregon' },
   twitter: { card: 'summary_large_image' },
 };
 
 export default function OregonMarketsPage() {
-  const counties = [...oregonMarket.counties].sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
-
   return (
     <main>
       <Hero
         title="Oregon"
-        lead="Portland metro, the Willamette Valley, the coast, Central and Eastern Oregon. Explore the Oregon counties and cities we serve."
+        lead="From Portland metro to the coast, valley, and high desert. Explore by region and find your community."
         variant="short"
         imageSrc={oregonMarket.imageSrc}
         imageAlt={oregonMarket.imageAlt}
@@ -37,7 +34,7 @@ export default function OregonMarketsPage() {
         </Button>
       </Hero>
 
-      <section className="section" aria-labelledby="counties-heading">
+      <section className="section" aria-labelledby="regions-heading">
         <div className="container stack--xl">
           <nav className="breadcrumb" aria-label="Breadcrumb">
             <ol className="breadcrumb-list">
@@ -46,26 +43,26 @@ export default function OregonMarketsPage() {
             </ol>
           </nav>
           <header className="stack--md text-center mx-auto">
-            <p className="section-tag">Counties we serve</p>
-            <h2 id="counties-heading" className="section-title">
-              {counties.length} {counties.length === 1 ? 'county' : 'counties'} in Oregon
+            <p className="section-tag">Explore by region</p>
+            <h2 id="regions-heading" className="section-title">
+              Oregon regions
             </h2>
             <p className="section-lead mx-auto">
-              From Portland metro to the coast, valley, and high desert. Click a county to see its cities and connect with a broker who knows the area.
+              Click a region to see its counties and cities. We serve communities across the state.
             </p>
           </header>
           <RevealSection>
             <ul className="city-stack" role="list">
-              {counties.map((county) => (
-                <li key={county.slug} className="city-stack__item">
+              {oregonRegions.map((region) => (
+                <li key={region.slug} className="city-stack__item">
                   <Link
-                    href={`/markets/oregon/${county.slug}`}
+                    href={`/markets/oregon/region/${region.slug}`}
                     className="city-stack__link"
                   >
                     <span className="city-stack__media">
                       <Image
-                        src={county.imageSrc}
-                        alt={county.imageAlt}
+                        src={region.imageSrc}
+                        alt={region.imageAlt}
                         fill
                         sizes="(min-width: 768px) 380px, 100vw"
                         className="city-stack__img"
@@ -73,9 +70,9 @@ export default function OregonMarketsPage() {
                       <span className="city-stack__overlay" aria-hidden />
                     </span>
                     <span className="city-stack__content">
-                      <span className="city-stack__title">{county.name}</span>
-                      <span className="city-stack__tagline">{county.description}</span>
-                      <span className="city-stack__cta" aria-hidden>View cities →</span>
+                      <span className="city-stack__title">{region.name}</span>
+                      <span className="city-stack__tagline">{region.description}</span>
+                      <span className="city-stack__cta" aria-hidden>Explore region →</span>
                     </span>
                   </Link>
                 </li>
@@ -110,7 +107,7 @@ export default function OregonMarketsPage() {
             Ready to find your place in Oregon?
           </h2>
           <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Connect with a BCRE broker in your county.
+            Connect with a BCRE broker in your region.
           </p>
           <Button href="/contact" variant="white">
             Get in touch
