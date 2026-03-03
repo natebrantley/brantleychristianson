@@ -7,12 +7,23 @@ import { oregonMarket } from '@/data/markets';
 import { oregonRegions } from '@/data/oregon-regions';
 import type { Metadata } from 'next';
 
+const title = 'Oregon Real Estate';
+const description =
+  'BCRE serves Portland metro, the Willamette Valley, the coast, Central and Eastern Oregon. Explore Oregon regions and connect with a local broker.';
+
 export const metadata: Metadata = {
-  title: 'Oregon Real Estate',
-  description:
-    'BCRE serves Portland metro, the Willamette Valley, the coast, Central and Eastern Oregon. Explore Oregon regions and connect with a local broker.',
-  openGraph: { url: '/markets/oregon' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/markets/oregon',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 export default function OregonMarketsPage() {

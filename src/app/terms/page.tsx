@@ -3,12 +3,23 @@ import { Button } from '@/components/Button';
 import { assetPaths } from '@/config/theme';
 import type { Metadata } from 'next';
 
+const title = 'Terms of Use';
+const description =
+  'Terms of use for the Brantley Christianson Real Estate website and services.';
+
 export const metadata: Metadata = {
-  title: 'Terms of Use',
-  description:
-    'Terms of use for the Brantley Christianson Real Estate website and services.',
-  openGraph: { url: '/terms' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/terms',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 export default function TermsPage() {

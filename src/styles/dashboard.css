@@ -1,0 +1,161 @@
+/* Dashboard sections: client & agent – uses existing tokens and card/stack patterns */
+
+.dashboard-section {
+  margin-top: var(--space-xxl);
+}
+
+.dashboard-section-header {
+  margin-bottom: var(--space-lg);
+}
+
+.dashboard-section-header .section-tag {
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-section-header .section-title {
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-section-header .section-lead {
+  margin-bottom: 0;
+  font-size: 0.9375rem;
+}
+
+/* Content cards in dashboard need internal padding when used as info blocks */
+.dashboard-section .card {
+  padding: var(--space-lg);
+}
+
+.dashboard-section .card h2,
+.dashboard-section .card h3 {
+  font-family: var(--font-headings);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem;
+}
+
+.dashboard-section .card p {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+
+.dashboard-section .card p:last-child {
+  margin-bottom: 0;
+}
+
+.dashboard-section .card + .card {
+  margin-top: var(--space-md);
+}
+
+/* Stat or metric block for agent dashboard */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: var(--space-md);
+}
+
+@media (min-width: 640px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.dashboard-stat {
+  background: var(--theme-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+}
+
+.dashboard-stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 600;
+  color: var(--color-accent);
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-stat-label {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+/* Empty state – centered message and CTA */
+.empty-state {
+  text-align: center;
+  padding: var(--space-xl) var(--space-lg);
+  background: var(--theme-surface-muted);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.empty-state p {
+  margin: 0 0 var(--space-md);
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  max-width: 36ch;
+  margin-inline: auto;
+}
+
+.empty-state .button {
+  margin-top: 0.25rem;
+}
+
+/* Dashboard card grid for lists (e.g. saved homes, leads) */
+.dashboard-card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .dashboard-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  }
+}
+
+.dashboard-card {
+  background: var(--theme-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-lg);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.35s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo);
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.dashboard-card-title {
+  font-family: var(--font-headings);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 0.25rem;
+}
+
+.dashboard-card-meta {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+/* Quick actions row */
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}

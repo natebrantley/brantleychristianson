@@ -16,6 +16,7 @@
 @import './featured-listing.css';
 @import './markets.css';
 @import './portland-market.css';
+@import './dashboard.css';
 
 *,
 *::before,
@@ -397,4 +398,80 @@ a:hover {
 }
 .not-found-link--text:hover {
   color: var(--color-primary);
+}
+
+/* Global loading & skeleton states */
+.loading-shell {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+}
+
+.loading-shell__inner {
+  width: 100%;
+}
+
+.loading-shell__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+@media (min-width: 768px) {
+  .loading-shell__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--theme-surface-muted);
+}
+
+.skeleton--pill {
+  width: 120px;
+  height: 0.75rem;
+  border-radius: 999px;
+}
+
+.skeleton--title {
+  width: min(24rem, 100%);
+  height: 1.75rem;
+  margin-top: var(--space-sm);
+}
+
+.skeleton--text {
+  width: min(36rem, 100%);
+  height: 0.9rem;
+  margin-top: var(--space-sm);
+}
+
+.skeleton--card {
+  height: 160px;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(var(--color-accent-rgb), 0.12) 40%,
+    transparent 80%
+  );
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }

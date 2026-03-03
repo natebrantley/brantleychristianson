@@ -3,12 +3,23 @@ import { Button } from '@/components/Button';
 import { assetPaths } from '@/config/theme';
 import type { Metadata } from 'next';
 
+const title = 'Privacy Policy';
+const description =
+  'Privacy policy for Brantley Christianson Real Estate. How we collect, use, and protect your information.';
+
 export const metadata: Metadata = {
-  title: 'Privacy Policy',
-  description:
-    'Privacy policy for Brantley Christianson Real Estate. How we collect, use, and protect your information.',
-  openGraph: { url: '/privacy' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/privacy',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 export default function PrivacyPage() {

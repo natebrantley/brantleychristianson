@@ -41,12 +41,23 @@ const SOCIAL_LINKS = [
   },
 ].filter((s) => s.href);
 
+const title = 'Connect on Social';
+const description =
+  'Follow Brantley Christianson Real Estate on Instagram, Facebook, LinkedIn, and YouTube for listings, market insights, broker stories, and featured video tours.';
+
 export const metadata: Metadata = {
-  title: 'Connect on Social',
-  description:
-    'Follow Brantley Christianson Real Estate on Instagram, Facebook, LinkedIn, and YouTube for listings, market insights, broker stories, and featured video tours.',
-  openGraph: { url: '/social' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/social',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 export default function SocialPage() {

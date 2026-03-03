@@ -4,15 +4,27 @@ import { Button } from '@/components/Button';
 import { PortlandCondoGuideList } from '@/components/PortlandCondoGuideList';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
+import { SITE_URL } from '@/config/site';
 import { portlandCondoGuide } from '@/data/portland-condo-guide';
 import type { Metadata } from 'next';
 
+const title = '2026 Portland Condo Guide';
+const description =
+  'BCRE’s 2026 Portland condo guide. Compare buildings by neighborhood, median price, HOA, and more. Pearl District, Downtown, South Waterfront, East Portland.';
+
 export const metadata: Metadata = {
-  title: '2026 Portland Condo Guide',
-  description:
-    'BCRE’s 2026 Portland condo guide. Compare buildings by neighborhood, median price, HOA, and more. Pearl District, Downtown, South Waterfront, East Portland.',
-  openGraph: { url: '/resources/portland-condo-guide' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/resources/portland-condo-guide',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 export default function PortlandCondoGuidePage() {
@@ -22,11 +34,11 @@ export default function PortlandCondoGuidePage() {
     name: '2026 Portland Condo Guide',
     description:
       'Dataset of Portland condominium buildings with median prices, HOA fees, rent caps, amenities, and more.',
-    url: 'https://brantleychristianson.com/resources/portland-condo-guide',
+    url: `${SITE_URL}/resources/portland-condo-guide`,
     creator: {
       '@type': 'Organization',
       name: 'Brantley Christianson Real Estate',
-      url: 'https://brantleychristianson.com',
+      url: SITE_URL,
     },
     spatialCoverage: {
       '@type': 'Place',

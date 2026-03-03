@@ -12,6 +12,8 @@ export default function SignInPage() {
             card: 'shadow-lg border border-slate-200',
           },
         }}
+        afterSignInUrl="/dashboard"
+        afterSignUpUrl="/dashboard"
       />
     </div>
   );

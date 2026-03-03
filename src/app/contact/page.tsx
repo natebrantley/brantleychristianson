@@ -2,14 +2,26 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { ConsultationForm } from '@/components/ConsultationForm';
 import { assetPaths } from '@/config/theme';
+import { SITE_URL } from '@/config/site';
 import type { Metadata } from 'next';
 
+const title = 'Request a Consultation';
+const description =
+  'Get a tailored real estate or market consultation. Tell us your goals—buying, selling, or learning the market—and we’ll connect you with a BCRE broker in Oregon or Washington.';
+
 export const metadata: Metadata = {
-  title: 'Request a Consultation',
-  description:
-    'Get a tailored real estate or market consultation. Tell us your goals—buying, selling, or learning the market—and we’ll connect you with a BCRE broker in Oregon or Washington.',
-  openGraph: { url: '/contact' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/contact',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 const contactJsonLd = {
@@ -17,11 +29,11 @@ const contactJsonLd = {
   '@type': 'ContactPage',
   name: 'Request a Consultation',
   description: 'Get in touch with Brantley Christianson Real Estate for a tailored consultation.',
-  url: 'https://brantleychristianson.com/contact',
+  url: `${SITE_URL}/contact`,
   mainEntity: {
     '@type': 'RealEstateAgent',
     name: 'Brantley Christianson Real Estate',
-    url: 'https://brantleychristianson.com',
+    url: SITE_URL,
     areaServed: [{ '@type': 'State', name: 'Oregon' }, { '@type': 'State', name: 'Washington' }],
   },
 };

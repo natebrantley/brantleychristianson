@@ -14,12 +14,23 @@ const hubItems = allMarkets.map((m) => ({
   imageAlt: m.imageAlt,
 }));
 
+const title = 'Our Markets';
+const description =
+  'BCRE serves Oregon and Washington: Portland metro (Multnomah, Washington, Clackamas), SW Washington (Clark, Cowlitz), and beyond. Find your community.';
+
 export const metadata: Metadata = {
-  title: 'Our Markets',
-  description:
-    'BCRE serves Oregon and Washington: Portland metro (Multnomah, Washington, Clackamas), SW Washington (Clark, Cowlitz), and beyond. Find your community.',
-  openGraph: { url: '/markets' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/markets',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 export default function MarketsIndexPage() {

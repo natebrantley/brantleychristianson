@@ -5,6 +5,7 @@ import { IntelligenceHubs } from '@/components/IntelligenceHubs';
 import { RevealSection } from '@/components/RevealSection';
 import { LazyYouTube } from '@/components/LazyYouTube';
 import { assetPaths } from '@/config/theme';
+import { SITE_URL } from '@/config/site';
 import type { Metadata } from 'next';
 
 const MARKETS = [
@@ -46,7 +47,7 @@ export default function HomePage() {
     '@type': 'RealEstateAgent',
     name: 'Brantley Christianson Real Estate',
     description: 'Fiercely Independent, Strategically Driven. Luxury real estate in the Pacific Northwest.',
-    url: 'https://brantleychristianson.com',
+    url: SITE_URL,
   };
 
   return (

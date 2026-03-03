@@ -167,6 +167,9 @@
   .site-nav .nav-list li:last-child {
     border-bottom: none;
   }
+  .site-nav .nav-list .nav-signin-item {
+    padding: var(--space-lg) var(--space-md);
+  }
   .site-nav .nav-list a {
     display: block;
     width: 100%;
@@ -176,6 +179,12 @@
     text-align: center;
     min-height: 48px;
     box-sizing: border-box;
+  }
+  .site-nav .nav-list .nav-signin-btn {
+    display: block;
+    width: 100%;
+    max-width: 220px;
+    margin-inline: auto;
   }
   .nav-close-wrap {
     margin-top: var(--space-xl);

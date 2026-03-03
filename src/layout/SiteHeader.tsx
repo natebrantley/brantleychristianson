@@ -73,10 +73,20 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
-            <li>
+            <SignedIn>
+              <li>
+                <Link href="/dashboard" onClick={close}>
+                  Dashboard
+                </Link>
+              </li>
+            </SignedIn>
+            <li className="nav-signin-item">
               <SignedOut>
-                <SignInButton mode="modal">
-                  <button type="button" className="btn btn-ghost">
+                <SignInButton mode="modal" afterSignInUrl="/dashboard" afterSignUpUrl="/dashboard">
+                  <button
+                    type="button"
+                    className="btn btn-primary nav-signin-btn w-full md:btn-ghost md:w-auto"
+                  >
                     Sign in
                   </button>
                 </SignInButton>

@@ -5,12 +5,23 @@ import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
 import type { Metadata } from 'next';
 
+const title = 'Resources';
+const description =
+  'Guides on buying and selling condos, evaluating HOAs and rent caps, and understanding Portland and Pacific Northwest condo markets. From BCRE.';
+
 export const metadata: Metadata = {
-  title: 'Resources',
-  description:
-    'Guides on buying and selling condos, evaluating HOAs and rent caps, and understanding Portland and Pacific Northwest condo markets. From BCRE.',
-  openGraph: { url: '/resources' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/resources',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 export default function ResourcesPage() {

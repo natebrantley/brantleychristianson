@@ -6,12 +6,23 @@ import { agents } from '@/data/agents';
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 
+const title = 'Our Brokers';
+const description =
+  'Meet the BCRE team. Licensed in Oregon and Washington. Portland metro, SW Washington, the coast & Mt. Hood. Connect with a broker who knows your market.';
+
 export const metadata: Metadata = {
-  title: 'Our Brokers',
-  description:
-    'Meet the BCRE team. Licensed in Oregon and Washington. Portland metro, SW Washington, the coast & Mt. Hood. Connect with a broker who knows your market.',
-  openGraph: { url: '/brokers' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/brokers',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 export default function BrokersPage() {

@@ -6,12 +6,23 @@ import { RevealSection } from '@/components/RevealSection';
 import { washingtonMarket } from '@/data/markets';
 import type { Metadata } from 'next';
 
+const title = 'Washington Real Estate';
+const description =
+  'BCRE serves Clark and Cowlitz counties—Vancouver, Camas, Longview, Kelso, and Southwest Washington. Local expertise across the Portland-Vancouver metro.';
+
 export const metadata: Metadata = {
-  title: 'Washington Real Estate',
-  description:
-    'BCRE serves Clark and Cowlitz counties—Vancouver, Camas, Longview, Kelso, and Southwest Washington. Local expertise across the Portland-Vancouver metro.',
-  openGraph: { url: '/markets/washington' },
-  twitter: { card: 'summary_large_image' },
+  title,
+  description,
+  openGraph: {
+    url: '/markets/washington',
+    title,
+    description,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 };
 
 export default function WashingtonMarketsPage() {
