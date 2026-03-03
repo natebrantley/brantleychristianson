@@ -1,8 +1,8 @@
 import { auth } from '@clerk/nextjs/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl: string = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+const supabaseAnonKey: string = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl) {
@@ -20,7 +20,7 @@ export async function createClerkSupabaseClient(): Promise<SupabaseClient> {
     throw new Error('createClerkSupabaseClient must not be used in client-side components.');
   }
 
-  const { getToken } = auth();
+  const { getToken } = await auth();
   const token = await getToken();
 
   if (!token) {
@@ -53,7 +53,7 @@ export function supabaseAdmin(): SupabaseClient {
   }
 
   if (!cachedAdminClient) {
-    cachedAdminClient = createClient(supabaseUrl, supabaseServiceRoleKey);
+    cachedAdminClient = createClient(supabaseUrl, supabaseServiceRoleKey as string);
   }
 
   return cachedAdminClient;

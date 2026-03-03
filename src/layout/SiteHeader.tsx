@@ -82,7 +82,7 @@ export function SiteHeader() {
             </SignedIn>
             <li className="nav-signin-item">
               <SignedOut>
-                <SignInButton mode="modal" afterSignInUrl="/dashboard" afterSignUpUrl="/dashboard">
+                <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
                   <button
                     type="button"
                     className="btn btn-primary nav-signin-btn w-full md:btn-ghost md:w-auto"

@@ -6,7 +6,7 @@ import { isBrokerRole } from '@/lib/roles';
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardRouterPage() {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     redirect('/sign-in');

@@ -7,7 +7,7 @@ import { Button } from '@/components/Button';
 export const dynamic = 'force-dynamic';
 
 export default async function AgentsDashboardPage() {
-  const { userId } = auth();
+  const { userId } = await auth();
 
   if (!userId) {
     redirect('/sign-in');
