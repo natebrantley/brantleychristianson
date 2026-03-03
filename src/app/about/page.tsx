@@ -20,7 +20,7 @@ export default function AboutPage() {
         lead="We serve Oregon and Washington with experienced brokers across residential, condos, and investment property—no franchise, no corporate playbook."
         variant="short"
         imageSrc={`${assetPaths.stock}/living.jpeg`}
-        imageAlt=""
+        imageAlt="Living space in a Pacific Northwest home"
         priority
       >
         <Button href="/contact" variant="white">

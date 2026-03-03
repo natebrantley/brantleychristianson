@@ -217,6 +217,28 @@ a:hover {
   border: 0;
 }
 
+/* Skip link: visible on focus for keyboard users */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-accent);
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-decoration: none;
+  border-radius: 0 0 var(--radius-md) 0;
+  transform: translateY(-100%);
+  transition: transform 0.2s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .reveal-item {
   opacity: 0;
   transform: translateY(24px);

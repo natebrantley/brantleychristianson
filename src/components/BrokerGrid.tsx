@@ -33,7 +33,7 @@ export function BrokerGrid({
               <span className="broker-card-image-wrap">
                 <Image
                   src={agent.image}
-                  alt=""
+                  alt={`${agent.name}, ${agent.title}`}
                   width={img.width}
                   height={img.height}
                   sizes={img.sizes}

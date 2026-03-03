@@ -68,8 +68,13 @@ export default function RootLayout({
             </Script>
           </>
         )}
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <SiteHeader />
-        {children}
+        <div id="main-content" tabIndex={-1}>
+          {children}
+        </div>
         <SiteFooter />
       </body>
     </html>

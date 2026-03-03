@@ -28,13 +28,9 @@ export default function Error({
         <Button href="/" variant="white">
           Back to home
         </Button>
-        <button
-          type="button"
-          className="button button--outline"
-          onClick={() => reset()}
-        >
+        <Button variant="outline" onClick={() => reset()}>
           Try again
-        </button>
+        </Button>
       </Hero>
     </main>
   );

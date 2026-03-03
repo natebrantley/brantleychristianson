@@ -22,12 +22,21 @@
   margin-bottom: var(--space-xl);
 }
 
+.featured-listing__video-wrap > div {
+  position: absolute;
+  inset: 0;
+}
+
 .featured-listing__video {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   border: none;
+}
+
+.featured-listing__video-placeholder {
+  background: var(--color-primary);
 }
 
 .featured-listing__content {

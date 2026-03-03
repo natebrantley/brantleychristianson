@@ -39,7 +39,7 @@ export default function ContactPage() {
         lead="Tell us whether you’re buying, selling, or just learning the market. We’ll connect you with a broker who fits your goals."
         variant="short"
         imageSrc={`${assetPaths.stock}/couch.jpeg`}
-        imageAlt=""
+        imageAlt="Living room"
         priority
       >
         <Button href="#consultation" variant="white">

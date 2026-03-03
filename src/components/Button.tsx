@@ -14,6 +14,7 @@ export interface ButtonProps {
   'aria-label'?: string;
   target?: string;
   rel?: string;
+  onClick?: () => void;
 }
 
 export function Button({
@@ -26,6 +27,7 @@ export function Button({
   'aria-label': ariaLabel,
   target,
   rel,
+  onClick,
 }: ButtonProps) {
   const variantClass = `button--${variant}`;
   const classes = ['button', variantClass, className].filter(Boolean).join(' ');
@@ -44,6 +46,7 @@ export function Button({
       className={classes}
       disabled={disabled}
       aria-label={ariaLabel}
+      onClick={onClick}
     >
       {children}
     </button>

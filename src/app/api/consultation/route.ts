@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { getClientIp, isRateLimited } from '@/lib/rateLimit';
 
 interface ConsultationRequestBody {
   name?: string;
@@ -30,6 +31,14 @@ export async function POST(request: NextRequest) {
           "We're unable to process your request right now. Please try again later or email us directly at info@brantleychristianson.com.",
       },
       { status: 500 }
+    );
+  }
+
+  const clientIp = getClientIp(request);
+  if (isRateLimited(`consultation:${clientIp}`)) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again in 15 minutes.' },
+      { status: 429 }
     );
   }
 

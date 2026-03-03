@@ -11,7 +11,7 @@ export default function NotFound() {
         lead="If you landed here by clicking a link in an older email from us, thank you for reaching out. We’ve upgraded our platform, and some links from our previous system no longer work. We appreciate your patience as we roll out full functionality."
         variant="short"
         imageSrc={`${assetPaths.stock}/couch.jpeg`}
-        imageAlt=""
+        imageAlt="Living room"
         priority={false}
       >
         <Button href="/contact" variant="white">

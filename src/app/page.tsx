@@ -4,6 +4,7 @@ import { Button } from '@/components/Button';
 import { IntelligenceHubs } from '@/components/IntelligenceHubs';
 import { BrokerGrid } from '@/components/BrokerGrid';
 import { RevealSection } from '@/components/RevealSection';
+import { LazyYouTube } from '@/components/LazyYouTube';
 import { assetPaths } from '@/config/theme';
 import { agents } from '@/data/agents';
 import type { Metadata } from 'next';
@@ -62,7 +63,7 @@ export default function HomePage() {
           lead="A fiercely independent Pacific Northwest brokerage helping you compare properties, understand the market, and move with confidence."
           variant="short"
           imageSrc={`${assetPaths.stock}/kitchen.jpeg`}
-          imageAlt=""
+          imageAlt="Modern kitchen in a Pacific Northwest home"
           priority
         >
           <Button href="/markets" variant="white">
@@ -91,12 +92,9 @@ export default function HomePage() {
             </header>
             <article className="featured-listing__article">
               <div className="featured-listing__video-wrap">
-                <iframe
-                  src="https://www.youtube.com/embed/tudKYUYCZfs"
+                <LazyYouTube
+                  videoId="tudKYUYCZfs"
                   title="Featured listing – Camas School District residence"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="featured-listing__video"
                 />
               </div>
               <div className="featured-listing__content">
