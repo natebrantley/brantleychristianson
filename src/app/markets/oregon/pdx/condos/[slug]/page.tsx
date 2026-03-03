@@ -6,7 +6,7 @@ import { CondoMapSection } from '@/components/CondoMapSection';
 import { WalkScoreSection } from '@/components/WalkScoreSection';
 import { ConsultationForm } from '@/components/ConsultationForm';
 import { CondoImageWithFallback } from '@/components/CondoImageWithFallback';
-import { assetPaths } from '@/config/theme';
+import { CONDO_FALLBACK_IMAGE } from '@/config/theme';
 import {
   getCondoBySlug,
   getCondoSlugs,
@@ -227,8 +227,8 @@ export default async function CondoBuildingPage({ params }: PageProps) {
         title={condo.name}
         lead={`${condo.neighborhood} · ${condo.address}`}
         variant="condo"
-        imageSrc={condo.image}
-        imageFallbackSrc={`${assetPaths.stock}/living.jpeg`}
+        imageSrc={condo.image || CONDO_FALLBACK_IMAGE}
+        imageFallbackSrc={CONDO_FALLBACK_IMAGE}
         imageAlt={condo.name}
         priority
       >

@@ -1,8 +1,12 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
+import { PortlandMarketHighlights } from '@/components/portland/PortlandMarketHighlights';
+import { PortlandFinancingBreakdown } from '@/components/portland/PortlandFinancingBreakdown';
+import { PortlandNeighborhoodSpotlight } from '@/components/portland/PortlandNeighborhoodSpotlight';
 import {
   getCityBySlug,
   getAllCityPaths,
@@ -27,9 +31,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { city: cityData, county: countyData, state: stateMarket } = data;
   const lead = cityData.tagline
     ? `${cityData.tagline}. ${countyData.name}, ${stateMarket.name}.`
-    : `${countyData.name}, ${stateMarket.name} real estate.`;
+    : `${countyData.name}, ${stateMarket.name} Real Estate.`;
   const title = `${cityData.name} Real Estate | ${countyData.name}`;
-  const description = `${cityData.name} real estate. ${lead} Connect with a BCRE broker who knows the area.`;
+  const description = `${cityData.name} Real Estate. ${lead} Connect with a BCRE broker who knows the area.`;
   const url = `/markets/${state}/${county}/${city}`;
   return {
     title,
@@ -110,6 +114,12 @@ export default async function CityPage({ params }: PageProps) {
         </Button>
       </Hero>
 
+      {isPortland && (
+        <>
+          <PortlandMarketHighlights />
+        </>
+      )}
+
       {/* Breadcrumb */}
       <section className="section city-page-breadcrumb" aria-label="Breadcrumb">
         <div className="container">
@@ -136,7 +146,7 @@ export default async function CityPage({ params }: PageProps) {
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Local expertise</p>
             <h2 id="city-about-heading" className="section-title">
-              {cityData.name} real estate
+              {cityData.name} Real Estate
             </h2>
             <p className="section-lead mx-auto">
               {cityData.tagline && (
@@ -173,6 +183,13 @@ export default async function CityPage({ params }: PageProps) {
         </div>
       </section>
 
+      {isPortland && (
+        <>
+          <PortlandFinancingBreakdown />
+          <PortlandNeighborhoodSpotlight />
+        </>
+      )}
+
       {/* Other cities in this county */}
       {otherCities.length > 0 && (
         <section
@@ -197,12 +214,22 @@ export default async function CityPage({ params }: PageProps) {
                       href={`/markets/${state}/${county}/${c.slug}`}
                       className="city-card"
                     >
-                      <span className="city-card-name">{c.name}</span>
-                      {c.tagline && (
-                        <span className="city-card-tagline">{c.tagline}</span>
-                      )}
-                      <span className="city-card-arrow" aria-hidden>
-                        →
+                      <span className="city-card-image-wrap">
+                        <Image
+                          src={c.imageSrc}
+                          alt={c.imageAlt}
+                          fill
+                          sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                          className="city-card-img"
+                        />
+                        <span className="city-card-image-overlay" aria-hidden />
+                      </span>
+                      <span className="city-card-body">
+                        <span className="city-card-name">{c.name}</span>
+                        {c.tagline && (
+                          <span className="city-card-tagline">{c.tagline}</span>
+                        )}
+                        <span className="city-card-arrow" aria-hidden>→</span>
                       </span>
                     </Link>
                   </li>

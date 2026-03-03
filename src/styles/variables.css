@@ -44,6 +44,7 @@
   --surface-page: #f5f5f7;
   --surface-elevated: var(--color-light);
   --surface-muted: #eef1f5;
+  --surface-tinted: #eef1f5;
   --border-subtle: rgba(var(--color-primary-rgb), 0.06);
   --border-strong: rgba(var(--color-primary-rgb), 0.16);
 

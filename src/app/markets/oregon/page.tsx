@@ -16,7 +16,7 @@ const countyStackItems = oregonMarket.counties.map((c) => ({
 export const metadata: Metadata = {
   title: 'Oregon Real Estate',
   description:
-    'BCRE serves Multnomah, Washington, and Clackamas counties—Portland metro and surrounding Oregon communities. Explore cities and connect with a local broker.',
+    'BCRE serves Portland metro, the Willamette Valley, the coast, Central and Eastern Oregon. Explore Oregon counties and cities and connect with a local broker.',
   openGraph: { url: '/markets/oregon' },
   twitter: { card: 'summary_large_image' },
 };
@@ -26,7 +26,7 @@ export default function OregonMarketsPage() {
     <main>
       <Hero
         title="Oregon"
-        lead="Portland metro and beyond. We serve Multnomah, Washington, and Clackamas counties."
+        lead="Portland metro, the Willamette Valley, the coast, Central and Eastern Oregon. Explore the Oregon counties and cities we serve."
         variant="short"
         imageSrc={oregonMarket.imageSrc}
         imageAlt={oregonMarket.imageAlt}
@@ -45,10 +45,10 @@ export default function OregonMarketsPage() {
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Counties we serve</p>
             <h2 id="counties-heading" className="section-title">
-              Multnomah, Washington & Clackamas
+              Oregon counties & communities
             </h2>
             <p className="section-lead mx-auto">
-              Portland and the surrounding metro. Our brokers know these communities inside and out.
+              From Portland metro to the coast, valley, and high desert, explore Oregon counties and the cities where we work.
             </p>
           </header>
           <RevealSection>

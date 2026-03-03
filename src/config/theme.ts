@@ -59,6 +59,9 @@ export const assetPaths = {
   logos: '/media/img/logos',
 } as const;
 
+/** Default image when a condo building image is missing from /media/img/condos/ */
+export const CONDO_FALLBACK_IMAGE = `${assetPaths.stock}/living.jpeg`;
+
 export type StackGap = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 
 export const stackGapMap: Record<StackGap, string> = {

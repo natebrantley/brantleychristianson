@@ -2,6 +2,8 @@
 @media (max-width: 639px) {
   .condo-guide-section .container {
     padding-top: var(--space-md);
+    min-width: 0;
+    overflow-x: hidden;
   }
   .condo-guide-section .section-title {
     text-align: center;
@@ -43,14 +45,22 @@
 .condo-guide {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .condo-guide-intro {
   margin-bottom: var(--space-md);
-  padding: var(--space-md) var(--space-md) var(--space-sm);
+  padding: var(--space-md);
   border-radius: var(--radius-lg);
   background: var(--surface-tinted);
   border: 1px solid var(--border-subtle);
+  min-width: 0;
+}
+@media (max-width: 639px) {
+  .condo-guide-intro {
+    padding: var(--space-sm);
+  }
 }
 
 .condo-guide-intro-text {
@@ -84,6 +94,7 @@
   padding: var(--space-md) 0;
   border-bottom: 1px solid var(--border-subtle);
   text-align: center;
+  min-width: 0;
 }
 
 .condo-guide-legend-item {
@@ -106,6 +117,7 @@
   margin-bottom: var(--space-xl);
   padding: var(--space-md) 0;
   border-bottom: 1px solid var(--border-subtle);
+  min-width: 0;
 }
 
 .condo-guide-toolbar-group {
@@ -118,6 +130,8 @@
 .condo-guide-toolbar-group .condo-guide-select {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .condo-guide-count {
@@ -285,6 +299,7 @@
 .condo-guide-grid > li {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
 }
 
 .condo-guide-card {
@@ -299,8 +314,9 @@
 @media (max-width: 639px) {
   .condo-guide-card {
     border-radius: var(--radius-md);
-    max-width: 420px;
+    max-width: 100%;
     margin-inline: auto;
+    min-width: 0;
   }
 }
 .condo-guide-card:hover {
@@ -312,6 +328,7 @@
   display: block;
   text-decoration: none;
   color: inherit;
+  min-width: 0;
 }
 
 .condo-guide-card-image-wrap {
@@ -346,7 +363,8 @@
 }
 
 .condo-guide-card-body {
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-md);
+  min-width: 0;
 }
 @media (min-width: 640px) {
   .condo-guide-card-body {
@@ -415,6 +433,11 @@
   gap: var(--space-xs) var(--space-sm);
   margin: 0 0 var(--space-sm);
   font-size: 0.75rem;
+  min-width: 0;
+}
+.condo-guide-card-stats > div {
+  min-width: 0;
+  overflow: hidden;
 }
 @media (min-width: 380px) {
   .condo-guide-card-stats {
@@ -425,12 +448,15 @@
   color: var(--color-muted);
   font-weight: 500;
   margin: 0;
+  min-width: 0;
+  word-break: break-word;
 }
 .condo-guide-card-stats dd {
   font-weight: 700;
   color: var(--color-primary);
   margin: 0;
   word-break: break-word;
+  min-width: 0;
 }
 
 .condo-guide-card-amenities {

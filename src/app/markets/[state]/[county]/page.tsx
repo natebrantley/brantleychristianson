@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
@@ -120,11 +121,23 @@ export default async function CountyPage({ params }: PageProps) {
                     href={`/markets/${state}/${county}/${city.slug}`}
                     className="city-card"
                   >
-                    <span className="city-card-name">{city.name}</span>
-                    {city.tagline && (
-                      <span className="city-card-tagline">{city.tagline}</span>
-                    )}
-                    <span className="city-card-arrow" aria-hidden>→</span>
+                    <span className="city-card-image-wrap">
+                      <Image
+                        src={city.imageSrc}
+                        alt={city.imageAlt}
+                        fill
+                        sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                        className="city-card-img"
+                      />
+                      <span className="city-card-image-overlay" aria-hidden />
+                    </span>
+                    <span className="city-card-body">
+                      <span className="city-card-name">{city.name}</span>
+                      {city.tagline && (
+                        <span className="city-card-tagline">{city.tagline}</span>
+                      )}
+                      <span className="city-card-arrow" aria-hidden>→</span>
+                    </span>
                   </Link>
                 </li>
               ))}

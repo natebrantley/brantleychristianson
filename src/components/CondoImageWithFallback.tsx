@@ -2,9 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { assetPaths } from '@/config/theme';
-
-const DEFAULT_FALLBACK = `${assetPaths.stock}/living.jpeg`;
+import { CONDO_FALLBACK_IMAGE } from '@/config/theme';
 
 export interface CondoImageWithFallbackProps {
   src: string;
@@ -21,7 +19,7 @@ export interface CondoImageWithFallbackProps {
 export function CondoImageWithFallback({
   src,
   alt,
-  fallbackSrc = DEFAULT_FALLBACK,
+  fallbackSrc = CONDO_FALLBACK_IMAGE,
   fill,
   width,
   height,

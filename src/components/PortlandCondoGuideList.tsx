@@ -5,11 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { PortlandCondoEntry } from '@/data/portland-condo-guide-types';
 import { CONDITION_COLOR_LEGEND } from '@/data/portland-condo-guide-types';
-import { assetPaths } from '@/config/theme';
+import { CONDO_FALLBACK_IMAGE } from '@/config/theme';
 import { portlandCondoNeighborhoods } from '@/data/portland-condo-guide';
 import { trackEvent } from '@/lib/analytics';
-
-const STOCK_PLACEHOLDER = `${assetPaths.stock}/living.jpeg`;
 
 function CondoCardImage({
   src,
@@ -25,7 +23,7 @@ function CondoCardImage({
   className?: string;
 }) {
   const [useFallback, setUseFallback] = useState(false);
-  const effectiveSrc = !src || useFallback ? STOCK_PLACEHOLDER : src;
+  const effectiveSrc = !src || useFallback ? CONDO_FALLBACK_IMAGE : src;
   return (
     <Image
       src={effectiveSrc}
