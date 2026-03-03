@@ -62,6 +62,14 @@ export default function HomePage() {
           </Button>
         </Hero>
 
+        <div className="site-announcement" role="region" aria-label="Site announcement">
+          <div className="container site-announcement__inner">
+            <p className="site-announcement__text">
+              We&apos;re rolling out a new website—full functionality is on the way. Thanks for your patience.
+            </p>
+          </div>
+        </div>
+
         <section className="section section--alt featured-listing" aria-labelledby="featured-listing-heading">
           <div className="container stack--xl">
             <header className="stack--md text-center mx-auto">
