@@ -8,6 +8,7 @@ import {
   getStateBySlug,
   getAllCountyPaths,
 } from '@/data/markets';
+import type { Metadata } from 'next';
 
 interface PageProps {
   params: Promise<{ state: string; county: string }>;
@@ -17,14 +18,21 @@ export async function generateStaticParams() {
   return getAllCountyPaths();
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { state, county } = await params;
   const stateMarket = getStateBySlug(state);
   const countyData = getCountyBySlug(state, county);
-  if (!stateMarket || !countyData) return { title: 'Market | BCRE' };
+  if (!stateMarket || !countyData) {
+    return { title: 'Market | Brantley Christianson Real Estate' };
+  }
+  const title = `${countyData.name} Real Estate | ${stateMarket.name}`;
+  const description = `BCRE serves ${countyData.name}. Explore cities: ${countyData.cities.map((c) => c.name).join(', ')}. Connect with a local broker.`;
+  const url = `/markets/${state}/${county}`;
   return {
-    title: `${countyData.name} | ${stateMarket.name} | Brantley Christianson Real Estate`,
-    description: `BCRE serves ${countyData.name}. Explore cities: ${countyData.cities.map((c) => c.name).join(', ')}.`,
+    title,
+    description,
+    openGraph: { url, title, description },
+    twitter: { card: 'summary_large_image', title, description },
   };
 }
 

@@ -2,8 +2,22 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { assetPaths } from '@/config/theme';
 import { site } from '@/data/site';
+import type { Metadata } from 'next';
+
+/** Extract YouTube playlist ID from a playlist URL for embedding */
+function getYoutubePlaylistId(url: string): string | null {
+  const match = url?.match(/[?&]list=([^&]+)/);
+  return match ? match[1] : null;
+}
 
 const SOCIAL_LINKS = [
+  {
+    key: 'youtube',
+    label: 'YouTube',
+    href: site.social.youtube,
+    handle: '@brantleychristianson',
+    tagline: 'Featured listings, video walkthroughs, and condo tours.',
+  },
   {
     key: 'instagram',
     label: 'Instagram',
@@ -25,22 +39,19 @@ const SOCIAL_LINKS = [
     handle: '@natebrantley',
     tagline: 'Broker spotlights, market commentary, and company news.',
   },
-  {
-    key: 'youtube',
-    label: 'YouTube',
-    href: site.social.youtube,
-    handle: '@brantleychristianson',
-    tagline: 'Featured listings, video walkthroughs, and condo tours.',
-  },
 ].filter((s) => s.href);
 
-export const metadata = {
-  title: 'Social | Brantley Christianson Real Estate',
+export const metadata: Metadata = {
+  title: 'Connect on Social',
   description:
     'Follow Brantley Christianson Real Estate on Instagram, Facebook, LinkedIn, and YouTube for listings, market insights, broker stories, and featured video tours.',
+  openGraph: { url: '/social' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function SocialPage() {
+  const youtubePlaylistId = getYoutubePlaylistId(site.social.youtube ?? '');
+
   return (
     <main>
       <Hero
@@ -60,6 +71,45 @@ export default function SocialPage() {
           Request a consultation
         </Button>
       </Hero>
+
+      {youtubePlaylistId && (
+        <section
+          className="section section--alt social-youtube-featured"
+          aria-labelledby="youtube-playlist-heading"
+        >
+          <div className="container stack--xl">
+            <header className="stack--md text-center mx-auto social-youtube-featured__header">
+              <p className="section-tag">Featured</p>
+              <h2 id="youtube-playlist-heading" className="section-title">
+                Featured listings on YouTube
+              </h2>
+              <p className="section-lead mx-auto" style={{ maxWidth: '42ch' }}>
+                Video walkthroughs and condo tours from our brokers. Watch below or open the
+                playlist on YouTube.
+              </p>
+            </header>
+            <div className="social-youtube-featured__embed-wrap">
+              <iframe
+                src={`https://www.youtube.com/embed/videoseries?list=${youtubePlaylistId}`}
+                title="BCRE featured listings playlist on YouTube"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="social-youtube-featured__embed"
+              />
+            </div>
+            <p className="text-center">
+              <Button
+                href={site.social.youtube}
+                variant="primary"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Watch full playlist on YouTube
+              </Button>
+            </p>
+          </div>
+        </section>
+      )}
 
       <section className="section" aria-labelledby="social-heading">
         <div className="container stack--xl">

@@ -5,11 +5,14 @@ import { PortlandCondoGuideList } from '@/components/PortlandCondoGuideList';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
 import { portlandCondoGuide } from '@/data/portland-condo-guide';
+import type { Metadata } from 'next';
 
-export const metadata = {
-  title: '2026 Portland Condo Guide | Brantley Christianson Real Estate',
+export const metadata: Metadata = {
+  title: '2026 Portland Condo Guide',
   description:
     'BCRE’s 2026 Portland condo guide. Compare buildings by neighborhood, median price, HOA, and more. Pearl District, Downtown, South Waterfront, East Portland.',
+  openGraph: { url: '/resources/portland-condo-guide' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function PortlandCondoGuidePage() {

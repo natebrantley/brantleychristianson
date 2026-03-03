@@ -4,6 +4,7 @@ import { IntelligenceHubs } from '@/components/IntelligenceHubs';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
 import { allMarkets } from '@/data/markets';
+import type { Metadata } from 'next';
 
 const hubItems = allMarkets.map((m) => ({
   title: m.name,
@@ -13,10 +14,12 @@ const hubItems = allMarkets.map((m) => ({
   imageAlt: m.imageAlt,
 }));
 
-export const metadata = {
-  title: 'Our Markets | Brantley Christianson Real Estate',
+export const metadata: Metadata = {
+  title: 'Our Markets',
   description:
-    'BCRE serves Oregon and Washington: Portland metro (Multnomah, Washington, Clackamas), SW Washington (Clark, Cowlitz), and beyond.',
+    'BCRE serves Oregon and Washington: Portland metro (Multnomah, Washington, Clackamas), SW Washington (Clark, Cowlitz), and beyond. Find your community.',
+  openGraph: { url: '/markets' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function MarketsIndexPage() {

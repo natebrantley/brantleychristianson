@@ -1,10 +1,11 @@
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
-import { IntelligenceHubs } from '@/components/IntelligenceHubs';
+import { MarketStack } from '@/components/MarketStack';
 import { RevealSection } from '@/components/RevealSection';
 import { washingtonMarket } from '@/data/markets';
+import type { Metadata } from 'next';
 
-const countyHubs = washingtonMarket.counties.map((c) => ({
+const countyStackItems = washingtonMarket.counties.map((c) => ({
   title: c.name,
   description: c.description,
   href: `/markets/washington/${c.slug}`,
@@ -12,10 +13,12 @@ const countyHubs = washingtonMarket.counties.map((c) => ({
   imageAlt: c.imageAlt,
 }));
 
-export const metadata = {
-  title: 'Washington Markets | Brantley Christianson Real Estate',
+export const metadata: Metadata = {
+  title: 'Washington Real Estate',
   description:
-    'BCRE serves Clark and Cowlitz counties—Vancouver, Camas, Longview, Kelso, and Southwest Washington.',
+    'BCRE serves Clark and Cowlitz counties—Vancouver, Camas, Longview, Kelso, and Southwest Washington. Local expertise across the Portland-Vancouver metro.',
+  openGraph: { url: '/markets/washington' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function WashingtonMarketsPage() {
@@ -49,7 +52,7 @@ export default function WashingtonMarketsPage() {
             </p>
           </header>
           <RevealSection>
-            <IntelligenceHubs hubs={countyHubs} />
+            <MarketStack items={countyStackItems} />
           </RevealSection>
         </div>
       </section>

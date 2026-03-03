@@ -6,6 +6,7 @@ import { BrokerGrid } from '@/components/BrokerGrid';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
 import { agents } from '@/data/agents';
+import type { Metadata } from 'next';
 
 const MARKETS = [
   {
@@ -24,10 +25,20 @@ const MARKETS = [
   },
 ];
 
-export const metadata = {
-  title: 'Brantley Christianson Real Estate | Pacific Northwest',
+export const metadata: Metadata = {
+  title: 'Pacific Northwest Real Estate',
   description:
-    'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington.',
+    'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington. Portland metro, SW Washington, coast & Mt. Hood.',
+  openGraph: {
+    url: '/',
+    title: 'Brantley Christianson Real Estate | Pacific Northwest Real Estate',
+    description: 'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Brantley Christianson Real Estate | Pacific Northwest Real Estate',
+    description: 'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington.',
+  },
 };
 
 export default function HomePage() {

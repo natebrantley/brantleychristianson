@@ -12,6 +12,8 @@ export interface ButtonProps {
   type?: 'button' | 'submit';
   disabled?: boolean;
   'aria-label'?: string;
+  target?: string;
+  rel?: string;
 }
 
 export function Button({
@@ -22,13 +24,15 @@ export function Button({
   type = 'button',
   disabled,
   'aria-label': ariaLabel,
+  target,
+  rel,
 }: ButtonProps) {
   const variantClass = `button--${variant}`;
   const classes = ['button', variantClass, className].filter(Boolean).join(' ');
 
   if (href) {
     return (
-      <Link href={href} className={classes} aria-label={ariaLabel}>
+      <Link href={href} className={classes} aria-label={ariaLabel} target={target} rel={rel}>
         {children}
       </Link>
     );

@@ -2,11 +2,14 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
+import type { Metadata } from 'next';
 
-export const metadata = {
-  title: 'About | Brantley Christianson Real Estate',
+export const metadata: Metadata = {
+  title: 'About Us',
   description:
-    'A local, independent real estate brokerage in Oregon and Washington. Fiercely independent, strategically driven.',
+    'A local, independent real estate brokerage in Oregon and Washington. Fiercely independent, strategically driven. Portland metro, SW Washington, coast & Mt. Hood.',
+  openGraph: { url: '/about' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function AboutPage() {

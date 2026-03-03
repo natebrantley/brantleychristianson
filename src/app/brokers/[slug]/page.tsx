@@ -4,6 +4,7 @@ import { Button } from '@/components/Button';
 import { agents, getAgentBySlug } from '@/data/agents';
 import { assetPaths } from '@/config/theme';
 import type { Agent } from '@/data/types';
+import type { Metadata } from 'next';
 
 interface BrokerPageProps {
   params: { slug: string };
@@ -35,6 +36,22 @@ function getNativeLanguageCta(agent: Agent) {
 
 export function generateStaticParams() {
   return agents.map((agent) => ({ slug: agent.slug }));
+}
+
+export async function generateMetadata({ params }: BrokerPageProps): Promise<Metadata> {
+  const agent = getAgentBySlug(params.slug);
+  if (!agent) {
+    return { title: 'Broker | Brantley Christianson Real Estate' };
+  }
+  const title = `${agent.name} | Real Estate Broker`;
+  const description = `${agent.name}, ${agent.title} at Brantley Christianson Real Estate. Licensed in ${agent.licenses.join(' and ')}. Connect for buying or selling in Oregon and Washington.`;
+  const url = `/brokers/${agent.slug}`;
+  return {
+    title,
+    description,
+    openGraph: { url, title, description },
+    twitter: { card: 'summary_large_image', title, description },
+  };
 }
 
 export default function BrokerProfilePage({ params }: BrokerPageProps) {

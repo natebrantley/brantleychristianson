@@ -8,6 +8,7 @@ import {
   getAllCityPaths,
   getOtherCitiesInCounty,
 } from '@/data/markets';
+import type { Metadata } from 'next';
 
 interface PageProps {
   params: Promise<{ state: string; county: string; city: string }>;
@@ -17,17 +18,24 @@ export async function generateStaticParams() {
   return getAllCityPaths();
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { state, county, city } = await params;
   const data = getCityBySlug(state, county, city);
-  if (!data) return { title: 'City | BCRE' };
+  if (!data) {
+    return { title: 'City | Brantley Christianson Real Estate' };
+  }
   const { city: cityData, county: countyData, state: stateMarket } = data;
   const lead = cityData.tagline
     ? `${cityData.tagline}. ${countyData.name}, ${stateMarket.name}.`
     : `${countyData.name}, ${stateMarket.name} real estate.`;
+  const title = `${cityData.name} Real Estate | ${countyData.name}`;
+  const description = `${cityData.name} real estate. ${lead} Connect with a BCRE broker who knows the area.`;
+  const url = `/markets/${state}/${county}/${city}`;
   return {
-    title: `${cityData.name} Real Estate | ${countyData.name} | BCRE`,
-    description: `${cityData.name} real estate. ${lead} Connect with a BCRE broker who knows the area.`,
+    title,
+    description,
+    openGraph: { url, title, description },
+    twitter: { card: 'summary_large_image', title, description },
   };
 }
 

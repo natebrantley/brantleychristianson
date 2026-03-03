@@ -2,15 +2,33 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { SiteHeader } from '@/layout/SiteHeader';
 import { SiteFooter } from '@/layout/SiteFooter';
+import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, DEFAULT_OG_IMAGE } from '@/config/site';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Brantley Christianson Real Estate | BCRE',
-  description:
-    'Fiercely Independent, Strategically Driven. Luxury real estate in the Pacific Northwest.',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: DEFAULT_DESCRIPTION,
   openGraph: {
-    title: 'Brantley Christianson Real Estate | BCRE',
-    description: 'Fiercely Independent, Strategically Driven. Luxury real estate in the Pacific Northwest.',
+    type: 'website',
+    locale: 'en_US',
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: DEFAULT_DESCRIPTION,
+    url: SITE_URL,
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_NAME,
+    description: DEFAULT_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

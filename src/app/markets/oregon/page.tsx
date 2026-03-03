@@ -1,10 +1,11 @@
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
-import { IntelligenceHubs } from '@/components/IntelligenceHubs';
+import { MarketStack } from '@/components/MarketStack';
 import { RevealSection } from '@/components/RevealSection';
 import { oregonMarket } from '@/data/markets';
+import type { Metadata } from 'next';
 
-const countyHubs = oregonMarket.counties.map((c) => ({
+const countyStackItems = oregonMarket.counties.map((c) => ({
   title: c.name,
   description: c.description,
   href: `/markets/oregon/${c.slug}`,
@@ -12,10 +13,12 @@ const countyHubs = oregonMarket.counties.map((c) => ({
   imageAlt: c.imageAlt,
 }));
 
-export const metadata = {
-  title: 'Oregon Markets | Brantley Christianson Real Estate',
+export const metadata: Metadata = {
+  title: 'Oregon Real Estate',
   description:
-    'BCRE serves Multnomah, Washington, and Clackamas counties—Portland metro and surrounding Oregon communities.',
+    'BCRE serves Multnomah, Washington, and Clackamas counties—Portland metro and surrounding Oregon communities. Explore cities and connect with a local broker.',
+  openGraph: { url: '/markets/oregon' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function OregonMarketsPage() {
@@ -49,7 +52,7 @@ export default function OregonMarketsPage() {
             </p>
           </header>
           <RevealSection>
-            <IntelligenceHubs hubs={countyHubs} />
+            <MarketStack items={countyStackItems} />
           </RevealSection>
         </div>
       </section>
@@ -59,7 +62,7 @@ export default function OregonMarketsPage() {
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Resource</p>
             <h2 id="condo-guide-heading" className="section-title">
-              Portland condos
+              2026 Portland Condo Guide
             </h2>
             <p className="section-lead mx-auto">
               Explore our data-driven guide to Portland condominium buildings.

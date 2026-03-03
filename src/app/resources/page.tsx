@@ -3,11 +3,14 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
+import type { Metadata } from 'next';
 
-export const metadata = {
-  title: 'Resources | Brantley Christianson Real Estate',
+export const metadata: Metadata = {
+  title: 'Resources',
   description:
-    'Guides on buying and selling condos, evaluating HOAs and rent caps, and understanding Portland and Pacific Northwest condo markets.',
+    'Guides on buying and selling condos, evaluating HOAs and rent caps, and understanding Portland and Pacific Northwest condo markets. From BCRE.',
+  openGraph: { url: '/resources' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function ResourcesPage() {

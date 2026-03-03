@@ -14,6 +14,7 @@ import {
 } from '@/data/portland-condo-guide';
 import type { PortlandCondoEntry } from '@/data/portland-condo-guide-types';
 import { CONDITION_COLOR_LEGEND } from '@/data/portland-condo-guide-types';
+import type { Metadata } from 'next';
 
 function formatPrice(n: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -41,13 +42,20 @@ export async function generateStaticParams() {
   return getCondoSlugs().map((slug) => ({ slug }));
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const condo = getCondoBySlug(slug);
-  if (!condo) return { title: 'Condo | BCRE' };
+  if (!condo) {
+    return { title: 'Portland Condos | Brantley Christianson Real Estate' };
+  }
+  const title = `${condo.name} Portland Condos | ${condo.neighborhood}`;
+  const description = `${condo.name} at ${condo.address}. ${condo.neighborhood}. Median price ${formatPrice(condo.medianPrice)}, HOA $${condo.averageMonthlyHoa}/mo. ${condo.stories} stories, built ${condo.yearBuilt}. Rent cap: ${condo.rentCap}. Portland condo guide data.`;
+  const url = `/markets/oregon/pdx/condos/${slug}`;
   return {
-    title: `${condo.name} Portland Condos | ${condo.neighborhood} | BCRE`,
-    description: `${condo.name} at ${condo.address}. ${condo.neighborhood}. Median price ${formatPrice(condo.medianPrice)}, HOA $${condo.averageMonthlyHoa}/mo. ${condo.stories} stories, built ${condo.yearBuilt}. Rent cap: ${condo.rentCap}. Portland condo guide data.`,
+    title,
+    description,
+    openGraph: { url, title, description },
+    twitter: { card: 'summary_large_image', title, description },
   };
 }
 

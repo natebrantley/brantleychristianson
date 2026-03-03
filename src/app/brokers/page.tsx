@@ -4,11 +4,14 @@ import { BrokersList } from '@/components/BrokersList';
 import { assetPaths } from '@/config/theme';
 import { agents } from '@/data/agents';
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
 
-export const metadata = {
-  title: 'Our Brokers | Brantley Christianson Real Estate',
+export const metadata: Metadata = {
+  title: 'Our Brokers',
   description:
-    'Meet the BCRE team. Licensed in Oregon and Washington. Portland metro, SW Washington, the coast & Mt. Hood.',
+    'Meet the BCRE team. Licensed in Oregon and Washington. Portland metro, SW Washington, the coast & Mt. Hood. Connect with a broker who knows your market.',
+  openGraph: { url: '/brokers' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function BrokersPage() {
