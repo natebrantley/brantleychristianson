@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title,
   description,
   openGraph: {
-    url: '/contact',
+    url: `${SITE_URL}/contact`,
     title,
     description,
   },

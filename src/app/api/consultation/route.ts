@@ -44,6 +44,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && parseInt(contentLength, 10) > 100_000) {
+    return NextResponse.json({ error: 'Request body too large' }, { status: 413 });
+  }
+
   let body: ConsultationRequestBody;
   try {
     body = await request.json();
@@ -52,12 +57,17 @@ export async function POST(request: NextRequest) {
   }
 
   const email = typeof body.email === 'string' ? body.email.trim() : '';
-  const name = typeof body.name === 'string' ? body.name.trim() : '';
-  const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
-  const message = typeof body.message === 'string' ? body.message.trim() : '';
+  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 200) : '';
+  const phone = typeof body.phone === 'string' ? body.phone.trim().slice(0, 50) : '';
+  const message = typeof body.message === 'string' ? body.message.trim().slice(0, 2000) : '';
 
   if (!email) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email) || email.length > 254) {
+    return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 });
   }
 
   const dc = apiKey.includes('-') ? apiKey.split('-').pop() : 'us2';
@@ -113,16 +123,11 @@ export async function POST(request: NextRequest) {
     }
 
     const tags: string[] = ['Consultation'];
-
-    if (body.source) {
-      tags.push(`Source: ${body.source}`);
-    }
-    if (body.market) {
-      tags.push(`Market: ${body.market}`);
-    }
-    if (body.buildingName) {
-      tags.push(`Building: ${body.buildingName}`);
-    }
+    const tagVal = (s: unknown, max = 100) =>
+      typeof s === 'string' ? s.trim().slice(0, max) : '';
+    if (tagVal(body.source)) tags.push(`Source: ${tagVal(body.source)}`);
+    if (tagVal(body.market)) tags.push(`Market: ${tagVal(body.market)}`);
+    if (tagVal(body.buildingName)) tags.push(`Building: ${tagVal(body.buildingName)}`);
 
     if (tags.length > 0) {
       const tagsUrl = `https://${dc}.api.mailchimp.com/3.0/lists/${audienceId}/members/${subscriberHash}/tags`;
