@@ -20,8 +20,8 @@ export default function ResourcesPage() {
         title="Condo & market resources for serious buyers and sellers."
         lead="Use our guides to compare buildings, understand HOAs and rent caps, and make better decisions in Portland and across the Pacific Northwest."
         variant="short"
-        imageSrc={`${assetPaths.stock}/library.jpeg`}
-        imageAlt=""
+        imageSrc={`${assetPaths.stock}/office.jpeg`}
+        imageAlt="Resources for condo and market research"
         priority
       >
         <Button href="/resources/portland-condo-guide" variant="white">

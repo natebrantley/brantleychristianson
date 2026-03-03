@@ -2,11 +2,9 @@ import { Hero } from '@/components/Hero';
 import Image from 'next/image';
 import { Button } from '@/components/Button';
 import { IntelligenceHubs } from '@/components/IntelligenceHubs';
-import { BrokerGrid } from '@/components/BrokerGrid';
 import { RevealSection } from '@/components/RevealSection';
 import { LazyYouTube } from '@/components/LazyYouTube';
 import { assetPaths } from '@/config/theme';
-import { agents } from '@/data/agents';
 import type { Metadata } from 'next';
 
 const MARKETS = [
@@ -186,30 +184,6 @@ export default function HomePage() {
               <Button href="/resources/portland-condo-guide" variant="outline">
                 View the 2026 Portland Condo Guide
               </Button>
-            </RevealSection>
-          </div>
-        </section>
-
-        <section className="section" aria-labelledby="team-heading">
-          <div className="container stack--xl">
-            <header className="stack--md text-center mx-auto">
-              <p className="section-tag">The team</p>
-              <h2 id="team-heading" className="section-title">
-                Our Brokers
-              </h2>
-              <p className="section-lead mx-auto">
-                Licensed in Oregon and Washington. Local expertise, exceptional service.
-              </p>
-            </header>
-            <RevealSection>
-              <div className="broker-grid-wrap broker-grid-wrap--home">
-                <BrokerGrid
-                  agents={agents}
-                  maxItems={8}
-                  showAllHref="/brokers"
-                  largeHeadshots
-                />
-              </div>
             </RevealSection>
           </div>
         </section>

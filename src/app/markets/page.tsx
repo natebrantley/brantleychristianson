@@ -30,7 +30,7 @@ export default function MarketsIndexPage() {
         lead="Oregon and Washington metro areas where we live and work. Start here to understand neighborhoods, counties, and real estate opportunities across our service area."
         variant="short"
         imageSrc={`${assetPaths.markets}/pdx_skyline_2.jpeg`}
-        imageAlt=""
+        imageAlt="Portland skyline and Oregon and Washington markets"
         priority
       >
         <Button href="/markets/oregon" variant="white">

@@ -47,7 +47,7 @@ export default function PortlandCondoGuidePage() {
         lead="Data-driven overview of Portland condominium buildings. Filter by neighborhood, sort by price or HOA."
         variant="short"
         imageSrc={`${assetPaths.markets}/pdx.jpeg`}
-        imageAlt=""
+        imageAlt="Portland skyline and condo buildings"
         priority
       >
         <Button href="/contact" variant="white">

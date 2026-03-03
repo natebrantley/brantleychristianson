@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
+import { assetPaths } from '@/config/theme';
 
 export default function Error({
   error,
@@ -23,6 +24,8 @@ export default function Error({
         title="Something went wrong."
         lead="An unexpected error occurred. You can try again, or head back to the home page."
         variant="short"
+        imageSrc={`${assetPaths.stock}/couch.jpeg`}
+        imageAlt="BCRE — return to home"
         priority={false}
       >
         <Button href="/" variant="white">

@@ -36,7 +36,7 @@ export function PortlandFinancingBreakdown() {
                 <circle
                   key={item.label}
                   className={`portland-financing__segment ${
-                    item.highlight ? 'portland-financing__segment--highlight' : ''
+                    'highlight' in item && item.highlight ? 'portland-financing__segment--highlight' : ''
                   }`}
                   cx="50"
                   cy="50"
@@ -60,7 +60,7 @@ export function PortlandFinancingBreakdown() {
             <li
               key={item.label}
               className={
-                item.highlight
+                'highlight' in item && item.highlight
                   ? 'portland-financing__legend-item portland-financing__legend-item--highlight'
                   : 'portland-financing__legend-item'
               }
@@ -69,7 +69,7 @@ export function PortlandFinancingBreakdown() {
                 className="portland-financing__legend-dot"
                 style={
                   {
-                    '--legend-color': item.highlight
+                    '--legend-color': 'highlight' in item && item.highlight
                       ? 'var(--color-accent)'
                       : 'var(--color-muted)',
                   } as React.CSSProperties

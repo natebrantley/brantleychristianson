@@ -22,7 +22,7 @@ export default function BrokersPage() {
         lead="Licensed in Oregon and Washington. Filter by location or language and find a broker who knows your markets, property types, and goals."
         variant="short"
         imageSrc={`${assetPaths.stock}/office.jpeg`}
-        imageAlt=""
+        imageAlt="BCRE brokers serving Oregon and Washington"
         priority
       >
         <Button href="/contact" variant="white">

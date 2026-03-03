@@ -85,7 +85,7 @@ export function PortlandMarketHighlights() {
                 <div className="portland-stat-card__content">
                   <span className="portland-stat-card__value">{card.value}</span>
                   <span className="portland-stat-card__label">{card.label}</span>
-                  {card.sub && (
+                  {'sub' in card && card.sub && (
                     <span className="portland-stat-card__sub">{card.sub}</span>
                   )}
                 </div>

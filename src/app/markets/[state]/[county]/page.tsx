@@ -46,7 +46,7 @@ export default async function CountyPage({ params }: PageProps) {
 
   const stateHref = `/markets/${state}`;
   const canonicalUrl = `https://brantleychristianson.com/markets/${state}/${county}`;
-  const cities = countyData.cities;
+  const cities = [...countyData.cities].sort((a, b) => a.name.localeCompare(b.name));
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',
@@ -114,29 +114,29 @@ export default async function CountyPage({ params }: PageProps) {
             </p>
           </header>
           <RevealSection>
-            <ul className="city-grid" role="list">
+            <ul className="city-stack" role="list">
               {cities.map((city) => (
-                <li key={city.slug}>
+                <li key={city.slug} className="city-stack__item">
                   <Link
                     href={`/markets/${state}/${county}/${city.slug}`}
-                    className="city-card"
+                    className="city-stack__link"
                   >
-                    <span className="city-card-image-wrap">
+                    <span className="city-stack__media">
                       <Image
                         src={city.imageSrc}
                         alt={city.imageAlt}
                         fill
-                        sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-                        className="city-card-img"
+                        sizes="(min-width: 768px) 380px, 100vw"
+                        className="city-stack__img"
                       />
-                      <span className="city-card-image-overlay" aria-hidden />
+                      <span className="city-stack__overlay" aria-hidden />
                     </span>
-                    <span className="city-card-body">
-                      <span className="city-card-name">{city.name}</span>
+                    <span className="city-stack__content">
+                      <span className="city-stack__title">{city.name}</span>
                       {city.tagline && (
-                        <span className="city-card-tagline">{city.tagline}</span>
+                        <span className="city-stack__tagline">{city.tagline}</span>
                       )}
-                      <span className="city-card-arrow" aria-hidden>→</span>
+                      <span className="city-stack__cta" aria-hidden>View city →</span>
                     </span>
                   </Link>
                 </li>

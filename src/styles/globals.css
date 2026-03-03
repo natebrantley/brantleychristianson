@@ -9,7 +9,6 @@
 @import './buttons.css';
 @import './hubs.css';
 @import './forms.css';
-@import './broker-grid.css';
 @import './contact.css';
 @import './brokers-page.css';
 @import './condo-guide.css';
@@ -244,6 +243,8 @@ a:hover {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+  display: block;
+  width: 100%;
 }
 .reveal-item.is-visible {
   opacity: 1;

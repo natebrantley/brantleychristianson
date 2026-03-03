@@ -1,119 +1,220 @@
-# Full Page Audit — Brantley Christianson Real Estate
+# Full Website Audit — Brantley Christianson Real Estate
 
-**Date:** March 2, 2026  
-**Scope:** Site-wide (Next.js 16 app, home, layout, key pages, components, API, SEO, a11y, performance, security)
-
----
-
-## Executive summary
-
-The site is in good shape: clear structure, semantic HTML, metadata and JSON-LD, accessible forms and navigation, and a solid design system. The main gaps are **missing Privacy/Terms pages** (linked in footer), **no skip link**, **empty hero image alts**, **API rate limiting**, and a few consistency and SEO tweaks. Below are findings by category with priority and suggested fixes.
+**Date:** March 2025  
+**Scope:** Structure, routes, components, data, styles, SEO, accessibility, and issues.
 
 ---
 
-## 1. Broken links & missing pages
+## 1. App structure & routes
 
-| Issue | Priority | Location | Fix |
-|-------|----------|----------|-----|
-| **Footer links to `/privacy` and `/terms`** but those routes do not exist. | **High** | `SiteFooter.tsx` | Add `src/app/privacy/page.tsx` and `src/app/terms/page.tsx`, or remove/update the links until pages exist. |
-| 404 and error pages exist and are well done. | — | `not-found.tsx`, `error.tsx` | No change. |
+### Directories (`src/app`)
 
-**Recommendation:** Either create placeholder (or real) Privacy and Terms pages, or change the footer to something like “Privacy & Terms (coming soon)” that does not link, or remove the links until ready.
+| Path | Purpose |
+|------|--------|
+| `/` | Root layout, home, error, not-found |
+| `about` | About the brokerage |
+| `api` | API routes (consultation) |
+| `brokers` | Brokers index + `[slug]` profile |
+| `contact` | Contact / consultation |
+| `markets` | Markets index; Oregon / Washington; `[state]/[county]/[city]`; Oregon PDX condos |
+| `privacy` | Privacy policy |
+| `resources` | Resources index + portland-condo-guide |
+| `social` | Social / video page |
+| `terms` | Terms of use |
 
----
+### All page routes
 
-## 2. Accessibility (a11y)
+| URL pattern | File | Notes |
+|-------------|------|--------|
+| `/` | `app/page.tsx` | Home |
+| `/about` | `app/about/page.tsx` | |
+| `/contact` | `app/contact/page.tsx` | |
+| `/brokers` | `app/brokers/page.tsx` | |
+| `/brokers/[slug]` | `app/brokers/[slug]/page.tsx` | Dynamic: agent slug from `agents.json` |
+| `/markets` | `app/markets/page.tsx` | |
+| `/markets/oregon` | `app/markets/oregon/page.tsx` | Oregon state; county stack A–Z |
+| `/markets/washington` | `app/markets/washington/page.tsx` | Washington state; uses `MarketStack` |
+| `/markets/[state]/[county]` | `app/markets/[state]/[county]/page.tsx` | County page; city stack A–Z |
+| `/markets/[state]/[county]/[city]` | `app/markets/[state]/[county]/[city]/page.tsx` | City page; Portland gets extra sections |
+| `/markets/oregon/pdx/condos/[slug]` | `app/markets/oregon/pdx/condos/[slug]/page.tsx` | Portland condo building detail |
+| `/resources` | `app/resources/page.tsx` | |
+| `/resources/portland-condo-guide` | `app/resources/portland-condo-guide/page.tsx` | |
+| `/social` | `app/social/page.tsx` | |
+| `/privacy` | `app/privacy/page.tsx` | |
+| `/terms` | `app/terms/page.tsx` | |
 
-| Issue | Priority | Location | Fix |
-|-------|----------|----------|-----|
-| **No skip link** to main content. | **High** | `SiteHeader.tsx` / layout | Add a “Skip to main content” link as the first focusable element (e.g. in header or layout) that targets `#main-content` and ensure `<main id="main-content">` in layout or a wrapper. |
-| **Hero images use `imageAlt=""`** on home, contact, about, not-found. | **Medium** | `page.tsx`, `contact/page.tsx`, `about/page.tsx`, `not-found.tsx` | If images are decorative, keep `alt=""`. If they convey meaning (e.g. “Modern kitchen in Pacific Northwest home”), add a short descriptive alt. |
-| **Broker headshots use `alt=""`** in `BrokerGrid`. | **Low** | `BrokerGrid.tsx` | Consider `alt={`${agent.name}, ${agent.title}`}` so screen readers get name + role. |
-| **Logo has `alt=""`** with an `aria-label` on the parent link. | — | `SiteHeader.tsx` | Acceptable; link is labeled “Brantley Christianson Real Estate – Home”. |
-| **Form inputs** use `outline: none` with custom focus (border + box-shadow). | **Low** | `forms.css` | Ensure focus ring is clearly visible (e.g. 2–3px, high contrast). Consider adding `:focus-visible` so custom focus only for keyboard. |
-| **ConsultationForm** has `aria-busy`, `aria-describedby` for errors, and confirmation has `role="status"` and `aria-live="polite"`. | — | `ConsultationForm.tsx` | Good. |
-| **Mobile nav** has `aria-expanded`, `aria-controls`, and Escape to close. | — | `SiteHeader.tsx` | Good. |
-| **Sections** use `aria-labelledby` / `aria-label` where appropriate. | — | Home, about, contact | Good. |
-| **`:focus-visible`** defined in `globals.css`. | — | `globals.css` | Good. |
+**API:** `POST /api/consultation` → `app/api/consultation/route.ts` (Mailchimp + rate limit).
 
----
-
-## 3. SEO & metadata
-
-| Issue | Priority | Location | Fix |
-|-------|----------|----------|-----|
-| **Root layout** sets `metadataBase`, default title template, description, OG, Twitter, robots. | — | `layout.tsx` | Good. |
-| **Home** has custom metadata and JSON-LD (`RealEstateAgent`). | — | `page.tsx` | Good. |
-| **Contact** has `ContactPage` JSON-LD. | — | `contact/page.tsx` | Good. |
-| **Child pages** use `openGraph: { url: '/contact' }` etc. without full URL. | **Low** | contact, about | `metadataBase` will resolve these; optional to set full `url` for clarity. |
-| **Featured listing** (home) is not marked up as structured data. | **Low** | `page.tsx` | Consider adding `Product` or `RealEstateListing` JSON-LD for the featured property. |
-| **Single `<h1>` per page** and sensible heading order. | — | Pages | Good. |
-
----
-
-## 4. Performance & best practices
-
-| Issue | Priority | Location | Fix |
-|-------|----------|----------|-----|
-| **Hero images** use Next `Image` with `priority` on key pages, `sizes` set. | — | Hero, home | Good. |
-| **YouTube iframe** on home (featured listing) loads on initial load. | **Medium** | `page.tsx` | Consider loading iframe only when in view (e.g. Intersection Observer) or using `loading="lazy"` if supported, or a “Play” placeholder to reduce initial payload. |
-| **GA** loaded with `strategy="afterInteractive"`. | — | `layout.tsx` | Good. |
-| **next.config** uses `reactStrictMode` and image formats (avif, webp). | — | `next.config.js` | Good. |
-| **Body** uses `min-height: 100dvh` and safe-area insets. | — | `globals.css` | Good. |
+**Special:** `error.tsx` (error boundary), `not-found.tsx` (404). No nested layouts under markets/brokers.
 
 ---
 
-## 5. Security
+## 2. Layout & global UI
 
-| Issue | Priority | Location | Fix |
-|-------|----------|----------|-----|
-| **Consultation API** has no rate limiting. | **High** | `api/consultation/route.ts` | Add rate limiting (e.g. by IP or fingerprint) to prevent abuse and Mailchimp quota burn. |
-| **API** validates required fields (email) and trims strings. | — | `api/consultation/route.ts` | Good. |
-| **No CSRF** token on consultation form. | **Medium** | Form + API | Next.js App Router same-origin POSTs are relatively safe; for extra hardening consider SameSite cookies or a short-lived token. |
-| **Sensitive config** (Mailchimp keys) only in server env. | — | API route | Good. |
-| **Error responses** do not leak internal details. | — | API route | Good. |
+- **Single root layout** (`app/layout.tsx`):
+  - `metadataBase`, default metadata, viewport, theme-color.
+  - Optional GA4 when `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set.
+  - Skip link (`#main-content`), `SiteHeader`, `#main-content` (tabIndex -1), `SiteFooter`.
+  - Imports `@/styles/globals.css` only (no per-page CSS).
 
 ---
 
-## 6. Code quality & consistency
+## 3. Components
 
-| Issue | Priority | Location | Fix |
-|-------|----------|----------|-----|
-| **Error page** uses raw `<button className="button button--outline">` instead of shared `Button`. | **Low** | `error.tsx` | Use `<Button variant="outline" onClick={reset}>Try again</Button>` for consistency (Button supports `onClick` if you add it, or use a small wrapper). |
-| **Inline `style`** used in a few places (e.g. `marginTop`, `marginBottom`). | **Low** | `page.tsx`, contact CTA | Prefer utility classes (e.g. `mt-lg`, `mb-md`) or extend the stack/section classes to avoid magic values. |
-| **Theme/config** is consistent (`@/config/theme`, `@/config/site`). | — | — | Good. |
-| **TypeScript** used; types in `@/data/types`. | — | — | Good. |
+### Shared (multi-page)
 
----
+| Component | Purpose | Used on |
+|-----------|---------|--------|
+| `Button` | CTA (primary/white/outline/text) | Most pages |
+| `Hero` | Page hero (short/condo/etc.) | Most pages |
+| `RevealSection` | Scroll-reveal wrapper | Home, about, markets, resources, condo guide |
+| `ConsultationForm` | Contact/consultation form | Contact, condo detail |
+| `IntelligenceHubs` | Hub cards (e.g. Oregon / Washington) | Home, markets index |
+| `LazyYouTube` | Lazy YouTube embed | Home |
+| `BrokersList` | Brokers list + filters | Brokers index only |
+| `MarketStack` | Stack of market links with images | **Washington state page only** |
+| `PortlandCondoGuideList` | Condo guide list | Portland condo guide page only |
+| `CondoMapSection` | Map links + embed | Condo detail only |
+| `WalkScoreSection` | Walk Score link | Condo detail only |
+| `CondoImageWithFallback` | Condo image + fallback | Condo detail only |
+| `portland/PortlandMarketHighlights` | Portland stat cards | Portland city page only |
+| `portland/PortlandFinancingBreakdown` | Financing breakdown | Portland city page only |
+| `portland/PortlandNeighborhoodSpotlight` | Neighborhood spotlight | Portland city page only |
 
-## 7. Content & UX
+### Unused components
 
-| Issue | Priority | Location | Fix |
-|-------|----------|----------|-----|
-| **Site announcement** (“We’re rolling out a new website…”) is clear and has a proper region/label. | — | Home | Good. |
-| **Featured listing** has title, description, specs, and broker link. | — | Home | Good. |
-| **CTA sections** are clear (“Ready to find your place?”, “Get in touch”). | — | Home, about | Good. |
-| **Consultation form** explains response time and “no spam.” | — | Contact | Good. |
+| Component | Status |
+|-----------|--------|
+| `BrokerGrid.tsx` | Not imported anywhere (brokers section removed from home) |
+| `FeaturedListingCard.tsx` | Not imported |
+| `PropertyCard.tsx` | Not imported |
 
----
-
-## 8. Checklist summary
-
-- [ ] Add `/privacy` and `/terms` pages or adjust footer links.
-- [ ] Add skip-to-main-content link and `id="main-content"` on main.
-- [ ] Add rate limiting to `POST /api/consultation`.
-- [ ] Consider descriptive `imageAlt` for hero images where they add context.
-- [ ] Consider lazy-loading or deferring the featured listing YouTube iframe.
-- [ ] Optionally add RealEstateListing JSON-LD for the featured listing.
-- [ ] Optionally use `Button` on the error page and add `onClick` to the component if needed.
-- [ ] Consider broker card image alts (e.g. agent name + title).
-
----
-
-## 9. Optional: Security headers
-
-If you deploy to Vercel (or similar), consider adding security headers in `next.config.js` (e.g. `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`). The Next.js docs and your host’s docs have examples.
+**Recommendation:** Remove unused components or document if reserved for future use.
 
 ---
 
-*End of audit.*
+## 4. Data & config
+
+### Data (`src/data`)
+
+| File | Exports / role |
+|------|----------------|
+| `markets.ts` | Oregon/Washington markets, counties, cities; helpers for `generateStaticParams` |
+| `agents.ts` + `agents.json` | Agent list, `getAgentBySlug`, filters (license, city, language) |
+| `site.ts` | Email, social links (Instagram, Facebook, LinkedIn, YouTube) |
+| `portland-condo-guide.ts` + `.json` | Portland condo guide entries; slugs; neighborhood helpers |
+| `portland-condo-guide-types.ts` | Types and condition color legend |
+| `portland-market.ts` | Portland stats, financing, neighborhoods (March 2026) |
+| `condos.ts` | Legacy condo list (Eliot Tower, etc.); PDX condos use portland-condo-guide |
+| `types.ts` | `Agent` interface |
+
+### Config (`src/config`)
+
+| File | Exports |
+|------|--------|
+| `site.ts` | `SITE_URL`, `SITE_NAME`, `DEFAULT_DESCRIPTION`, `DEFAULT_OG_IMAGE` |
+| `theme.ts` | `theme`, `assetPaths`, `CONDO_FALLBACK_IMAGE`, `stackGapMap` |
+
+**Note:** `config/site.ts` = SEO/defaults; `data/site.ts` = contact/social links.
+
+---
+
+## 5. Styles
+
+- **Entry:** Only `globals.css` is imported (in root layout).
+- **Design tokens:** `variables.css` (colors, spacing, fonts, shadows, radius, theme surfaces).
+- **Imported by globals (order):** variables → header → footer → hero → cards → buttons → hubs → forms → broker-grid → contact → brokers-page → condo-guide → condo-detail → featured-listing → markets → portland-market.
+
+All pages rely on the same design system; no page-specific CSS imports.
+
+---
+
+## 6. SEO & metadata
+
+- **Root layout:** `metadataBase`, title template `%s | Brantley Christianson Real Estate`, default description, OG/Twitter, robots index/follow.
+- **Static metadata:** Home, about, contact, brokers index, markets index, Oregon, Washington, resources, portland-condo-guide, social, privacy, terms.
+- **Dynamic metadata:** County page, city page, broker `[slug]`, condo `[slug]` (each uses `generateMetadata` with params).
+- **Structured data:** Home (RealEstateAgent JSON-LD); county/city/condo pages (BreadcrumbList; condo also has Residence/Condominium).
+
+**Canonical / OG URLs:** Used on county, city, and condo detail pages; domain from `config/site.ts` (`SITE_URL`).
+
+---
+
+## 7. Accessibility
+
+- **Skip link:** Present; targets `#main-content`.
+- **Landmark / headings:** Main content in `<main>`; sections use `aria-labelledby` / `aria-label` where appropriate.
+- **Focus:** Buttons/links and `.reveal-item` use visible focus styles (e.g. `:focus-visible`).
+- **Images:** Hero uses `imageAlt` (default `''` in Hero). **Issue:** Several pages pass **empty `imageAlt=""`** for Hero or hub images:
+  - `app/markets/page.tsx` (Hero)
+  - `app/brokers/page.tsx` (Hero)
+  - `app/resources/page.tsx` (Hero)
+  - `app/resources/portland-condo-guide/page.tsx` (imageAlt)
+- **Error page:** `Hero` used without `imageSrc`/`imageAlt`; Hero supports no image (no runtime error), but alt remains empty when image is present elsewhere.
+- **Lists:** `role="list"` used where needed (e.g. city stack, not-found links).
+
+**Recommendation:** Replace every `imageAlt=""` with a short, accurate description (e.g. “Oregon and Washington markets”, “Brokers team”, “Portland condo guide”).
+
+---
+
+## 8. External URLs & assets
+
+- **Domain:** `https://brantleychristianson.com` in `config/site.ts` and in metadata/canonical/JSON-LD and contact copy.
+- **Third-party:** GA4, Repliers API, Mailchimp (consultation), Google Maps/OSM (CondoMapSection), Walk Score, YouTube (LazyYouTube, social), social links from `data/site.ts`.
+- **Assets:** All under `public/media/`; paths via `config/theme.ts` (`assetPaths`: brokers, listings, hubs, markets, stock, condos, logos). Condo fallback: `stock/living.jpeg`.
+
+**Internal links:** Key nav (Markets, Contact, Brokers, Resources, etc.) and in-content links (e.g. `/brokers/ashley`) are consistent; broker slug `ashley` exists in `agents.json`.
+
+---
+
+## 9. Consistency & potential issues
+
+### Oregon vs Washington state page
+
+- **Oregon:** County list uses same “city-stack” pattern as county pages (expanded cards, vertical, A–Z), with breadcrumb.
+- **Washington:** Still uses `MarketStack` and a different card layout (`.market-stack`).
+- **Recommendation:** Align Washington state page with Oregon (breadcrumb + county stack A–Z using `.city-stack`) for consistency.
+
+### Duplicate path representations
+
+- Some paths appear with both `/` and `\` in grep (e.g. `src\app\...` vs `src/app/...`). This is filesystem/editor display; no duplicate route files found.
+
+### Portland condo guide vs condo detail route
+
+- List: `/resources/portland-condo-guide`
+- Building detail: `/markets/oregon/pdx/condos/[slug]`
+- Breadcrumb on detail includes Markets → Oregon → Portland → Condo Guide → Building. Logic is consistent.
+
+### Rate limiting & API
+
+- Consultation API uses `@/lib/rateLimit` and returns 429 with a clear message; fallback email (info@…) is documented in the API response.
+
+---
+
+## 10. Build & env
+
+- **Stack:** Next 16, React 18.
+- **Scripts:** `dev`, `build`, `start`, `lint`.
+- **Env:** `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `MAILCHIMP_*`, and any Repliers/API keys (see `api/consultation/route.ts` and `lib/`).
+
+---
+
+## Summary
+
+| Area | Status | Notes |
+|------|--------|--------|
+| Routes & structure | ✅ | Clear app-router layout; static + dynamic routes and one API route. |
+| Layout & global UI | ✅ | Single layout, skip link, header/footer. |
+| Components | ✅ | Unused components removed (BrokerGrid, FeaturedListingCard, PropertyCard, MarketStack). |
+| Data & config | ✅ | Centralized markets, agents, site, theme; static generation used correctly. |
+| Styles | ✅ | Single entry, design tokens; dead broker-grid.css removed. |
+| SEO & metadata | ✅ | Layout + per-page/dynamic metadata; JSON-LD where needed. |
+| Accessibility | ✅ | Meaningful `imageAlt` added on markets, brokers, resources, portland-condo-guide, error. |
+| State page consistency | ✅ | Washington state page rebuilt to match Oregon (breadcrumb + county stack, A–Z). |
+
+**Fixes applied (post-audit):**  
+1. Added meaningful `imageAlt` on markets, brokers, resources, portland-condo-guide; error page given image + alt.  
+2. Removed unused components and MarketStack; removed broker-grid.css.  
+3. Washington state page rebuilt with breadcrumb + city-stack (alphabetical counties).  
+4. Error page Hero given `imageSrc` and `imageAlt`.  
+5. TypeScript: optional `highlight`/`sub` in Portland components guarded with `'highlight' in item` / `'sub' in card`.
