@@ -20,9 +20,10 @@ export default function Error({
 
   return (
     <main>
-      <Hero
-        title="Something went wrong."
-        lead="An unexpected error occurred. You can try again, or head back to the home page."
+      <div role="alert" aria-live="assertive">
+        <Hero
+          title="Something went wrong."
+          lead="An unexpected error occurred. You can try again, or head back to the home page."
         variant="short"
         imageSrc={`${assetPaths.stock}/couch.jpeg`}
         imageAlt="BCRE — return to home"
@@ -35,6 +36,7 @@ export default function Error({
           Try again
         </Button>
       </Hero>
+      </div>
     </main>
   );
 }
