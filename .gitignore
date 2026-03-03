@@ -11,3 +11,6 @@ npm-debug.log*
 .yarn-integrity
 .vercel
 *.tsbuildinfo
+
+# clerk configuration (can include secrets)
+/.clerk/
