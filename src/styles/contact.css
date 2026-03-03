@@ -112,10 +112,38 @@
 .consultation-form-wrap {
   max-width: 520px;
   margin-inline: auto;
+  padding: var(--space-lg) var(--space-md);
+  background: var(--color-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border-subtle);
 }
+@media (min-width: 640px) {
+  .consultation-form-wrap {
+    padding: var(--space-xl);
+  }
+}
+
+.consultation-trust {
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+  max-width: 42ch;
+}
+
 .consultation-form.confirmation {
   text-align: center;
   padding: var(--space-xl);
   background: rgba(var(--color-accent-rgb), 0.08);
   border-radius: var(--radius-lg);
+}
+
+.consultation-form.confirmation .confirmation-message {
+  margin-bottom: 0;
+}
+
+.consultation-form-actions {
+  text-align: center;
+}
+.consultation-form-actions .button {
+  display: inline-block;
 }

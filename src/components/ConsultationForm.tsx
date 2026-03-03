@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/Button';
 import { trackEvent } from '@/lib/analytics';
@@ -26,6 +26,7 @@ export function ConsultationForm({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const pathname = usePathname();
+  const confirmationRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     trackEvent('consultation_form_view', {
@@ -36,6 +37,12 @@ export function ConsultationForm({
       building_slug: buildingSlug ?? null,
     });
   }, [pathname, source, market, buildingName, buildingSlug]);
+
+  useEffect(() => {
+    if (submitted && confirmationRef.current) {
+      confirmationRef.current.focus({ preventScroll: true });
+    }
+  }, [submitted]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -110,18 +117,30 @@ export function ConsultationForm({
 
   if (submitted) {
     return (
-      <div className="consultation-form confirmation" role="status">
-        <p className="section-lead" style={{ marginBottom: 0 }}>
+      <div
+        ref={confirmationRef}
+        className="consultation-form confirmation"
+        role="status"
+        aria-live="polite"
+        tabIndex={-1}
+      >
+        <p className="section-lead confirmation-message" style={{ marginBottom: 0 }}>
           Thank you. We&apos;ll be in touch shortly to schedule your consultation.
         </p>
       </div>
     );
   }
 
+  const errorId = 'consultation-form-error';
   return (
-    <form onSubmit={handleSubmit} className="consultation-form stack--md">
+    <form
+      onSubmit={handleSubmit}
+      className="consultation-form stack--md"
+      aria-busy={loading}
+      aria-describedby={error ? errorId : undefined}
+    >
       {error && (
-        <p className="form-error" role="alert">
+        <p id={errorId} className="form-error" role="alert">
           {error}
         </p>
       )}
@@ -172,9 +191,11 @@ export function ConsultationForm({
           disabled={loading}
         />
       </div>
-      <Button type="submit" variant="primary" disabled={loading}>
-        {loading ? 'Sending…' : submitLabel}
-      </Button>
+      <div className="consultation-form-actions">
+        <Button type="submit" variant="primary" disabled={loading}>
+          {loading ? 'Sending…' : submitLabel}
+        </Button>
+      </div>
     </form>
   );
 }

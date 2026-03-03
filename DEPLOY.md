@@ -16,6 +16,7 @@ Set these in your hosting dashboard (Vercel, Netlify, etc.) only if you use the 
 | `MAILCHIMP_MERGE_TAG_MESSAGE` | Optional | Merge tag for message (default: MMERGE3) |
 | `NEXT_PUBLIC_GOOGLE_MAPS_EMBED_KEY` | Optional | Embedded map on condo building pages |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Optional | Google Analytics 4 |
+| `REPLIERS_API_KEY` | Optional | Repliers.io CRM / lead management |
 
 **You can deploy with no env vars.** The site will run; the consultation form will fail until Mailchimp vars are set.
 

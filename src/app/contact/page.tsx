@@ -4,13 +4,32 @@ import { ConsultationForm } from '@/components/ConsultationForm';
 import { assetPaths } from '@/config/theme';
 
 export const metadata = {
-  title: 'Contact | Brantley Christianson Real Estate',
+  title: 'Request a Consultation | Brantley Christianson Real Estate',
   description:
-    'Get in touch with BCRE. Request a consultation with a broker in your Oregon or Washington market.',
+    'Get a tailored real estate or market consultation. Tell us your goals—buying, selling, or learning the market—and we’ll connect you with a BCRE broker in Oregon or Washington.',
+};
+
+const contactJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'Request a Consultation',
+  description: 'Get in touch with Brantley Christianson Real Estate for a tailored consultation.',
+  url: 'https://brantleychristianson.com/contact',
+  mainEntity: {
+    '@type': 'RealEstateAgent',
+    name: 'Brantley Christianson Real Estate',
+    url: 'https://brantleychristianson.com',
+    areaServed: [{ '@type': 'State', name: 'Oregon' }, { '@type': 'State', name: 'Washington' }],
+  },
 };
 
 export default function ContactPage() {
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactJsonLd) }}
+      />
     <main>
       <Hero
         title="Request a tailored real estate or market consultation."
@@ -39,6 +58,9 @@ export default function ContactPage() {
             <p className="section-lead mx-auto">
               Tell us about your goals. A BCRE broker will follow up to schedule a time to talk.
             </p>
+            <p className="consultation-trust text-center mx-auto">
+              We typically respond within one business day. No spam—just a direct reply from our team.
+            </p>
           </header>
           <div className="consultation-form-wrap">
             <ConsultationForm source="contact-page" market="multi-market" />
@@ -46,5 +68,6 @@ export default function ContactPage() {
         </div>
       </section>
     </main>
+    </>
   );
 }
