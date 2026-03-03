@@ -264,3 +264,51 @@ a:hover {
 .site-announcement__text strong {
   color: var(--color-primary);
 }
+
+/* 404 / not-found: friendly dead-link message */
+.not-found-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+.not-found-links a {
+  display: inline-block;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-primary);
+  transition: var(--transition-default);
+}
+.not-found-links a:hover {
+  color: var(--color-primary);
+}
+.not-found-link--primary {
+  background: rgba(var(--color-accent-rgb), 0.08);
+  border: 2px solid rgba(var(--color-accent-rgb), 0.3);
+}
+.not-found-link--primary:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+.not-found-link--secondary {
+  background: var(--color-light);
+  border: 2px solid var(--border-subtle);
+}
+.not-found-link--secondary:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+.not-found-link--text {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+.not-found-link--text:hover {
+  color: var(--color-primary);
+}

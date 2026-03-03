@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import {
-  repliersClient,
-  findClientByEmail,
-  createClient,
-  updateClient,
-  normalizePhoneForRepliers,
-  parseNameToFnameLname,
-} from '@/lib/repliers';
 
 interface ConsultationRequestBody {
   name?: string;
@@ -23,7 +15,6 @@ interface ConsultationRequestBody {
 /**
  * POST /api/consultation
  * Adds/updates the contact in the Mailchimp audience with merge fields and tags.
- * If Repliers is configured, also creates or updates the Repliers client (best-effort).
  * Requires MAILCHIMP_API_KEY and MAILCHIMP_AUDIENCE_ID in env.
  */
 export async function POST(request: NextRequest) {
@@ -34,7 +25,10 @@ export async function POST(request: NextRequest) {
   if (!apiKey || !audienceId) {
     console.error('Missing MAILCHIMP_API_KEY or MAILCHIMP_AUDIENCE_ID');
     return NextResponse.json(
-      { error: 'Server configuration error' },
+      {
+        error:
+          "We're unable to process your request right now. Please try again later or email us directly at info@brantleychristianson.com.",
+      },
       { status: 500 }
     );
   }
@@ -81,13 +75,18 @@ export async function POST(request: NextRequest) {
     }),
   });
 
-  const memberData = await memberRes.json().catch(() => ({}));
+  const memberData = (await memberRes.json().catch(() => ({}))) as {
+    detail?: string;
+    title?: string;
+    [key: string]: unknown;
+  };
 
   if (!memberRes.ok) {
     console.error('Mailchimp member error:', memberRes.status, memberData);
     const detail =
-      (memberData && (memberData.detail as string)) ||
-      'Failed to add or update contact';
+      typeof memberData?.detail === 'string'
+        ? memberData.detail
+        : 'Failed to add or update contact';
     return NextResponse.json({ error: detail }, { status: memberRes.status });
   }
 
@@ -120,42 +119,6 @@ export async function POST(request: NextRequest) {
       const tagsData = await tagsRes.json().catch(() => ({}));
       console.error('Mailchimp tags error:', tagsRes.status, tagsData);
       // Do not surface tag errors to the user; contact was still captured.
-    }
-  }
-
-  // Repliers lead sync (best-effort; do not fail the request)
-  const repliers = repliersClient();
-  if (repliers) {
-    try {
-      const { fname, lname } = parseNameToFnameLname(name);
-      const phoneNormalized = phone ? normalizePhoneForRepliers(phone) : null;
-      const tags: string[] = ['Consultation'];
-      if (body.source) tags.push(`Source: ${body.source}`);
-      if (body.market) tags.push(`Market: ${body.market}`);
-      if (body.buildingName) tags.push(`Building: ${body.buildingName}`);
-
-      const existing = await findClientByEmail(repliers, email);
-      if (existing) {
-        await updateClient(repliers, existing.clientId, {
-          fname,
-          lname,
-          phone: phoneNormalized,
-          tags,
-        });
-      } else {
-        await createClient(repliers, {
-          agentId: repliers.agentId,
-          fname,
-          lname,
-          email,
-          phone: phoneNormalized,
-          tags,
-          externalId: subscriberHash,
-        });
-      }
-    } catch (err) {
-      console.error('Repliers lead sync error:', err);
-      // Do not return error to user; Mailchimp capture succeeded.
     }
   }
 

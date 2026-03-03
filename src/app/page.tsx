@@ -204,7 +204,14 @@ export default function HomePage() {
               </p>
             </header>
             <RevealSection>
-              <BrokerGrid agents={agents} maxItems={8} showAllHref="/brokers" />
+              <div className="broker-grid-wrap broker-grid-wrap--home">
+                <BrokerGrid
+                  agents={agents}
+                  maxItems={8}
+                  showAllHref="/brokers"
+                  largeHeadshots
+                />
+              </div>
             </RevealSection>
           </div>
         </section>

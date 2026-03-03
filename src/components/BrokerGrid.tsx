@@ -8,10 +8,21 @@ export interface BrokerGridProps {
   agents: Agent[];
   maxItems?: number;
   showAllHref?: string;
+  /** When true, use larger headshot dimensions (e.g. for main index "Our Brokers" section) */
+  largeHeadshots?: boolean;
 }
 
-export function BrokerGrid({ agents, maxItems = 8, showAllHref = '/brokers' }: BrokerGridProps) {
+const HEADSHOT_SMALL = { width: 200, height: 200, sizes: '(max-width: 767px) 152px, 200px' } as const;
+const HEADSHOT_LARGE = { width: 224, height: 224, sizes: '(max-width: 767px) 176px, 224px' } as const;
+
+export function BrokerGrid({
+  agents,
+  maxItems = 8,
+  showAllHref = '/brokers',
+  largeHeadshots = false,
+}: BrokerGridProps) {
   const display = maxItems > 0 ? agents.slice(0, maxItems) : agents;
+  const img = largeHeadshots ? HEADSHOT_LARGE : HEADSHOT_SMALL;
 
   return (
     <div className="broker-grid-wrap">
@@ -23,9 +34,9 @@ export function BrokerGrid({ agents, maxItems = 8, showAllHref = '/brokers' }: B
                 <Image
                   src={agent.image}
                   alt=""
-                  width={112}
-                  height={112}
-                  sizes="(max-width: 767px) 88px, 112px"
+                  width={img.width}
+                  height={img.height}
+                  sizes={img.sizes}
                   className="broker-card-img"
                   loading="lazy"
                 />
