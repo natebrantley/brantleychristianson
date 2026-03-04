@@ -65,20 +65,38 @@ export async function POST(request: NextRequest) {
   const lastName =
     typeof data.last_name === 'string' ? data.last_name : null;
 
+  const publicMetadata = data.public_metadata;
+  const hasRoleKey =
+    typeof publicMetadata === 'object' &&
+    publicMetadata !== null &&
+    'role' in publicMetadata &&
+    typeof (publicMetadata as { role: unknown }).role === 'string';
+  const metadataRole = hasRoleKey
+    ? ((publicMetadata as { role: string }).role as string).toLowerCase()
+    : null;
+  const role =
+    metadataRole === 'agent' || metadataRole === 'broker'
+      ? metadataRole
+      : hasRoleKey
+        ? null
+        : undefined;
+
   if (!clerkId) {
     return new NextResponse(null, { status: 200 });
   }
 
   const admin = supabaseAdmin();
-  const { error } = await admin.from('users').upsert(
-    {
-      clerk_id: clerkId,
-      email: primaryEmail,
-      first_name: firstName,
-      last_name: lastName,
-    },
-    { onConflict: 'clerk_id' }
-  );
+  const row: Record<string, unknown> = {
+    clerk_id: clerkId,
+    email: primaryEmail,
+    first_name: firstName,
+    last_name: lastName,
+  };
+  if (role !== undefined) row.role = role;
+
+  const { error } = await admin.from('users').upsert(row, {
+    onConflict: 'clerk_id',
+  });
 
   if (error) {
     console.error('Supabase upsert failed:', error);

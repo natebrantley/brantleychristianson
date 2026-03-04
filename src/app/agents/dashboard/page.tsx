@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
-import { createClerkSupabaseClient } from '@/lib/supabase';
+import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { isBrokerRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 
@@ -26,12 +26,12 @@ export default async function AgentsDashboardPage() {
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading agent user record from Supabase:', { userId, error });
+      console.error('Error loading agent user record from Supabase:', { userId, ...formatSupabaseError(error) });
     }
 
     user = data ?? null;
   } catch (err) {
-    console.error('Unexpected error loading agent user record:', { userId, error: err });
+    console.error('Unexpected error loading agent user record:', { userId, ...formatSupabaseError(err) });
   }
 
   if (!user || !isBrokerRole(user.role)) {

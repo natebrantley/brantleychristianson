@@ -1,6 +1,17 @@
 import { auth } from '@clerk/nextjs/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
+/** Serialize Supabase or Error for logging (avoids empty {} in console) */
+export function formatSupabaseError(error: unknown): Record<string, unknown> {
+  if (error == null) return { error: null };
+  if (error instanceof Error) return { message: error.message, name: error.name };
+  if (typeof error === 'object' && 'message' in error) {
+    const e = error as { message?: string; code?: string; details?: string };
+    return { message: e.message, code: e.code, details: e.details };
+  }
+  return { message: String(error) };
+}
+
 const supabaseUrl: string = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey: string = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

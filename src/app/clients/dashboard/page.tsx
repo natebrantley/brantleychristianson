@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
-import { createClerkSupabaseClient } from '@/lib/supabase';
+import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { isBrokerRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
+import { Hero } from '@/components/Hero';
+import { assetPaths } from '@/config/theme';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,12 +28,12 @@ export default async function ClientsDashboardPage() {
       .maybeSingle();
 
     if (error) {
-      console.error('Error loading client user record from Supabase:', { userId, error });
+      console.error('Error loading client user record from Supabase:', { userId, ...formatSupabaseError(error) });
     }
 
     user = data ?? null;
   } catch (err) {
-    console.error('Unexpected error loading client user record:', { userId, error: err });
+    console.error('Unexpected error loading client user record:', { userId, ...formatSupabaseError(err) });
   }
 
   if (isBrokerRole(user?.role)) {
@@ -39,11 +41,19 @@ export default async function ClientsDashboardPage() {
   }
 
   return (
-    <main className="section">
-      <div className="container stack--lg">
-        <header className="stack--sm">
-          <p className="section-tag">Client dashboard</p>
-          <h1 className="section-title">Welcome back</h1>
+    <main>
+      <Hero
+        variant="short"
+        title="Your dashboard"
+        lead="Saved homes, searches, and next steps with your BCRE agent."
+        imageSrc={`${assetPaths.stock}/couch.jpeg`}
+        imageAlt="Client dashboard – your home search at a glance"
+      />
+      <div className="section">
+        <div className="container stack--lg">
+          <header className="stack--sm">
+            <p className="section-tag">Client dashboard</p>
+            <h1 className="section-title">Welcome back</h1>
           {user && (
             <p className="section-lead">
               Signed in as <strong>{user.first_name ?? ''} {user.last_name ?? ''}</strong>
@@ -126,6 +136,7 @@ export default async function ClientsDashboardPage() {
             </Button>
           </div>
         </section>
+        </div>
       </div>
     </main>
   );
