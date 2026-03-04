@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { lenders, getLenderBySlug } from '@/data/lenders';
 import { assetPaths } from '@/config/theme';
@@ -9,6 +10,7 @@ interface LenderPageProps {
   params: { slug: string };
 }
 
+/** Pre-build static pages for every lender at build time */
 export function generateStaticParams() {
   return lenders.map((lender) => ({ slug: lender.slug }));
 }
@@ -51,7 +53,22 @@ export default function LenderProfilePage({ params }: LenderPageProps) {
 
       <section className="section lender-detail-section" aria-labelledby="lender-name-heading">
         <div className="container container-narrow stack--lg">
+          <p className="lender-detail-back">
+            <Link href="/lenders">← Preferred Lenders</Link>
+          </p>
           <header className="stack--sm text-center">
+            {lender.logo && (
+              <div className="lender-detail-logo-wrap">
+                <Image
+                  src={lender.logo}
+                  alt=""
+                  width={120}
+                  height={48}
+                  sizes="120px"
+                  className="lender-detail-logo"
+                />
+              </div>
+            )}
             <h1 id="lender-name-heading" className="lender-detail-name">
               {lender.name}
             </h1>
@@ -128,6 +145,9 @@ export default function LenderProfilePage({ params }: LenderPageProps) {
                   Visit website
                 </Button>
               )}
+              <Button href="/lenders" variant="text">
+                View all lenders
+              </Button>
             </div>
           </article>
         </div>

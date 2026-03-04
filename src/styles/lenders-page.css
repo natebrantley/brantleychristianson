@@ -193,6 +193,30 @@
   object-position: center center;
 }
 
+.lender-detail-back {
+  margin: 0 0 var(--space-md);
+  font-size: 0.9375rem;
+}
+.lender-detail-back a {
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.lender-detail-back a:hover {
+  color: var(--color-primary);
+}
+
+.lender-detail-logo-wrap {
+  margin-bottom: var(--space-md);
+  display: flex;
+  justify-content: center;
+}
+.lender-detail-logo {
+  object-fit: contain;
+  height: auto;
+}
+
 .lender-detail-section .lender-detail-name {
   font-family: var(--font-display);
   font-size: clamp(1.75rem, 4vw + 1rem, 2.5rem);
