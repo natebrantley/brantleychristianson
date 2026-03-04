@@ -11,7 +11,7 @@ Set these **environment variables** in the Vercel project (Settings → Environm
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | [Clerk Dashboard → API Keys](https://dashboard.clerk.com/last-active?path=api-keys) — use **production** key (`pk_live_...`) for Production |
 | `CLERK_SECRET_KEY` | Same page (secret key; `sk_live_...` for Production) |
 
-- **Middleware** lives at `src/middleware.ts`. Clerk middleware runs only when `CLERK_SECRET_KEY` is set; otherwise requests pass through (no 500).
+- **Proxy** (Next.js 16) lives at `src/proxy.ts`. Clerk runs only when `CLERK_SECRET_KEY` is set; otherwise requests pass through (no 500).
 - **Layout** uses full auth header when the publishable key is set; otherwise uses a public header.
 
 ## Required for user sync (Clerk → Supabase)

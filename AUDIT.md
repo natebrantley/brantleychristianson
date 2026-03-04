@@ -43,9 +43,11 @@
 | `/privacy` | `app/privacy/page.tsx` | |
 | `/terms` | `app/terms/page.tsx` | |
 
-**API:** `POST /api/consultation` → `app/api/consultation/route.ts` (MailerLite + rate limit).
+**API:** `POST /api/consultation` → `app/api/consultation/route.ts` (MailerLite + rate limit).  
+**Webhooks:** `POST /api/webhooks/clerk` (Clerk → Supabase users + optional MailerLite), `POST /api/webhooks/mailerlite` (unsubscribe/bounce → users.marketing_opt_in).  
+**Auth:** `/dashboard` (role-based redirect), `/agents`, `/agents/dashboard`, `/clients`, `/clients/dashboard`, `/sign-in/[[...sign-in]]` (Clerk).
 
-**Special:** `error.tsx` (error boundary), `not-found.tsx` (404). No nested layouts under markets/brokers.
+**Special:** `error.tsx` (error boundary), `not-found.tsx` (404). Proxy at `src/proxy.ts` (Clerk when keys set).
 
 ---
 
@@ -249,3 +251,70 @@ All pages rely on the same design system; no page-specific CSS imports.
 4. Error page Hero given `imageSrc` and `imageAlt`.  
 5. TypeScript: optional `highlight`/`sub` in Portland components guarded with `'highlight' in item` / `'sub' in card`.  
 6. **March 2026:** Removed orphan `css/main.css`; added brokers/logos READMEs for asset expectations.
+
+---
+
+## 12. Audit — Post-push (March 2026)
+
+**Scope:** Full site after commits through `1f3d450` (client dashboard optimization, webhook hardening, Turbopack parse fix, VERCEL redirect_uri_mismatch docs).
+
+### Build & tooling
+
+| Check | Result |
+|-------|--------|
+| `npm run build` | ✅ Success (Next.js 16.1.6 Turbopack, 369 static pages) |
+| `npm audit` | ✅ 0 vulnerabilities |
+| `next lint` | ⚠️ Fails with "Invalid project directory provided" when run as `npm run lint` (Next CLI treats "lint" as path). Run `npx next lint` from project root for ESLint. |
+
+### Routes & auth (current)
+
+| URL | Purpose |
+|-----|---------|
+| `/` | Home |
+| `/dashboard` | Role-based redirect → `/agents` or `/clients` |
+| `/agents`, `/agents/dashboard` | Agent dashboard (broker role only) |
+| `/clients`, `/clients/dashboard` | Client dashboard (non-broker) |
+| `/sign-in/[[...sign-in]]` | Clerk sign-in |
+| `/api/consultation` | MailerLite consultation form; rate-limited |
+| `/api/webhooks/clerk` | Clerk user sync → Supabase (+ optional MailerLite); Svix-verified; MailerLite best-effort; lead bridge try/catch |
+| `/api/webhooks/mailerlite` | Unsubscribe/bounce → `users.marketing_opt_in`; signature-verified |
+
+### Security
+
+| Area | Status |
+|------|--------|
+| Env / secrets | ✅ `.env`, `.env*.local` in `.gitignore`; no secrets in repo; server-only keys (CLERK_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY, webhook secrets) not exposed to client |
+| Headers | ✅ `next.config.js`: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy |
+| Auth | ✅ Clerk; proxy (`src/proxy.ts`) only when CLERK_SECRET_KEY set; dashboard pages use `auth()` + role check and redirect |
+| Webhooks | ✅ Clerk: Svix verification, 400 on invalid/missing headers. MailerLite: HMAC SHA-256 timing-safe verify |
+| Consultation API | ✅ Rate limit (per IP), body size cap, email validation; no raw secrets in responses |
+
+### Documentation fixes applied
+
+- **docs/VERCEL.md:** "Middleware" → "Proxy"; clarified that Next.js 16 uses `src/proxy.ts` (not `middleware.ts`).
+- **AUDIT.md:** Routes section updated with webhooks and auth routes; proxy reference corrected.
+
+### Known minor issues (non-blocking)
+
+| Issue | Location | Recommendation |
+|-------|----------|----------------|
+| Lint script | `package.json` `"lint": "next lint"` | Run `npx next lint` from project root; in some environments the script may report "Invalid project directory" (Next CLI quirk). |
+
+### Client dashboard (post-optimization)
+
+- Supabase: `select('first_name, last_name, email, role')` (no `select('*')`).
+- Welcome block: `displayName` helper; quick actions (Explore markets, Request consultation) in header.
+- Getting started: two cards in `dashboard-card-grid` (responsive).
+- Ternary for `displayName` written with explicit `: null` to satisfy Turbopack parser.
+
+### Summary
+
+| Area | Status |
+|------|--------|
+| Build & deploy | ✅ |
+| Dependencies | ✅ No vulnerabilities |
+| Routes & auth | ✅ Dashboards and webhooks documented |
+| Security (headers, env, webhooks) | ✅ |
+| Docs | ✅ VERCEL + AUDIT updated for proxy and redirect_uri_mismatch |
+| Accessibility | ✅ Empty alt texts fixed (logo, broker/lender/condo images) |
+| Lint | ⚠️ Use `npx next lint` from project root |

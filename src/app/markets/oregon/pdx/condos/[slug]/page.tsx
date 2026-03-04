@@ -435,7 +435,7 @@ export default async function CondoBuildingPage({ params }: PageProps) {
                 <div className="condo-detail-card-image-wrap">
                   <CondoImageWithFallback
                     src={condo.image}
-                    alt=""
+                    alt={`${condo.name} building`}
                     width={400}
                     height={250}
                     className="condo-detail-card-img"
@@ -497,7 +497,7 @@ export default async function CondoBuildingPage({ params }: PageProps) {
                       <span className="condo-guide-card-image-wrap">
                         <CondoImageWithFallback
                           src={c.image}
-                          alt=""
+                          alt={`${c.name} condo building`}
                           width={400}
                           height={250}
                           className="condo-guide-card-img"

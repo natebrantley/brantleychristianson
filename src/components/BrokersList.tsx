@@ -275,7 +275,7 @@ export function BrokersList({ agents }: BrokersListProps) {
                   <span className="broker-tile-image-wrap">
                     <Image
                       src={agent.image}
-                      alt=""
+                      alt={`${agent.name}, ${agent.title}`}
                       width={200}
                       height={200}
                       sizes="200px"

@@ -51,7 +51,7 @@ export default async function LenderProfilePage({ params }: LenderPageProps) {
       <div className="lender-hero-image" aria-hidden>
         <Image
           src={`${assetPaths.stock}/couch.jpeg`}
-          alt=""
+          alt="Living room"
           fill
           className="lender-hero-image__img"
           priority
@@ -73,7 +73,7 @@ export default async function LenderProfilePage({ params }: LenderPageProps) {
               <div className="lender-detail-logo-wrap">
                 <Image
                   src={lender.logo}
-                  alt=""
+                  alt={`${lender.company} logo`}
                   width={120}
                   height={48}
                   sizes="120px"

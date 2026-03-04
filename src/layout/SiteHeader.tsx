@@ -43,7 +43,7 @@ export function SiteHeader() {
         <Link href="/" className="site-logo" onClick={close} aria-label="Brantley Christianson Real Estate – Home">
           <Image
             src={LOGO_SRC}
-            alt=""
+            alt="Brantley Christianson Real Estate logo"
             width={160}
             height={48}
             priority

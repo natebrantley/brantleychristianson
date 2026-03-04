@@ -71,7 +71,7 @@ export default function BrokerProfilePage({ params }: BrokerPageProps) {
       <div className="broker-hero-image">
         <Image
           src={`${assetPaths.stock}/couch.jpeg`}
-          alt=""
+          alt="Living room"
           fill
           className="broker-hero-image__img"
           priority
