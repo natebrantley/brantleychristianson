@@ -9,6 +9,7 @@ import {
   getStateBySlug,
   getAllCountyPaths,
 } from '@/data/markets';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 interface PageProps {
@@ -24,16 +25,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const stateMarket = getStateBySlug(state);
   const countyData = getCountyBySlug(state, county);
   if (!stateMarket || !countyData) {
-    return { title: 'Market | Brantley Christianson Real Estate' };
+    return { title: `Market | ${SITE_NAME}` };
   }
   const title = `${countyData.name} Real Estate | ${stateMarket.name}`;
   const description = `BCRE serves ${countyData.name}. Explore cities: ${countyData.cities.map((c) => c.name).join(', ')}. Connect with a local broker.`;
   const url = `/markets/${state}/${county}`;
+  const socialTitle = `${title} | ${SITE_NAME}`;
   return {
     title,
     description,
-    openGraph: { url, title, description },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { url, title: socialTitle, description, images: [defaultOgImage(`${countyData.name} real estate`)], },
+    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [defaultOgImage(`${countyData.name} real estate`).url] },
   };
 }
 

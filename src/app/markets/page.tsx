@@ -4,6 +4,7 @@ import { IntelligenceHubs } from '@/components/IntelligenceHubs';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
 import { allMarkets } from '@/data/markets';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 const hubItems = allMarkets.map((m) => ({
@@ -23,13 +24,15 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     url: '/markets',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('BCRE markets – Oregon and Washington')],
   },
   twitter: {
     card: 'summary_large_image',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('BCRE markets – Oregon and Washington').url],
   },
 };
 

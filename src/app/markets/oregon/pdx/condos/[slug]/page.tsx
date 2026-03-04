@@ -14,6 +14,7 @@ import {
 } from '@/data/portland-condo-guide';
 import type { PortlandCondoEntry } from '@/data/portland-condo-guide-types';
 import { CONDITION_COLOR_LEGEND } from '@/data/portland-condo-guide-types';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 function formatPrice(n: number): string {
@@ -46,16 +47,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const condo = getCondoBySlug(slug);
   if (!condo) {
-    return { title: 'Portland Condos | Brantley Christianson Real Estate' };
+    return { title: `Portland Condos | ${SITE_NAME}` };
   }
   const title = `${condo.name} Portland Condos | ${condo.neighborhood}`;
   const description = `${condo.name} at ${condo.address}. ${condo.neighborhood}. Median price ${formatPrice(condo.medianPrice)}, HOA $${condo.averageMonthlyHoa}/mo. ${condo.stories} stories, built ${condo.yearBuilt}. Rent cap: ${condo.rentCap}. Portland condo guide data.`;
   const url = `/markets/oregon/pdx/condos/${slug}`;
+  const socialTitle = `${title} | ${SITE_NAME}`;
   return {
     title,
     description,
-    openGraph: { url, title, description },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { url, title: socialTitle, description, images: [defaultOgImage(`${condo.name} – Portland condo`)], },
+    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [defaultOgImage(`${condo.name} – Portland condo`).url] },
   };
 }
 

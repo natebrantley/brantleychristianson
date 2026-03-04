@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Button } from '@/components/Button';
 import { agents, getAgentBySlug } from '@/data/agents';
 import { assetPaths } from '@/config/theme';
+import { SITE_NAME, absoluteUrl } from '@/config/site';
 import type { Agent } from '@/data/types';
 import type { Metadata } from 'next';
 
@@ -41,16 +42,18 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: BrokerPageProps): Promise<Metadata> {
   const agent = getAgentBySlug(params.slug);
   if (!agent) {
-    return { title: 'Broker | Brantley Christianson Real Estate' };
+    return { title: `Broker | ${SITE_NAME}` };
   }
   const title = `${agent.name} | Real Estate Broker`;
-  const description = `${agent.name}, ${agent.title} at Brantley Christianson Real Estate. Licensed in ${agent.licenses.join(' and ')}. Connect for buying or selling in Oregon and Washington.`;
+  const description = `${agent.name}, ${agent.title} at ${SITE_NAME}. Licensed in ${agent.licenses.join(' and ')}. Connect for buying or selling in Oregon and Washington.`;
   const url = `/brokers/${agent.slug}`;
+  const imageUrl = absoluteUrl(agent.image);
+  const images = [{ url: imageUrl, width: 600, height: 800, alt: `${agent.name}, ${agent.title}` }];
   return {
     title,
     description,
-    openGraph: { url, title, description },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { url, title, description, images },
+    twitter: { card: 'summary_large_image', title, description, images: [imageUrl] },
   };
 }
 

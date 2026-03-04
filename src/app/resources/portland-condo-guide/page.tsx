@@ -4,7 +4,7 @@ import { Button } from '@/components/Button';
 import { PortlandCondoGuideList } from '@/components/PortlandCondoGuideList';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
-import { SITE_URL } from '@/config/site';
+import { SITE_URL, SITE_NAME, defaultOgImage } from '@/config/site';
 import { portlandCondoGuide } from '@/data/portland-condo-guide';
 import type { Metadata } from 'next';
 
@@ -17,13 +17,15 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     url: '/resources/portland-condo-guide',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('Portland condo guide – BCRE')],
   },
   twitter: {
     card: 'summary_large_image',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('Portland condo guide – BCRE').url],
   },
 };
 

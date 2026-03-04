@@ -2,7 +2,7 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { ConsultationForm } from '@/components/ConsultationForm';
 import { assetPaths } from '@/config/theme';
-import { SITE_URL } from '@/config/site';
+import { SITE_URL, SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Request a Consultation';
@@ -14,13 +14,15 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     url: `${SITE_URL}/contact`,
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('Request a consultation – BCRE')],
   },
   twitter: {
     card: 'summary_large_image',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('Request a consultation – BCRE').url],
   },
 };
 

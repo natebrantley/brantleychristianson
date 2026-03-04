@@ -4,6 +4,7 @@ import { BrokersList } from '@/components/BrokersList';
 import { assetPaths } from '@/config/theme';
 import { agents } from '@/data/agents';
 import { Suspense } from 'react';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Our Brokers';
@@ -15,13 +16,15 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     url: '/brokers',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('BCRE brokers – Oregon and Washington')],
   },
   twitter: {
     card: 'summary_large_image',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('BCRE brokers – Oregon and Washington').url],
   },
 };
 

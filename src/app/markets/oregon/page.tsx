@@ -5,6 +5,7 @@ import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
 import { oregonMarket } from '@/data/markets';
 import { oregonRegions } from '@/data/oregon-regions';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Oregon Real Estate';
@@ -16,13 +17,15 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     url: '/markets/oregon',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('Oregon real estate – BCRE')],
   },
   twitter: {
     card: 'summary_large_image',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('Oregon real estate – BCRE').url],
   },
 };
 

@@ -2,6 +2,7 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'About Us';
@@ -13,13 +14,15 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     url: '/about',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('About BCRE – Oregon and Washington real estate')],
   },
   twitter: {
     card: 'summary_large_image',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('About BCRE – Oregon and Washington real estate').url],
   },
 };
 

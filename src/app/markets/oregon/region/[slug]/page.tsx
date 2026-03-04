@@ -10,6 +10,7 @@ import {
   getAllOregonRegionSlugs,
 } from '@/data/oregon-regions';
 import { oregonMarket } from '@/data/markets';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 interface PageProps {
@@ -24,16 +25,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const region = getRegionBySlug(slug);
   if (!region) {
-    return { title: 'Oregon Region | Brantley Christianson Real Estate' };
+    return { title: `Oregon Region | ${SITE_NAME}` };
   }
   const title = `${region.name} Real Estate | Oregon`;
   const description = `${region.description} Explore counties and cities. Connect with a BCRE broker.`;
   const url = `/markets/oregon/region/${slug}`;
+  const socialTitle = `${title} | ${SITE_NAME}`;
   return {
     title,
     description,
-    openGraph: { url, title, description },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { url, title: socialTitle, description, images: [defaultOgImage(`${region.name} real estate`)], },
+    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [defaultOgImage(`${region.name} real estate`).url] },
   };
 }
 

@@ -5,7 +5,7 @@ import { IntelligenceHubs } from '@/components/IntelligenceHubs';
 import { RevealSection } from '@/components/RevealSection';
 import { LazyYouTube } from '@/components/LazyYouTube';
 import { assetPaths } from '@/config/theme';
-import { SITE_URL } from '@/config/site';
+import { SITE_URL, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 const MARKETS = [
@@ -33,11 +33,13 @@ export const metadata: Metadata = {
     url: '/',
     title: 'Brantley Christianson Real Estate | Pacific Northwest Real Estate',
     description: 'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington.',
+    images: [defaultOgImage('Pacific Northwest real estate – Oregon and Washington')],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Brantley Christianson Real Estate | Pacific Northwest Real Estate',
     description: 'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington.',
+    images: [defaultOgImage('Pacific Northwest real estate – Oregon and Washington').url],
   },
 };
 

@@ -241,18 +241,86 @@
   margin: 0 0 var(--space-md);
 }
 
+/* Detail layout: photo + meta on left, content on right at large breakpoint */
+.lender-detail-article {
+  display: grid;
+  gap: var(--space-xl);
+}
+@media (min-width: 1024px) {
+  .lender-detail-article {
+    grid-template-columns: minmax(0, 320px) 1fr;
+    align-items: start;
+    gap: var(--space-xxl);
+  }
+}
+
+.lender-detail-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  text-align: center;
+}
+@media (min-width: 1024px) {
+  .lender-detail-primary {
+    align-items: flex-start;
+    text-align: left;
+    position: sticky;
+    top: var(--space-lg);
+  }
+}
+
+.lender-detail-photo-frame {
+  display: inline-block;
+  border-radius: var(--radius-lg);
+  border: 2px solid rgba(var(--color-accent-rgb), 0.25);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.lender-detail-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  vertical-align: middle;
+}
+.lender-detail-photo-frame .lender-detail-photo img,
+.lender-detail-photo-frame img {
+  object-fit: cover;
+  display: block;
+}
+
 .lender-detail-meta {
   font-size: 1rem;
   line-height: 1.5;
   color: var(--color-primary);
+  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin: var(--space-md) 0 0;
+  gap: 0.5rem;
 }
 
-.lender-detail-meta-line {
-  display: block;
+.lender-detail-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+}
+.lender-detail-meta-row dt {
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-primary);
+}
+.lender-detail-meta-row dt::after {
+  content: ':';
+}
+.lender-detail-meta-row dd {
+  margin: 0;
+  color: var(--color-primary);
+}
+
+.lender-detail-content {
+  min-width: 0;
 }
 
 .lender-detail-bio {
@@ -260,6 +328,18 @@
   line-height: 1.6;
   color: var(--color-primary);
   margin: 0;
+}
+
+.lender-detail-block {
+  margin: 0;
+}
+.lender-detail-block-title {
+  font-family: var(--font-headings);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
 }
 
 .lender-detail-specialties,
@@ -270,9 +350,13 @@
   margin: 0;
 }
 
+.lender-detail-address {
+  font-style: normal;
+}
+
 .lender-detail-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
-  justify-content: center;
+  align-items: center;
 }

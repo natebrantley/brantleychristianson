@@ -4,6 +4,7 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
 import { washingtonMarket } from '@/data/markets';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Washington Real Estate';
@@ -15,13 +16,15 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     url: '/markets/washington',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('Washington real estate – BCRE')],
   },
   twitter: {
     card: 'summary_large_image',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('Washington real estate – BCRE').url],
   },
 };
 

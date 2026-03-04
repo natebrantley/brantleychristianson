@@ -3,6 +3,7 @@ import { Button } from '@/components/Button';
 import { LendersList } from '@/components/LendersList';
 import { assetPaths } from '@/config/theme';
 import { lenders } from '@/data/lenders';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Preferred Lenders';
@@ -14,13 +15,15 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     url: '/lenders',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('BCRE preferred lenders')],
   },
   twitter: {
     card: 'summary_large_image',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('BCRE preferred lenders').url],
   },
 };
 

@@ -12,6 +12,7 @@ import {
   getAllCityPaths,
   getOtherCitiesInCounty,
 } from '@/data/markets';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 interface PageProps {
@@ -26,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { state, county, city } = await params;
   const data = getCityBySlug(state, county, city);
   if (!data) {
-    return { title: 'City | Brantley Christianson Real Estate' };
+    return { title: `City | ${SITE_NAME}` };
   }
   const { city: cityData, county: countyData, state: stateMarket } = data;
   const lead = cityData.tagline
@@ -35,11 +36,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${cityData.name} Real Estate | ${countyData.name}`;
   const description = `${cityData.name} Real Estate. ${lead} Connect with a BCRE broker who knows the area.`;
   const url = `/markets/${state}/${county}/${city}`;
+  const socialTitle = `${title} | ${SITE_NAME}`;
   return {
     title,
     description,
-    openGraph: { url, title, description },
-    twitter: { card: 'summary_large_image', title, description },
+    openGraph: { url, title: socialTitle, description, images: [defaultOgImage(`${cityData.name} real estate`)], },
+    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [defaultOgImage(`${cityData.name} real estate`).url] },
   };
 }
 

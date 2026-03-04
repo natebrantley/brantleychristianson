@@ -2,6 +2,7 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { assetPaths } from '@/config/theme';
 import { site } from '@/data/site';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 /** Extract YouTube playlist ID from a playlist URL for embedding */
@@ -50,13 +51,15 @@ export const metadata: Metadata = {
   description,
   openGraph: {
     url: '/social',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('BCRE on social')],
   },
   twitter: {
     card: 'summary_large_image',
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
+    images: [defaultOgImage('BCRE on social').url],
   },
 };
 
