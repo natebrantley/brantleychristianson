@@ -4,6 +4,7 @@ import { supabaseAdmin, formatSupabaseError } from '@/lib/supabase';
 
 /**
  * Clerk webhook: syncs user.created / user.updated to Supabase (users) and MailerLite (Master Audience).
+ * If the user's email exists in leads (e.g. from CSV/consultation), updates that lead row with clerk_id (bridge).
  * On user.deleted, removes the user from Supabase by clerk_id.
  * Requires CLERK_WEBHOOK_SECRET. Optional: MAILERLITE_API_TOKEN + MAILERLITE_GROUP_ID for list sync.
  */
@@ -181,6 +182,22 @@ export async function POST(request: NextRequest) {
         { error: 'Database sync failed', code: errDetail?.code ?? undefined },
         { status: 500 }
       );
+    }
+
+    // Bridge: if this user's email exists in leads (e.g. from CSV/consultation), link the lead to their Clerk account
+    if (primaryEmail) {
+      const { error: leadError } = await admin
+        .from('leads')
+        .update({ clerk_id: clerkId })
+        .eq('email', primaryEmail.toLowerCase())
+        .is('clerk_id', null);
+      if (leadError) {
+        console.warn('Clerk webhook: lead bridge update skipped (table missing or error)', {
+          clerkId,
+          email: primaryEmail,
+          supabaseError: formatSupabaseError(leadError),
+        });
+      }
     }
 
     return new NextResponse(null, { status: 200 });

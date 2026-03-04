@@ -71,7 +71,7 @@ alter table public.users add constraint users_role_check check (role is null or 
 
 ## 3. Clerk webhook
 
-The webhook at **POST /api/webhooks/clerk** upserts into **users** on `user.created` and `user.updated` (and optionally adds the user to MailerLite). On `user.deleted`, it deletes the user row by `clerk_id`.
+The webhook at **POST /api/webhooks/clerk** upserts into **users** on `user.created` and `user.updated` (and optionally adds the user to MailerLite). If the user’s email matches a row in **leads** (e.g. from a CSV import or consultation), it sets that lead’s `clerk_id` so the lead is linked to the new account (bridge). On `user.deleted`, it deletes the user row by `clerk_id`.
 
 - **clerk_id**, **email**, **first_name**, **last_name** from Clerk payload
 - **role** from Clerk `public_metadata.role` (only if set; `'agent'` or `'broker'`)
