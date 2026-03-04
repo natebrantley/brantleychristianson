@@ -33,3 +33,15 @@ After adding variables, redeploy (or push a new commit). Clear the build cache a
 ## Local development
 
 Use **development** Clerk keys (`pk_test_...`, `sk_test_...`) in `.env.local`. Production keys (`pk_live_...`, `sk_live_...`) are restricted to your production domain and will fail on `http://localhost:3000`.
+
+## Error: redirect_uri_mismatch on test/preview
+
+If you see **Error 400: redirect_uri_mismatch** when signing in on a test or preview URL (e.g. a Vercel preview deployment), Clerk does not yet allow that URL as a redirect target.
+
+**Fix:** In [Clerk Dashboard](https://dashboard.clerk.com) → **Configure** → **Domains**, add your test server URL as an allowed domain:
+
+1. Click **Add domain**.
+2. Enter the full origin of your test server (e.g. `https://your-app-git-branch-username.vercel.app` for a Vercel preview, or `https://staging.yoursite.com`).
+3. Save.
+
+Use the exact URL shown in the browser (no path). After adding the domain, try signing in again on the test server.

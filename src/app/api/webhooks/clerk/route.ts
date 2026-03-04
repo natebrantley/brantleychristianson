@@ -159,7 +159,13 @@ export async function POST(request: NextRequest) {
         }).then(async (res) => {
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
-            throw new Error(`MailerLite: ${JSON.stringify(data)}`);
+            // Log but don't fail the webhook: Supabase sync is primary; MailerLite is best-effort.
+            console.warn('Clerk webhook: MailerLite sync skipped (non-fatal)', {
+              status: res.status,
+              eventType,
+              email: primaryEmail,
+              mailerliteResponse: data,
+            });
           }
         })
       : Promise.resolve();
@@ -202,14 +208,15 @@ export async function POST(request: NextRequest) {
 
     return new NextResponse(null, { status: 200 });
   } catch (err) {
-    console.error('Clerk webhook: MailerLite add failed', {
+    // Only Supabase errors should throw here; MailerLite is handled above with warn.
+    console.error('Clerk webhook: unexpected error', {
       event: eventType,
       clerkId,
       primaryEmail,
       err,
     });
     return NextResponse.json(
-      { error: 'Marketing list sync failed' },
+      { error: 'Database sync failed' },
       { status: 500 }
     );
   }
