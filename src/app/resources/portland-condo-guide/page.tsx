@@ -5,7 +5,7 @@ import { PortlandCondoGuideList } from '@/components/PortlandCondoGuideList';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
 import { SITE_URL, SITE_NAME, defaultOgImage } from '@/config/site';
-import { portlandCondoGuide } from '@/data/portland-condo-guide';
+import { portlandCondoGuide, portlandCondoNeighborhoods } from '@/data/portland-condo-guide';
 import type { Metadata } from 'next';
 
 const title = '2026 Portland Condo Guide';
@@ -71,33 +71,36 @@ export default function PortlandCondoGuidePage() {
 
       <section className="section" aria-labelledby="how-to-use-heading">
         <div className="container container-narrow stack--xl">
+          <div className="condo-guide-at-a-glance" aria-label="Guide summary">
+            <p>
+              <strong>{portlandCondoGuide.length} buildings</strong> across{' '}
+              <strong>{portlandCondoNeighborhoods.length} neighborhoods</strong> — Pearl District,
+              Downtown, South Waterfront, East Portland, and more.
+            </p>
+          </div>
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">How to use this guide</p>
             <h2 id="how-to-use-heading" className="section-title">
               Make smarter Portland condo decisions
             </h2>
             <p className="section-lead mx-auto">
-              Start with your neighborhood and budget, then use the filters and stats to compare
-              buildings side by side.
+              Filter by neighborhood and financial position, then sort by price or HOA to compare
+              buildings. Click any building for full stats, policies, and our take.
             </p>
           </header>
           <div className="stack--md">
             <p>
-              Use the <strong>neighborhood filter</strong> to focus on areas you&apos;re actually
-              willing to live in, then sort by <strong>median price</strong> or{' '}
-              <strong>average monthly HOA</strong> to see how different buildings stack up.
+              Use the <strong>neighborhood</strong> and <strong>financial position</strong> filters
+              below to narrow the list. Sort by <strong>median price</strong> or{' '}
+              <strong>HOA</strong> to rank by cost; use <strong>HOA ratio</strong> or{' '}
+              <strong>tax ratio</strong> to compare value. Green dots indicate stronger financial
+              position (lower cost burden, no special assessment).
             </p>
             <p>
-              Pay attention to <strong>rent caps</strong>, <strong>short-term rental rules</strong>,
-              and <strong>special assessments</strong> if you&apos;re an investor or you care about
-              flexibility and risk. Buildings with stronger financial footing often have more
-              predictable long-term ownership costs.
-            </p>
-            <p>
-              When you&apos;re ready to go deeper, click into individual buildings for detailed
-              stats and our expert view, or cross-reference this guide with our{' '}
-              <Link href="/markets/oregon/multnomah/portland">Portland market hub</Link>. For
-              tailored advice on specific buildings, <Link href="/contact">request a consultation</Link>.
+              For deeper detail—rent caps, short-term rental rules, amenities, and our expert
+              view—open a building or visit our{' '}
+              <Link href="/markets/oregon/multnomah/portland">Portland market hub</Link>.{' '}
+              <Link href="/contact">Request a consultation</Link> for tailored advice.
             </p>
           </div>
         </div>

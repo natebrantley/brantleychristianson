@@ -77,8 +77,8 @@ const SORT_OPTIONS: { value: CondoSort; label: string }[] = [
   { value: 'medianPrice', label: 'Median price (low–high)' },
   { value: 'medianPriceDesc', label: 'Median price (high–low)' },
   { value: 'hoa', label: 'HOA (low–high)' },
-  { value: 'hoaEfficiency', label: 'HOA efficiency (best first)' },
-  { value: 'taxEfficiency', label: 'Tax efficiency (best first)' },
+  { value: 'hoaEfficiency', label: 'HOA ratio (low–high)' },
+  { value: 'taxEfficiency', label: 'Tax ratio (low–high)' },
   { value: 'yearBuilt', label: 'Year built (newest)' },
   { value: 'daysOnMarket', label: 'Days on market' },
 ];
@@ -262,7 +262,7 @@ export function PortlandCondoGuideList({ condos }: PortlandCondoGuideListProps) 
                   <span className="condo-guide-card-image-wrap">
                     <CondoCardImage
                       src={condo.image || ''}
-                      alt=""
+                      alt={`${condo.name}, ${condo.neighborhood}`}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="condo-guide-card-img"
@@ -274,20 +274,9 @@ export function PortlandCondoGuideList({ condos }: PortlandCondoGuideListProps) 
                     />
                   </span>
                   <div className="condo-guide-card-body">
-                    <div className="condo-guide-card-header">
-                      <span className="condo-guide-card-thumb-wrap">
-                        <CondoCardImage
-                          src={condo.image || ''}
-                          alt=""
-                          fill
-                          sizes="80px"
-                          className="condo-guide-card-thumb-img"
-                        />
-                      </span>
-                      <div className="condo-guide-card-title-block">
-                        <h2 className="condo-guide-card-name">{condo.name}</h2>
-                        <p className="condo-guide-card-neighborhood">{condo.neighborhood}</p>
-                      </div>
+                    <div className="condo-guide-card-title-block">
+                      <h2 className="condo-guide-card-name">{condo.name}</h2>
+                      <p className="condo-guide-card-neighborhood">{condo.neighborhood}</p>
                     </div>
                     <p className="condo-guide-card-address">{condo.address}</p>
                     <dl className="condo-guide-card-stats">
@@ -308,36 +297,12 @@ export function PortlandCondoGuideList({ condos }: PortlandCondoGuideListProps) 
                         <dd>{condo.yearBuilt}</dd>
                       </div>
                       <div>
-                        <dt>Stories</dt>
-                        <dd>{condo.stories}</dd>
-                      </div>
-                      <div>
-                        <dt>DOM</dt>
+                        <dt title="Median days on market">DOM</dt>
                         <dd>{Math.round(condo.medianDaysOnMarket)}</dd>
-                      </div>
-                      <div>
-                        <dt>Tax ratio</dt>
-                        <dd>{condo.taxPriceRatio.toFixed(2)}</dd>
-                      </div>
-                      <div>
-                        <dt>HOA ratio</dt>
-                        <dd>{condo.hoaPriceRatio.toFixed(2)}</dd>
                       </div>
                       <div>
                         <dt>Rent cap</dt>
                         <dd>{condo.rentCap}</dd>
-                      </div>
-                      <div>
-                        <dt>Concierge</dt>
-                        <dd>{condo.concierge}</dd>
-                      </div>
-                      <div>
-                        <dt>Parking</dt>
-                        <dd>{condo.parking}</dd>
-                      </div>
-                      <div>
-                        <dt>Special assess.</dt>
-                        <dd>{condo.specialAssessment}</dd>
                       </div>
                     </dl>
                     {condo.amenities.length > 0 && (
@@ -346,6 +311,7 @@ export function PortlandCondoGuideList({ condos }: PortlandCondoGuideListProps) 
                         {condo.amenities.length > 5 && ` +${condo.amenities.length - 5}`}
                       </p>
                     )}
+                    <p className="condo-guide-card-cta">View building details →</p>
                   </div>
                 </Link>
               </article>

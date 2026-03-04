@@ -15,6 +15,23 @@
 
 /* 2026 Portland Condo Guide resource */
 
+.condo-guide-at-a-glance {
+  padding: var(--space-md) var(--space-lg);
+  background: var(--surface-tinted);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-xl);
+  text-align: center;
+}
+.condo-guide-at-a-glance p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-muted);
+}
+.condo-guide-at-a-glance strong {
+  color: var(--color-primary);
+}
+
 .home-condo-guide-banner {
   position: relative;
   width: 100%;
@@ -170,12 +187,20 @@
 .condo-guide-reset {
   border: none;
   background: none;
-  padding: 0;
+  padding: 0.25rem 0.5rem;
   margin-left: var(--space-xs);
   font-size: 0.8125rem;
   color: var(--color-accent);
   cursor: pointer;
   text-decoration: underline;
+  border-radius: var(--radius-sm);
+}
+.condo-guide-reset:hover {
+  color: var(--color-primary);
+}
+.condo-guide-reset:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .condo-guide-empty {
@@ -262,6 +287,10 @@
   -webkit-appearance: none;
   appearance: none;
 }
+.condo-guide-select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
 @media (min-width: 640px) {
   .condo-guide-select {
     min-width: 180px;
@@ -330,6 +359,11 @@
   color: inherit;
   min-width: 0;
 }
+.condo-guide-card-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-lg);
+}
 
 .condo-guide-card-image-wrap {
   position: relative;
@@ -372,33 +406,12 @@
   }
 }
 
-.condo-guide-card-header {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
+.condo-guide-card-body > .condo-guide-card-title-block {
   margin-bottom: var(--space-xs);
-}
-
-.condo-guide-card-thumb-wrap {
-  position: relative;
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--color-primary);
-  border: 1px solid var(--border-subtle);
-}
-
-.condo-guide-card-thumb-img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover;
 }
 
 .condo-guide-card-title-block {
   min-width: 0;
-  flex: 1;
 }
 
 .condo-guide-card-name {
@@ -412,6 +425,17 @@
 
 .condo-guide-card-title-block .condo-guide-card-neighborhood {
   margin: 0;
+}
+
+.condo-guide-card-cta {
+  margin: var(--space-sm) 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+.condo-guide-card-link:focus-visible .condo-guide-card-cta,
+.condo-guide-card-link:hover .condo-guide-card-cta {
+  text-decoration: underline;
 }
 
 .condo-guide-card-neighborhood {

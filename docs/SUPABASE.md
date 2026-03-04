@@ -2,6 +2,22 @@
 
 This app uses Supabase for the **users** table (synced from Clerk) and for role-based dashboard routing. Follow these steps to configure Supabase correctly.
 
+## Full connection checklist (do in order)
+
+1. **Get your three Supabase values** – Supabase Dashboard → your project → **Settings** (gear) → **API**. Copy:
+   - **Project URL** → use as `NEXT_PUBLIC_SUPABASE_URL` (e.g. `https://xxxx.supabase.co`)
+   - **anon public** key → use as `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **service_role** key (click Reveal) → use as `SUPABASE_SERVICE_ROLE_KEY`
+2. **Local** – Put all three in `.env.local`. Restart the dev server (`npm run dev`).
+3. **Vercel** – Project → **Settings** → **Environment Variables**. Add the same three for **Production** (and Preview if you use it). **Redeploy** after saving.
+4. **Create the table** – Supabase → **SQL Editor**. Paste and run the contents of `supabase/migrations/20240301000000_create_users_table.sql`. Then **Table Editor** → confirm **users** exists with columns `clerk_id`, `email`, `first_name`, `last_name`, `role`.
+5. **Test dashboard (local)** – Sign in at `/sign-in`, then go to `/dashboard`. If you see "Error loading user" or redirect issues, check the terminal for the Supabase error message.
+6. **Webhook (production)** – Clerk → **Webhooks** → endpoint `https://your-production-domain.com/api/webhooks/clerk`, events **user.created** and **user.updated**. Set `CLERK_WEBHOOK_SECRET` in Vercel to the signing secret from that endpoint. Redeploy. Create a test user and check Clerk webhook Logs (200) and Supabase **users** table (new row).
+
+If something fails, the exact error is in: browser console (client), terminal (local server), or Vercel → Logs (production).
+
+---
+
 ## 1. Environment variables
 
 Set these in `.env.local` (local) and in Vercel (production):
@@ -85,3 +101,13 @@ The migration leaves RLS **disabled** so the anon key can read **users** when th
 | Broker sent to client dashboard | Ensure **users** has `role = 'agent'` or `'broker'` for that user (Clerk public_metadata or Supabase edit). See **BROKER-SETUP.md**. |
 | Webhook returns 500 | Check `CLERK_WEBHOOK_SECRET` and `SUPABASE_SERVICE_ROLE_KEY`; confirm **users** table and unique constraint on **clerk_id**. |
 | RLS blocking reads | If RLS is enabled, ensure the policy allows the request (e.g. JWT sub = clerk_id) or disable RLS for **users** for the anon key if you are not using a Clerk JWT template in Supabase. |
+
+### Users not syncing from Clerk to Supabase
+
+If sign-ups reach Clerk but no row appears in **users** (or the webhook fails):
+
+1. **Webhook URL** – Clerk can only call a **public** URL. Use your **production** URL (e.g. `https://yourdomain.com/api/webhooks/clerk`). Localhost will not receive webhooks unless you use a tunnel (e.g. ngrok).
+2. **Clerk Dashboard → Webhooks** – Confirm the endpoint URL is correct and that **user.created** and **user.updated** are selected. Check **Logs** for each event: 200 = success; 400 = bad request (e.g. invalid signature); 500 = server error (see step 4).
+3. **Environment (Vercel)** – In the project that serves the webhook (usually production), set `CLERK_WEBHOOK_SECRET` (from Clerk → Webhooks → your endpoint → Signing secret) and `SUPABASE_SERVICE_ROLE_KEY`. Redeploy after changing env.
+4. **Error details** – On 500, the app logs the Supabase error (event, clerkId, supabaseError). Check **Vercel → Project → Logs** (or your host’s function logs) for the exact message (e.g. column constraint, missing column).
+5. **Table schema** – The webhook sends `clerk_id`, `email`, `first_name`, `last_name`, and optionally `role`. If **users.email** is NOT NULL in your database, sign-ups without an email will fail; the migration defines **email** as nullable. Fix in Supabase with `ALTER TABLE public.users ALTER COLUMN email DROP NOT NULL;` if needed.

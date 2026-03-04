@@ -4,6 +4,11 @@ Last updated: 2026-03. Focus: security, APIs, auth, config, and high-impact impr
 
 ## Sitewide audit (Mar 2026)
 
+### Build audit
+- **Build:** `npm run build` succeeds (Next.js 16.1.6, Turbopack, React 19).
+- **Dependencies:** React 19 and @types/react 19; Clerk 6.x, Supabase, Vercel Analytics, Svix current.
+- **Lint:** `next lint` has a known Next 16 CLI quirk (treats "lint" as directory on some setups). Use `npx eslint src --ext .ts,.tsx` if needed.
+
 - **Proxy** – Migrated from `middleware.ts` to `proxy.ts` (Next.js 16 convention). Same behavior: Clerk when `CLERK_SECRET_KEY` set, else pass-through.
 - **Build** – `npm run build` succeeds; all routes compile (static, SSG, dynamic).
 - **Lint** – `npm run lint` (next lint) can fail with “Invalid project directory provided, no such directory: …/lint” on some setups (Next 16 CLI may treat the `lint` subcommand as a directory). Workaround: run ESLint directly, e.g. `npx eslint src --ext .ts,.tsx`, or fix when upgrading ESLint/Next.

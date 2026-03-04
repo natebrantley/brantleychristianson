@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin, formatSupabaseError } from '@/lib/supabase';
 
 const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
@@ -99,9 +99,14 @@ export async function POST(request: NextRequest) {
   });
 
   if (error) {
-    console.error('Supabase upsert failed:', error);
+    const errDetail = formatSupabaseError(error);
+    console.error('Clerk webhook: Supabase upsert failed', {
+      event: eventType,
+      clerkId,
+      supabaseError: errDetail,
+    });
     return NextResponse.json(
-      { error: 'Database sync failed' },
+      { error: 'Database sync failed', code: errDetail?.code ?? undefined },
       { status: 500 }
     );
   }
