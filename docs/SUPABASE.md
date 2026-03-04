@@ -100,6 +100,17 @@ The migration leaves RLS **disabled** so the anon key can read **users** when th
 | "Error loading user record" / empty `{}` in logs | Use the improved logging (formatSupabaseError); check Supabase URL and anon key; confirm **users** exists and has `clerk_id`. |
 | Broker sent to client dashboard | Ensure **users** has `role = 'agent'` or `'broker'` for that user (Clerk public_metadata or Supabase edit). See **BROKER-SETUP.md**. |
 | Webhook returns 500 | Check `CLERK_WEBHOOK_SECRET` and `SUPABASE_SERVICE_ROLE_KEY`; confirm **users** table and unique constraint on **clerk_id**. |
+
+### See why the webhook is failing (500)
+
+1. In **Clerk Dashboard** → **Configure** → **Webhooks** → your endpoint → **Message Attempts**.
+2. Click a **Failed** attempt (e.g. `user.updated`).
+3. Open the **Response** or **Response body** for that attempt. The app returns a JSON body with an `error` field:
+   - **"Missing SUPABASE_SERVICE_ROLE_KEY"** (or `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`) → Add that variable in **Vercel** → Settings → Environment Variables for **Production**, then redeploy.
+   - **"relation \"public.users\" does not exist"** → Run the **users** table migration in your production Supabase (SQL Editor: paste `supabase/migrations/20240301000000_create_users_table.sql` and run).
+   - **"Database sync failed"** or a Supabase error message (e.g. column name, constraint) → Check **Vercel → Logs** for the full detail; fix the **users** table schema in Supabase to match the webhook (see migration files).
+4. After fixing env or schema, trigger another user update in Clerk and confirm the next attempt succeeds (200).
+
 | RLS blocking reads | If RLS is enabled, ensure the policy allows the request (e.g. JWT sub = clerk_id) or disable RLS for **users** for the anon key if you are not using a Clerk JWT template in Supabase. |
 
 ### Users not syncing from Clerk to Supabase

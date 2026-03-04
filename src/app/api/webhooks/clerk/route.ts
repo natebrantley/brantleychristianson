@@ -11,11 +11,27 @@ import { supabaseAdmin, formatSupabaseError } from '@/lib/supabase';
 const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 
+function getSupabaseEnvError(): string | null {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()) return 'Missing NEXT_PUBLIC_SUPABASE_URL';
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()) return 'Missing NEXT_PUBLIC_SUPABASE_ANON_KEY';
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) return 'Missing SUPABASE_SERVICE_ROLE_KEY';
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   if (!CLERK_WEBHOOK_SECRET) {
     console.error('Missing CLERK_WEBHOOK_SECRET');
     return NextResponse.json(
       { error: 'Webhook secret not configured' },
+      { status: 500 }
+    );
+  }
+
+  const supabaseEnvError = getSupabaseEnvError();
+  if (supabaseEnvError) {
+    console.error('Clerk webhook:', supabaseEnvError);
+    return NextResponse.json(
+      { error: supabaseEnvError },
       { status: 500 }
     );
   }
