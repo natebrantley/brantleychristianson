@@ -25,13 +25,16 @@ export async function generateMetadata({ params }: LenderPageProps): Promise<Met
   const title = `${lender.name} | Preferred Lender`;
   const description = `${lender.name}, ${lender.title} at ${lender.company}. ${lender.bio.slice(0, 120)}…`;
   const url = `/lenders/${lender.slug}`;
-  const imageUrl = absoluteUrl(lender.image);
-  const images = [{ url: imageUrl, width: 600, height: 800, alt: `${lender.name}, ${lender.title}` }];
+  // Social sharing: use lender headshot (not default site image)
+  const headshotUrl = absoluteUrl(lender.image);
+  const ogImages = [
+    { url: headshotUrl, width: 600, height: 800, alt: `${lender.name}, ${lender.title}` },
+  ];
   return {
     title,
     description,
-    openGraph: { url, title, description, images },
-    twitter: { card: 'summary_large_image', title, description, images: [imageUrl] },
+    openGraph: { url, title, description, images: ogImages },
+    twitter: { card: 'summary_large_image', title, description, images: [headshotUrl] },
   };
 }
 
