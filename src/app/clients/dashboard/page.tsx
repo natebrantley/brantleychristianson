@@ -45,7 +45,9 @@ export default async function ClientsDashboardPage() {
     redirect('/agents');
   }
 
-  const displayName = user ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null;
+  const displayName = user
+    ? ([user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null)
+    : null;
 
   return (
     <main>
