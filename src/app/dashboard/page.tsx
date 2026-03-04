@@ -5,6 +5,11 @@ import { isBrokerRole } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * /dashboard redirects to the correct dashboard based on role.
+ * Agent dashboard: /agents (pipeline, leads, clients, marketing).
+ * Client dashboard: /clients (saved homes, searches, next steps).
+ */
 export default async function DashboardRouterPage() {
   const { userId } = await auth();
 

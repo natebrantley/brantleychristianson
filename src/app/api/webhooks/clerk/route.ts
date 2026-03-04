@@ -179,36 +179,41 @@ export async function POST(request: NextRequest) {
     const { error } = supabaseResult;
     if (error) {
       const errDetail = formatSupabaseError(error);
+      const message = typeof errDetail.message === 'string' ? errDetail.message : 'Database sync failed';
       console.error('Clerk webhook: Supabase upsert failed', {
         event: eventType,
         clerkId,
         supabaseError: errDetail,
       });
       return NextResponse.json(
-        { error: 'Database sync failed', code: errDetail?.code ?? undefined },
+        { error: message, code: errDetail?.code ?? undefined, details: errDetail?.details },
         { status: 500 }
       );
     }
 
     // Bridge: if this user's email exists in leads (e.g. from CSV/consultation), link the lead to their Clerk account
     if (primaryEmail) {
-      const { error: leadError } = await admin
-        .from('leads')
-        .update({ clerk_id: clerkId })
-        .eq('email', primaryEmail.toLowerCase())
-        .is('clerk_id', null);
-      if (leadError) {
-        console.warn('Clerk webhook: lead bridge update skipped (table missing or error)', {
-          clerkId,
-          email: primaryEmail,
-          supabaseError: formatSupabaseError(leadError),
-        });
+      try {
+        const { error: leadError } = await admin
+          .from('leads')
+          .update({ clerk_id: clerkId })
+          .eq('email', primaryEmail.toLowerCase())
+          .is('clerk_id', null);
+        if (leadError) {
+          console.warn('Clerk webhook: lead bridge update skipped (table missing or error)', {
+            clerkId,
+            email: primaryEmail,
+            supabaseError: formatSupabaseError(leadError),
+          });
+        }
+      } catch (leadErr) {
+        console.warn('Clerk webhook: lead bridge threw', { clerkId, email: primaryEmail, err: leadErr });
       }
     }
 
     return new NextResponse(null, { status: 200 });
   } catch (err) {
-    // Only Supabase errors should throw here; MailerLite is handled above with warn.
+    const message = err instanceof Error ? err.message : 'Database sync failed';
     console.error('Clerk webhook: unexpected error', {
       event: eventType,
       clerkId,
@@ -216,7 +221,7 @@ export async function POST(request: NextRequest) {
       err,
     });
     return NextResponse.json(
-      { error: 'Database sync failed' },
+      { error: message },
       { status: 500 }
     );
   }

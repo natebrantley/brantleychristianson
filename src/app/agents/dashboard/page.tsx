@@ -3,8 +3,14 @@ import { auth } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { isBrokerRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Agent dashboard',
+  description: 'Pipeline, leads, and client management for BCRE agents.',
+};
 
 export default async function AgentsDashboardPage() {
   const { userId } = await auth();
