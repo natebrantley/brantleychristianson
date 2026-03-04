@@ -43,7 +43,7 @@
 | `/privacy` | `app/privacy/page.tsx` | |
 | `/terms` | `app/terms/page.tsx` | |
 
-**API:** `POST /api/consultation` → `app/api/consultation/route.ts` (Mailchimp + rate limit).
+**API:** `POST /api/consultation` → `app/api/consultation/route.ts` (MailerLite + rate limit).
 
 **Special:** `error.tsx` (error boundary), `not-found.tsx` (404). No nested layouts under markets/brokers.
 
@@ -160,7 +160,7 @@ All pages rely on the same design system; no page-specific CSS imports.
 ## 8. External URLs & assets
 
 - **Domain:** `https://brantleychristianson.com` in `config/site.ts` and in metadata/canonical/JSON-LD and contact copy.
-- **Third-party:** GA4, Repliers API, Mailchimp (consultation), Google Maps/OSM (CondoMapSection), Walk Score, YouTube (LazyYouTube, social), social links from `data/site.ts`.
+- **Third-party:** GA4, Repliers API, MailerLite (consultation), Google Maps/OSM (CondoMapSection), Walk Score, YouTube (LazyYouTube, social), social links from `data/site.ts`.
 - **Assets:** All under `public/media/`; paths via `config/theme.ts` (`assetPaths`: brokers, listings, hubs, markets, stock, condos, logos). Condo fallback: `stock/living.jpeg`.
 
 **Internal links:** Key nav (Markets, Contact, Brokers, Resources, etc.) and in-content links (e.g. `/brokers/ashley`) are consistent; broker slug `ashley` exists in `agents.json`.
@@ -195,7 +195,7 @@ All pages rely on the same design system; no page-specific CSS imports.
 
 - **Stack:** Next 16, React 18.
 - **Scripts:** `dev`, `build`, `start`, `lint`.
-- **Env:** `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `MAILCHIMP_*`, and any Repliers/API keys (see `api/consultation/route.ts` and `lib/`).
+- **Env:** `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `MAILERLITE_*`, and any Repliers/API keys (see `api/consultation/route.ts` and `lib/`).
 
 ---
 

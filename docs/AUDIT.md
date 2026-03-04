@@ -15,7 +15,7 @@ Last updated: 2026-03. Focus: security, APIs, auth, config, and high-impact impr
 
 - **App structure** – App Router, layouts, dashboard/agents/clients routes, loading states.
 - **Auth & Clerk** – `src/middleware.ts` (Clerk when keys set), conditional layout/SiteHeaderPublic, `auth()` / `getToken()` in server components, role logic (`isBrokerRole`), redirects.
-- **APIs** – Consultation (Mailchimp), Clerk webhook (Svix + Supabase sync).
+- **APIs** – Consultation (MailerLite), Clerk webhook (Svix + Supabase sync).
 - **Data** – Supabase (Clerk JWT client, admin, webhook sync), static data in `src/data`.
 - **Security** – Headers, rate limiting, input validation, webhook verification, env/config.
 - **Error handling** – Global error and not-found, API error responses and logging.
@@ -29,7 +29,7 @@ Last updated: 2026-03. Focus: security, APIs, auth, config, and high-impact impr
 | Consultation API | Hardened | Rate limit, body size cap, email validation, field length caps, tag length caps. |
 | Clerk webhook | OK | Svix verification; syncs users; no PII in logs. |
 | Security headers | OK | X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. |
-| Env/config | OK | `.env.example` documents Clerk, Supabase, Mailchimp, optional services. |
+| Env/config | OK | `.env.example` documents Clerk, Supabase, MailerLite, optional services. |
 | SEO | OK | Contact page uses absolute `SITE_URL` for OpenGraph url. |
 
 ## Improvements Made

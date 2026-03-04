@@ -25,7 +25,7 @@ Set these **environment variables** in the Vercel project (Settings → Environm
 
 ## Optional
 
-- **Mailchimp** (consultation form): `MAILCHIMP_API_KEY`, `MAILCHIMP_AUDIENCE_ID`
+- **MailerLite** (consultation form): `MAILERLITE_API_TOKEN`, optional `MAILERLITE_GROUP_ID`
 - **Analytics**: `NEXT_PUBLIC_GA_MEASUREMENT_ID`
 
 After adding variables, redeploy (or push a new commit). Clear the build cache and redeploy if a previous build failed due to missing keys.

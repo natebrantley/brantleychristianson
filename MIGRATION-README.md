@@ -65,7 +65,6 @@ Build: `npm run build`. Put all media in `public/media/` (e.g. `public/media/img
 
 1. **Connect repo:** [Vercel](https://vercel.com) → Import Project → select `natebrantley/brantleychristianson`. Framework Preset: Next.js.
 2. **Environment variables:** In Project Settings → Environment Variables, add (for Production and Preview):
-   - `MAILCHIMP_API_KEY` – Mailchimp API key (e.g. `…-us2`)
-   - `MAILCHIMP_AUDIENCE_ID` – Mailchimp audience (list) ID  
-   Optional: `MAILCHIMP_MERGE_TAG_MESSAGE` (default `MMERGE3`) for the consultation message merge field.
+   - `MAILERLITE_API_TOKEN` – MailerLite API token (Integrations → MailerLite API → Generate new token)
+   Optional: `MAILERLITE_GROUP_ID` – group ID to add consultation leads to (e.g. "Consultation" group).
 3. **Deploy:** Push to `master` (or your production branch) to trigger a new deployment.

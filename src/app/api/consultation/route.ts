@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
 import { getClientIp, isRateLimited } from '@/lib/rateLimit';
+
+const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 
 interface ConsultationRequestBody {
   name?: string;
@@ -15,18 +16,17 @@ interface ConsultationRequestBody {
 
 /**
  * POST /api/consultation
- * Adds/updates the contact in the Mailchimp audience with merge fields and tags.
- * Requires MAILCHIMP_API_KEY and MAILCHIMP_AUDIENCE_ID in env.
+ * Adds/updates the contact in MailerLite with fields and optional group.
+ * Requires MAILERLITE_API_TOKEN in env. Optional: MAILERLITE_GROUP_ID.
  * Rate limiting: best-effort in-memory limiter allowing up to 5 requests
  * per 15 minutes per client IP (see src/lib/rateLimit.ts).
  */
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.MAILCHIMP_API_KEY;
-  const audienceId = process.env.MAILCHIMP_AUDIENCE_ID;
-  const messageMergeTag = process.env.MAILCHIMP_MERGE_TAG_MESSAGE ?? 'MMERGE3';
+  const apiToken = process.env.MAILERLITE_API_TOKEN;
+  const groupId = process.env.MAILERLITE_GROUP_ID?.trim() || undefined;
 
-  if (!apiKey || !audienceId) {
-    console.error('Missing MAILCHIMP_API_KEY or MAILCHIMP_AUDIENCE_ID');
+  if (!apiToken) {
+    console.error('Missing MAILERLITE_API_TOKEN');
     return NextResponse.json(
       {
         error:
@@ -70,44 +70,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 });
   }
 
-  const dc = apiKey.includes('-') ? apiKey.split('-').pop() : 'us2';
+  const tagVal = (s: unknown, max = 100) =>
+    typeof s === 'string' ? s.trim().slice(0, max) : '';
 
-  const mergeFields: Record<string, string> = {
-    FNAME: name || '',
-    PHONE: phone || '',
+  const fields: Record<string, string> = {};
+  if (name) fields.name = name;
+  if (phone) fields.phone = phone;
+  if (message) fields.message = message;
+  if (tagVal(body.source)) fields.source = tagVal(body.source);
+  if (tagVal(body.market)) fields.market = tagVal(body.market);
+  if (tagVal(body.buildingName)) fields.building_name = tagVal(body.buildingName);
+
+  const payload: {
+    email: string;
+    fields: Record<string, string>;
+    groups?: string[];
+  } = {
+    email: email.toLowerCase(),
+    fields,
   };
-  if (messageMergeTag && message) {
-    mergeFields[messageMergeTag] = message;
+  if (groupId) {
+    payload.groups = [groupId];
   }
 
-  const subscriberHash = crypto.createHash('md5').update(email.toLowerCase()).digest('hex');
-  const memberUrl = `https://${dc}.api.mailchimp.com/3.0/lists/${audienceId}/members/${subscriberHash}`;
-
   try {
-    const memberRes = await fetch(memberUrl, {
-      method: 'PUT',
+    const res = await fetch(`${MAILERLITE_API_BASE}/subscribers`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        Accept: 'application/json',
+        Authorization: `Bearer ${apiToken}`,
       },
-      body: JSON.stringify({
-        email_address: email,
-        status_if_new: 'subscribed',
-        merge_fields: mergeFields,
-      }),
+      body: JSON.stringify(payload),
     });
 
-    const memberData = (await memberRes.json().catch(() => ({}))) as {
-      detail?: string;
-      title?: string;
+    const data = (await res.json().catch(() => ({}))) as {
+      message?: string;
+      errors?: Record<string, string[]>;
       [key: string]: unknown;
     };
 
-    if (!memberRes.ok) {
-      console.error('Mailchimp member error:', {
-        status: memberRes.status,
-        data: memberData,
-        subscriberHash,
+    if (!res.ok) {
+      console.error('MailerLite subscriber error:', {
+        status: res.status,
+        data,
         source: body.source,
         market: body.market,
         buildingSlug: body.buildingSlug,
@@ -122,43 +128,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tags: string[] = ['Consultation'];
-    const tagVal = (s: unknown, max = 100) =>
-      typeof s === 'string' ? s.trim().slice(0, max) : '';
-    if (tagVal(body.source)) tags.push(`Source: ${tagVal(body.source)}`);
-    if (tagVal(body.market)) tags.push(`Market: ${tagVal(body.market)}`);
-    if (tagVal(body.buildingName)) tags.push(`Building: ${tagVal(body.buildingName)}`);
-
-    if (tags.length > 0) {
-      const tagsUrl = `https://${dc}.api.mailchimp.com/3.0/lists/${audienceId}/members/${subscriberHash}/tags`;
-      const tagsRes = await fetch(tagsUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          tags: tags.map((name) => ({ name, status: 'active' as const })),
-        }),
-      });
-
-      if (!tagsRes.ok) {
-        const tagsData = await tagsRes.json().catch(() => ({}));
-        console.error('Mailchimp tags error:', {
-          status: tagsRes.status,
-          data: tagsData,
-          subscriberHash,
-          source: body.source,
-          market: body.market,
-          buildingSlug: body.buildingSlug,
-        });
-        // Do not surface tag errors to the user; contact was still captured.
-      }
-    }
+    return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error('Mailchimp request failed:', {
+    console.error('MailerLite request failed:', {
       error,
-      subscriberHash,
       source: body.source,
       market: body.market,
       buildingSlug: body.buildingSlug,
@@ -172,6 +145,4 @@ export async function POST(request: NextRequest) {
       { status: 502 }
     );
   }
-
-  return NextResponse.json({ ok: true });
 }
