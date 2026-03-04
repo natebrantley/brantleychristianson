@@ -3,6 +3,7 @@ import { Webhook } from 'svix';
 import { supabaseAdmin, formatSupabaseError } from '@/lib/supabase';
 
 const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 
 export async function POST(request: NextRequest) {
   if (!CLERK_WEBHOOK_SECRET) {
@@ -94,22 +95,69 @@ export async function POST(request: NextRequest) {
   };
   if (role !== undefined) row.role = role;
 
-  const { error } = await admin.from('users').upsert(row, {
+  const apiToken = process.env.MAILERLITE_API_TOKEN;
+  const masterGroupId = process.env.MAILERLITE_GROUP_ID?.trim();
+
+  const supabasePromise = admin.from('users').upsert(row, {
     onConflict: 'clerk_id',
   });
 
-  if (error) {
-    const errDetail = formatSupabaseError(error);
-    console.error('Clerk webhook: Supabase upsert failed', {
+  const mailerlitePromise =
+    primaryEmail && apiToken && masterGroupId
+      ? fetch(`${MAILERLITE_API_BASE}/subscribers`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${apiToken}`,
+          },
+          body: JSON.stringify({
+            email: primaryEmail,
+            fields: {
+              name: firstName ?? '',
+              last_name: lastName ?? '',
+            },
+            groups: [masterGroupId],
+          }),
+        }).then(async (res) => {
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(`MailerLite: ${JSON.stringify(data)}`);
+          }
+        })
+      : Promise.resolve();
+
+  try {
+    const [supabaseResult] = await Promise.all([
+      supabasePromise,
+      mailerlitePromise,
+    ]);
+
+    const { error } = supabaseResult;
+    if (error) {
+      const errDetail = formatSupabaseError(error);
+      console.error('Clerk webhook: Supabase upsert failed', {
+        event: eventType,
+        clerkId,
+        supabaseError: errDetail,
+      });
+      return NextResponse.json(
+        { error: 'Database sync failed', code: errDetail?.code ?? undefined },
+        { status: 500 }
+      );
+    }
+
+    return new NextResponse(null, { status: 200 });
+  } catch (err) {
+    console.error('Clerk webhook: MailerLite add failed', {
       event: eventType,
       clerkId,
-      supabaseError: errDetail,
+      primaryEmail,
+      err,
     });
     return NextResponse.json(
-      { error: 'Database sync failed', code: errDetail?.code ?? undefined },
+      { error: 'Marketing list sync failed' },
       { status: 500 }
     );
   }
-
-  return new NextResponse(null, { status: 200 });
 }

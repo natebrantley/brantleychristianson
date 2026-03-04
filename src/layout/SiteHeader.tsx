@@ -2,8 +2,7 @@
 
 import { useEffect } from 'react';
 import {
-  SignedIn,
-  SignedOut,
+  Show,
   SignInButton,
   UserButton,
 } from '@clerk/nextjs';
@@ -74,15 +73,15 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
-            <SignedIn>
+            <Show when="signed-in">
               <li>
                 <Link href="/dashboard" onClick={close}>
                   Dashboard
                 </Link>
               </li>
-            </SignedIn>
+            </Show>
             <li className="nav-signin-item">
-              <SignedOut>
+              <Show when="signed-out">
                 <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
                   <button
                     type="button"
@@ -91,8 +90,8 @@ export function SiteHeader() {
                     Sign in
                   </button>
                 </SignInButton>
-              </SignedOut>
-              <SignedIn>
+              </Show>
+              <Show when="signed-in">
                 <UserButton
                   appearance={{
                     elements: {
@@ -100,7 +99,7 @@ export function SiteHeader() {
                     },
                   }}
                 />
-              </SignedIn>
+              </Show>
             </li>
           </ul>
           <div className="nav-close-wrap">
