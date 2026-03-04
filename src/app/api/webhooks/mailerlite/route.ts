@@ -2,7 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { supabaseAdmin, formatSupabaseError } from '@/lib/supabase';
 
+/**
+ * MailerLite webhook: when subscribers unsubscribe, bounce, report spam, or are deleted,
+ * updates Supabase users.marketing_opt_in to false so the app doesn’t email them.
+ * Requires MAILERLITE_WEBHOOK_SECRET. Requires users.marketing_opt_in column (see migration).
+ */
 const MAILERLITE_WEBHOOK_SECRET = process.env.MAILERLITE_WEBHOOK_SECRET;
+
+/** Events that mean "do not send marketing" – we set users.marketing_opt_in = false in Supabase. */
+const OPT_OUT_EVENTS = new Set([
+  'subscriber.unsubscribed',
+  'subscriber.bounced',
+  'subscriber.spam_reported',
+  'subscriber.deleted',
+]);
 
 function verifySignature(rawBody: string, signature: string, secret: string): boolean {
   const expected = crypto.createHmac('sha256', secret).update(rawBody, 'utf8').digest('hex');
@@ -60,7 +73,7 @@ export async function POST(request: NextRequest) {
 
   for (const event of events) {
     const type = typeof event?.type === 'string' ? event.type : '';
-    if (type !== 'subscriber.unsubscribed' && type !== 'subscriber.bounced') {
+    if (!OPT_OUT_EVENTS.has(type)) {
       continue;
     }
 

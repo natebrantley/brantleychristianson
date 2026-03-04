@@ -20,7 +20,7 @@ Last updated: 2026-03. Focus: security, APIs, auth, config, and high-impact impr
 
 - **App structure** – App Router, layouts, dashboard/agents/clients routes, loading states.
 - **Auth & Clerk** – `src/middleware.ts` (Clerk when keys set), conditional layout/SiteHeaderPublic, `auth()` / `getToken()` in server components, role logic (`isBrokerRole`), redirects.
-- **APIs** – Consultation (MailerLite), Clerk webhook (Svix + Supabase sync).
+- **APIs** – Consultation (MailerLite), Clerk webhook (Svix + Supabase + MailerLite; handles user.created, user.updated, user.deleted), MailerLite webhook (unsubscribe/bounce/spam/deleted → Supabase users.marketing_opt_in = false).
 - **Data** – Supabase (Clerk JWT client, admin, webhook sync), static data in `src/data`.
 - **Security** – Headers, rate limiting, input validation, webhook verification, env/config.
 - **Error handling** – Global error and not-found, API error responses and logging.
@@ -32,7 +32,8 @@ Last updated: 2026-03. Focus: security, APIs, auth, config, and high-impact impr
 | Proxy (middleware) | OK | `src/proxy.ts`; runs Clerk only when `CLERK_SECRET_KEY` is set; else `NextResponse.next()`. Matcher excludes static assets. |
 | Auth & roles | OK | Client-by-default; broker = `agent` or `broker` in Supabase. |
 | Consultation API | Hardened | Rate limit, body size cap, email validation, field length caps, tag length caps. |
-| Clerk webhook | OK | Svix verification; syncs users; no PII in logs. |
+| Clerk webhook | OK | Svix verification; syncs users + MailerLite; deletes on user.deleted; no PII in logs. |
+| MailerLite webhook | OK | Signature verification; sets users.marketing_opt_in = false on unsubscribe/bounce/spam/deleted. |
 | Security headers | OK | X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. |
 | Env/config | OK | `.env.example` documents Clerk, Supabase, MailerLite, optional services. |
 | SEO | OK | Contact page uses absolute `SITE_URL` for OpenGraph url. |

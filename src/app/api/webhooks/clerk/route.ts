@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';
 import { supabaseAdmin, formatSupabaseError } from '@/lib/supabase';
 
+/**
+ * Clerk webhook: syncs user.created / user.updated to Supabase (users) and MailerLite (Master Audience).
+ * On user.deleted, removes the user from Supabase by clerk_id.
+ * Requires CLERK_WEBHOOK_SECRET. Optional: MAILERLITE_API_TOKEN + MAILERLITE_GROUP_ID for list sync.
+ */
 const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 
@@ -41,11 +46,41 @@ export async function POST(request: NextRequest) {
   }
 
   const eventType = payload.type;
+  const data = payload.data;
+
+  // user.deleted: remove from Supabase by clerk_id
+  if (eventType === 'user.deleted') {
+    const clerkId =
+      data && typeof data === 'object' && typeof data.id === 'string'
+        ? data.id
+        : null;
+    if (!clerkId) {
+      return new NextResponse(null, { status: 200 });
+    }
+    const admin = supabaseAdmin();
+    const { error } = await admin
+      .from('users')
+      .delete()
+      .eq('clerk_id', clerkId);
+    if (error) {
+      const errDetail = formatSupabaseError(error);
+      console.error('Clerk webhook: Supabase delete failed', {
+        event: eventType,
+        clerkId,
+        supabaseError: errDetail,
+      });
+      return NextResponse.json(
+        { error: 'Database delete failed', code: errDetail?.code ?? undefined },
+        { status: 500 }
+      );
+    }
+    return new NextResponse(null, { status: 200 });
+  }
+
   if (eventType !== 'user.created' && eventType !== 'user.updated') {
     return new NextResponse(null, { status: 200 });
   }
 
-  const data = payload.data;
   if (!data || typeof data !== 'object') {
     return new NextResponse(null, { status: 200 });
   }
@@ -87,6 +122,7 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = supabaseAdmin();
+  // Omit id so Supabase auto-generates UUID; use clerk_id for upsert conflict.
   const row: Record<string, unknown> = {
     clerk_id: clerkId,
     email: primaryEmail,
