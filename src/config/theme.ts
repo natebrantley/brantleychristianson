@@ -57,6 +57,8 @@ export const assetPaths = {
   condos: '/media/img/condos',
   /** Logos: /media/img/logos/{filename} */
   logos: '/media/img/logos',
+  /** Lender headshots & logos: /media/img/lenders/{filename} */
+  lenders: '/media/img/lenders',
 } as const;
 
 /** Default image when a condo building image is missing from /media/img/condos/ */

@@ -1,0 +1,36 @@
+[
+  {
+    "name": "Spencer Buck",
+    "slug": "spencer-buck",
+    "title": "Loan Officer",
+    "company": "NEXA Lending",
+    "logo": "/media/img/logos/nexa.png",
+    "nmls": "NMLS #1541695",
+    "co_nmls": "Co. NMLS #1660690",
+    "phone": "(253) 250-6150",
+    "email": "sbuck@nexalending.com",
+    "image": "/media/img/lenders/spencer.png",
+    "url": "https://buckhomeloan.com",
+    "licenses": ["WA", "MT", "FL"],
+    "specialties": ["Residential & Investment Lending"],
+    "address": "5559 S Sossaman Rd Bldg #1\nSuite #101\nMesa, AZ 85212",
+    "bio": "Dedicated to offering more options, flexibility, and exceptional service to help you build a strategic plan for your home loan."
+  },
+  {
+    "name": "Taylor Winkler",
+    "slug": "taylor-winkler",
+    "title": "Loan Officer",
+    "company": "NEXA Mortgage",
+    "logo": "/media/img/logos/nexa.png",
+    "nmls": "NMLS #1448538",
+    "co_nmls": "Co. NMLS #1660690",
+    "phone": "(425) 931-4678",
+    "email": "taylorwinkler@nexamortgage.com",
+    "image": "/media/img/lenders/taylor.png",
+    "url": "https://tayloryourloan.net",
+    "licenses": ["WA", "OR", "CA"],
+    "specialties": ["Purchase Loans", "Refinancing", "Investment Properties"],
+    "address": "5559 S Sossaman Rd Bldg #1\nSuite #101\nMesa, AZ 85212",
+    "bio": "Providing unmatched care and trust, Taylor leverages NEXA Mortgage's expansive options to secure the perfect financing tailored to your needs."
+  }
+]

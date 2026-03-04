@@ -13,3 +13,24 @@ export interface Agent {
   cities: string[];
   languages: string[];
 }
+
+/**
+ * Preferred lender – matches src/data/lenders.json
+ */
+export interface Lender {
+  name: string;
+  slug: string;
+  title: string;
+  company: string;
+  logo?: string;
+  nmls: string;
+  co_nmls?: string;
+  phone: string;
+  email: string;
+  image: string;
+  url: string;
+  licenses: string[];
+  specialties: string[];
+  address?: string;
+  bio: string;
+}

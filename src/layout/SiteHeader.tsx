@@ -17,6 +17,7 @@ const LOGO_SRC = `${assetPaths.logos}/BCRE-White-Trans.png`;
 const NAV_LINKS = [
   { href: '/markets', label: 'Markets' },
   { href: '/brokers', label: 'Brokers' },
+  { href: '/lenders', label: 'Lenders' },
   { href: '/about', label: 'About' },
   { href: '/social', label: 'Social' },
 ];
