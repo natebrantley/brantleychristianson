@@ -68,6 +68,23 @@ function lenderJsonLd(lender: Lender) {
   };
 }
 
+/** JSON-LD BreadcrumbList for profile page */
+function breadcrumbJsonLd(lender: Lender) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Preferred Lenders', item: `${SITE_URL}/lenders` },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: lender.name,
+        item: `${SITE_URL}/lenders/${lender.slug}`,
+      },
+    ],
+  };
+}
+
 export default async function LenderProfilePage({ params }: LenderPageProps) {
   const { slug } = await params;
   const lender = getLenderBySlug(slug);
@@ -77,12 +94,17 @@ export default async function LenderProfilePage({ params }: LenderPageProps) {
   }
 
   const jsonLd = lenderJsonLd(lender);
+  const breadcrumbLd = breadcrumbJsonLd(lender);
 
   return (
     <main>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <div className="lender-hero-image" aria-hidden>
         <Image
@@ -101,7 +123,12 @@ export default async function LenderProfilePage({ params }: LenderPageProps) {
       >
         <div className="container container-narrow stack--lg">
           <nav className="lender-detail-back" aria-label="Breadcrumb">
-            <Link href="/lenders">← Preferred Lenders</Link>
+            <ol className="lender-detail-breadcrumb" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li>
+                <Link href="/lenders">Preferred Lenders</Link>
+              </li>
+              <li aria-current="page">{lender.name}</li>
+            </ol>
           </nav>
 
           <header className="lender-detail-header stack--sm text-center">

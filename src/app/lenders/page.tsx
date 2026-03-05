@@ -3,7 +3,7 @@ import { Button } from '@/components/Button';
 import { LendersList } from '@/components/LendersList';
 import { assetPaths } from '@/config/theme';
 import { lenders } from '@/data/lenders';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { SITE_NAME, SITE_URL, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Preferred Lenders';
@@ -13,8 +13,9 @@ const description =
 export const metadata: Metadata = {
   title,
   description,
+  alternates: { canonical: `${SITE_URL}/lenders` },
   openGraph: {
-    url: '/lenders',
+    url: `${SITE_URL}/lenders`,
     title: `${title} | ${SITE_NAME}`,
     description,
     images: [defaultOgImage('BCRE preferred lenders')],
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
 
 export default function LendersPage() {
   return (
-    <main>
+    <main className="lenders-page">
       <Hero
         title="Preferred Lenders"
         lead="Work with loan officers we trust. They know our markets and deliver options, clarity, and service for purchase, refinance, and investment loans."

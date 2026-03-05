@@ -1,5 +1,3 @@
-'use client';
-
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Lender } from '@/data/types';
@@ -23,7 +21,11 @@ export function LendersList({ lenders }: LendersListProps) {
       {lenders.map((lender) => (
         <li key={lender.slug}>
           <article className="lender-tile">
-            <Link href={`/lenders/${lender.slug}`} className="lender-tile-link">
+            <Link
+              href={`/lenders/${lender.slug}`}
+              className="lender-tile-link"
+              aria-label={`View profile for ${lender.name}`}
+            >
               <span className="lender-tile-image-wrap">
                 <Image
                   src={lender.image}
@@ -51,11 +53,19 @@ export function LendersList({ lenders }: LendersListProps) {
               </div>
             </Link>
             <div className="lender-tile-actions">
-              <a href={`mailto:${lender.email}`} className="lender-tile-email">
+              <a
+                href={`mailto:${lender.email}`}
+                className="lender-tile-email"
+                aria-label={`Email ${lender.name}`}
+              >
                 Email
               </a>
               {lender.phone && (
-                <a href={`tel:${lender.phone.replace(/\D/g, '')}`} className="lender-tile-phone">
+                <a
+                  href={`tel:${lender.phone.replace(/\D/g, '')}`}
+                  className="lender-tile-phone"
+                  aria-label={`Call ${lender.name} at ${lender.phone}`}
+                >
                   {lender.phone}
                 </a>
               )}

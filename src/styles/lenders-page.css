@@ -79,6 +79,13 @@
   box-shadow: var(--shadow-hover);
   transform: translateY(-4px);
 }
+@media (prefers-reduced-motion: reduce) {
+  .lender-tile,
+  .lender-tile:hover {
+    transition: none;
+    transform: none;
+  }
+}
 
 .lender-tile-link {
   display: flex;
@@ -197,14 +204,30 @@
   margin: 0 0 var(--space-md);
   font-size: 0.9375rem;
 }
-.lender-detail-back a {
+.lender-detail-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+}
+.lender-detail-breadcrumb li:not(:last-child)::after {
+  content: '›';
+  margin-left: 0.5rem;
+  color: var(--color-muted);
+  font-weight: 400;
+}
+.lender-detail-breadcrumb a {
   color: var(--color-accent);
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2s ease;
 }
-.lender-detail-back a:hover {
+.lender-detail-breadcrumb a:hover {
   color: var(--color-primary);
+}
+.lender-detail-breadcrumb [aria-current='page'] {
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 .lender-detail-logo-wrap {
