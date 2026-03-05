@@ -32,5 +32,22 @@
     "specialties": ["Purchase Loans", "Refinancing", "Investment Properties"],
     "address": "5559 S Sossaman Rd Bldg #1\nSuite #101\nMesa, AZ 85212",
     "bio": "Providing unmatched care and trust, Taylor leverages NEXA Mortgage's expansive options to secure the perfect financing tailored to your needs."
+  },
+  {
+    "name": "Madisyn Donnelly",
+    "slug": "madisyn",
+    "title": "Mortgage Broker",
+    "company": "DC Lending",
+    "logo": "/media/img/logos/dc_gray.png",
+    "nmls": "NMLS #2718255",
+    "co_nmls": "Co. NMLS #1773532",
+    "phone": "(360) 977-8176",
+    "email": "Madisyn@dc-lending.com",
+    "image": "/media/img/lenders/madisyn.jpg",
+    "url": "",
+    "licenses": ["WA", "OR"],
+    "specialties": ["Residential Lending"],
+    "address": "216 NE 4th Ave. Ste 101\nCamas, WA 98607",
+    "bio": "Mortgage broker with DC Lending, serving Washington and Oregon with personalized home loan solutions."
   }
 ]

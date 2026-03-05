@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { lenders, getLenderBySlug } from '@/data/lenders';
 import { assetPaths } from '@/config/theme';
-import { SITE_NAME, absoluteUrl } from '@/config/site';
+import { SITE_NAME, SITE_URL, absoluteUrl } from '@/config/site';
 import type { Metadata } from 'next';
+import type { Lender } from '@/data/types';
 
 interface LenderPageProps {
   params: Promise<{ slug: string }>;
@@ -16,6 +17,9 @@ export function generateStaticParams() {
   return lenders.map((lender) => ({ slug: lender.slug }));
 }
 
+/** Meta description max length for SEO */
+const META_DESC_MAX = 155;
+
 export async function generateMetadata({ params }: LenderPageProps): Promise<Metadata> {
   const { slug } = await params;
   const lender = getLenderBySlug(slug);
@@ -23,9 +27,10 @@ export async function generateMetadata({ params }: LenderPageProps): Promise<Met
     return { title: `Lender | ${SITE_NAME}` };
   }
   const title = `${lender.name} | Preferred Lender`;
-  const description = `${lender.name}, ${lender.title} at ${lender.company}. ${lender.bio.slice(0, 120)}…`;
-  const url = `/lenders/${lender.slug}`;
-  // Social sharing: use lender headshot (not default site image)
+  const rawDesc = `${lender.name}, ${lender.title} at ${lender.company}. ${lender.bio}`;
+  const description =
+    rawDesc.length > META_DESC_MAX ? `${rawDesc.slice(0, META_DESC_MAX - 1)}…` : rawDesc;
+  const canonical = `${SITE_URL}/lenders/${lender.slug}`;
   const headshotUrl = absoluteUrl(lender.image);
   const ogImages = [
     { url: headshotUrl, width: 600, height: 800, alt: `${lender.name}, ${lender.title}` },
@@ -33,8 +38,33 @@ export async function generateMetadata({ params }: LenderPageProps): Promise<Met
   return {
     title,
     description,
-    openGraph: { url, title, description, images: ogImages },
+    alternates: { canonical },
+    openGraph: { url: canonical, title, description, images: ogImages },
     twitter: { card: 'summary_large_image', title, description, images: [headshotUrl] },
+  };
+}
+
+/** JSON-LD for lender profile (Person + contact) */
+function lenderJsonLd(lender: Lender) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: lender.name,
+    jobTitle: lender.title,
+    worksFor: {
+      '@type': 'Organization',
+      name: lender.company,
+    },
+    email: lender.email,
+    telephone: lender.phone || undefined,
+    image: absoluteUrl(lender.image),
+    description: lender.bio,
+    address: lender.address
+      ? {
+          '@type': 'PostalAddress',
+          streetAddress: lender.address.replace(/\n/g, ', '),
+        }
+      : undefined,
   };
 }
 
@@ -46,12 +76,18 @@ export default async function LenderProfilePage({ params }: LenderPageProps) {
     notFound();
   }
 
+  const jsonLd = lenderJsonLd(lender);
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="lender-hero-image" aria-hidden>
         <Image
           src={`${assetPaths.stock}/couch.jpeg`}
-          alt="Living room"
+          alt=""
           fill
           className="lender-hero-image__img"
           priority
@@ -78,6 +114,7 @@ export default async function LenderProfilePage({ params }: LenderPageProps) {
                   height={48}
                   sizes="120px"
                   className="lender-detail-logo"
+                  loading="lazy"
                 />
               </div>
             )}
@@ -98,6 +135,7 @@ export default async function LenderProfilePage({ params }: LenderPageProps) {
                   height={364}
                   sizes="(min-width: 1024px) 320px, 280px"
                   className="lender-detail-photo"
+                  loading="lazy"
                 />
               </div>
               <dl className="lender-detail-meta">
