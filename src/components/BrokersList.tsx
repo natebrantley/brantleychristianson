@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Agent } from '@/data/types';
 import { getBrokerCities, getBrokerLanguages } from '@/data/agents';
+import { AssignAgentButton } from '@/components/AssignAgentButton';
 
 export type BrokerSort = 'name-asc' | 'name-desc';
 
@@ -86,9 +87,12 @@ function filterByLanguage(agents: Agent[], language: string): Agent[] {
 
 export interface BrokersListProps {
   agents: Agent[];
+  /** When set, agent links use this path (e.g. "/agents") instead of agent.url (e.g. "/brokers/slug"). */
+  basePath?: string;
 }
 
-export function BrokersList({ agents }: BrokersListProps) {
+export function BrokersList({ agents, basePath }: BrokersListProps) {
+  const agentHref = (agent: Agent) => (basePath ? `${basePath}/${agent.slug}` : agent.url);
   const searchParams = useSearchParams();
   const cities = useMemo(() => getBrokerCities(), []);
   const languages = useMemo(() => getBrokerLanguages(), []);
@@ -271,7 +275,7 @@ export function BrokersList({ agents }: BrokersListProps) {
           {sorted.map((agent) => (
             <li key={agent.slug}>
               <article className="broker-tile">
-                <Link href={agent.url} className="broker-tile-link">
+                <Link href={agentHref(agent)} className="broker-tile-link">
                   <span className="broker-tile-image-wrap">
                     <Image
                       src={agent.image}
@@ -312,6 +316,7 @@ export function BrokersList({ agents }: BrokersListProps) {
                       {agent.phone}
                     </a>
                   )}
+                  <AssignAgentButton slug={agent.slug} label="Choose as my agent" variant="text" className="broker-tile-assign" />
                 </div>
               </article>
             </li>

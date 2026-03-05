@@ -1,10 +1,12 @@
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 import { auth } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { isBrokerRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
+import { getAgentBySlug } from '@/data/agents';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +16,7 @@ export const metadata: Metadata = {
   description: 'Saved homes, searches, and next steps with your BCRE agent.',
 };
 
-type UserFields = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null };
+type UserFields = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_slug?: string | null };
 
 function formatLeadDate(iso: string): string {
   try {
@@ -40,7 +42,7 @@ export default async function ClientsDashboardPage() {
     const [userRes, leadsRes] = await Promise.all([
       supabase
         .from('users')
-        .select('first_name, last_name, email, role')
+        .select('first_name, last_name, email, role, assigned_broker_slug')
         .eq('clerk_id', userId)
         .maybeSingle(),
       supabase
@@ -71,6 +73,8 @@ export default async function ClientsDashboardPage() {
     ? ([user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null)
     : null;
 
+  const assignedAgent = user?.assigned_broker_slug ? getAgentBySlug(user.assigned_broker_slug) : null;
+
   return (
     <main>
       <Hero
@@ -82,6 +86,54 @@ export default async function ClientsDashboardPage() {
       />
       <div className="section">
         <div className="container stack--lg">
+          {/* Your agent or choose agent */}
+          <section className="dashboard-section" aria-labelledby="your-agent-heading">
+            <h2 id="your-agent-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
+              Your agent
+            </h2>
+            {assignedAgent ? (
+              <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
+                <div style={{ flexShrink: 0 }}>
+                  <Image
+                    src={assignedAgent.image}
+                    alt=""
+                    width={80}
+                    height={80}
+                    style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
+                  />
+                </div>
+                <div style={{ flex: '1 1 200px' }}>
+                  <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{assignedAgent.name}</p>
+                  <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{assignedAgent.title}</p>
+                  <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
+                    {assignedAgent.phone && (
+                      <Button href={`tel:${assignedAgent.phone.replace(/\D/g, '')}`} variant="primary">
+                        Call {assignedAgent.name}
+                      </Button>
+                    )}
+                    <Button href={`mailto:${assignedAgent.email}`} variant="outline">
+                      Email
+                    </Button>
+                    <Button href={assignedAgent.url} variant="text">
+                      View profile
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="card" style={{ padding: 'var(--space-lg)' }}>
+                <p style={{ margin: 0 }}>
+                  You don&apos;t have an agent assigned yet. Choose one from our team and they&apos;ll be listed here for quick call and email.
+                </p>
+                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)' }}>
+                  <Button href="/agents" variant="primary">
+                    Choose your agent
+                  </Button>
+                </div>
+              </div>
+            )}
+          </section>
+
           {/* Welcome + quick actions */}
           <header className="stack--sm">
             <p className="section-tag">Client dashboard</p>

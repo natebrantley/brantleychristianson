@@ -223,7 +223,7 @@ export default async function AgentsDashboardPage() {
               <Button href="/resources" variant="outline">
                 Share resources with clients
               </Button>
-              <Button href="/brokers" variant="text">
+              <Button href="/agents" variant="text">
                 Browse team profiles
               </Button>
             </div>

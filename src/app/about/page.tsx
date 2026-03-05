@@ -59,7 +59,7 @@ export default function AboutPage() {
         <Button href="/contact" variant="white">
           Get in touch
         </Button>
-        <Button href="/brokers" variant="white">
+        <Button href="/agents" variant="white">
           Meet our brokers
         </Button>
       </Hero>
@@ -127,7 +127,7 @@ export default function AboutPage() {
             </p>
           </header>
           <RevealSection className="text-center">
-            <Button href="/brokers" variant="primary">
+            <Button href="/agents" variant="primary">
               Meet the BCRE team
             </Button>
           </RevealSection>

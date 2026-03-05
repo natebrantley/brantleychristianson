@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      { source: '/brokers', destination: '/agents', permanent: true },
+      { source: '/brokers/:slug', destination: '/agents/:slug', permanent: true },
+    ];
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
   },
