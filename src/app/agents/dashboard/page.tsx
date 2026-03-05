@@ -99,7 +99,7 @@ export default async function AgentsDashboardPage() {
               {displayName && (
                 <p className="section-lead">
                   Signed in as <strong>{displayName}</strong>
-                  {user.email ? ` (${user.email})` : ''}
+                  {user?.email ? ` (${user.email})` : ''}
                 </p>
               )}
               {!displayName && (
