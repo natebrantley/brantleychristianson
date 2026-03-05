@@ -1,11 +1,22 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextFetchEvent, NextRequest } from 'next/server';
 
 const hasClerkKeys =
   process.env.CLERK_SECRET_KEY != null && process.env.CLERK_SECRET_KEY !== '';
 
-const clerkHandler = clerkMiddleware();
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/api/favorites',
+  '/api/saved-searches',
+  '/listings/saved',
+]);
+
+const clerkHandler = clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export function proxy(request: NextRequest, event: NextFetchEvent) {
   if (hasClerkKeys) {

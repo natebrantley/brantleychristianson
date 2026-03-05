@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { Webhook } from 'svix';
 import type { WebhookEvent } from '@clerk/nextjs/server';
+import { repliersClient, createClient as createRepliersClient, parseNameToFnameLname } from '@/lib/repliers';
 
 const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 
@@ -19,6 +20,9 @@ interface UsersRow {
   last_name: string | null;
   role: 'agent' | 'broker' | 'user';
 }
+
+/** App-managed columns we must preserve on webhook upsert (set by client or other flows). */
+const USERS_PRESERVE_COLUMNS = ['assigned_broker_slug', 'repliers_client_id', 'marketing_opt_in'] as const;
 
 /** Standard error response for 4xx/5xx */
 function errResponse(
@@ -229,7 +233,9 @@ async function bridgeLeads(
   }
 }
 
-/** Handle user.created / user.updated: upsert users, optional MailerLite, optional lead bridge */
+/** Handle user.created / user.updated: upsert users, optional MailerLite, optional lead bridge.
+ * Preserves app-managed columns (assigned_broker_slug, repliers_client_id, marketing_opt_in) so
+ * client agent selection and other app flows are never overwritten by Clerk sync. */
 async function handleUserUpsert(
   admin: SupabaseClient,
   data: WebhookEvent['data'],
@@ -250,16 +256,29 @@ async function handleUserUpsert(
       ? syncMailerLite(row.email, row.first_name, row.last_name, eventType, logContext)
       : Promise.resolve();
 
-  const supabasePromise = admin.from('users').upsert(
-    {
-      clerk_id: row.clerk_id,
-      email: row.email,
-      first_name: row.first_name,
-      last_name: row.last_name,
-      role: row.role,
-    },
-    { onConflict: 'clerk_id' }
-  );
+  // Preserve app-managed columns: when a client selects a broker, we store it in assigned_broker_slug;
+  // do not overwrite it (or repliers_client_id, marketing_opt_in) when Clerk sends user.updated.
+  let upsertPayload: Record<string, unknown> = {
+    clerk_id: row.clerk_id,
+    email: row.email,
+    first_name: row.first_name,
+    last_name: row.last_name,
+    role: row.role,
+  };
+  const { data: existing } = await admin
+    .from('users')
+    .select(USERS_PRESERVE_COLUMNS.join(','))
+    .eq('clerk_id', clerkId)
+    .maybeSingle();
+  if (existing && typeof existing === 'object') {
+    for (const key of USERS_PRESERVE_COLUMNS) {
+      if (key in existing && (existing as Record<string, unknown>)[key] !== undefined) {
+        upsertPayload[key] = (existing as Record<string, unknown>)[key];
+      }
+    }
+  }
+
+  const supabasePromise = admin.from('users').upsert(upsertPayload, { onConflict: 'clerk_id' });
 
   const [supabaseResult] = await Promise.all([supabasePromise, mailerlitePromise]);
   const { error } = supabaseResult;
@@ -282,7 +301,52 @@ async function handleUserUpsert(
     await bridgeLeads(admin, clerkId, row.email, logContext);
   }
 
+  if (eventType === 'user.created') {
+    syncRepliersClientIfNeeded(admin, clerkId, row, logContext).catch((err) => {
+      console.warn('Clerk webhook: Repliers client sync failed (non-fatal)', { ...logContext, clerkId, err });
+    });
+  }
+
   return okResponse();
+}
+
+/** On user.created: create Repliers client and set users.repliers_client_id. Do not block webhook 200. */
+async function syncRepliersClientIfNeeded(
+  admin: SupabaseClient,
+  clerkId: string,
+  row: UsersRow,
+  logContext: Record<string, unknown>
+): Promise<void> {
+  const { data: existing } = await admin
+    .from('users')
+    .select('repliers_client_id')
+    .eq('clerk_id', clerkId)
+    .maybeSingle();
+  if (existing && (existing as { repliers_client_id?: number }).repliers_client_id != null) {
+    return;
+  }
+  if (!row.email?.trim()) return;
+
+  const repliers = repliersClient();
+  if (!repliers) return;
+
+  const { fname, lname } = parseNameToFnameLname([row.first_name, row.last_name].filter(Boolean).join(' '));
+  const { clientId } = await createRepliersClient(repliers, {
+    agentId: repliers.agentId,
+    fname: fname || row.first_name || 'User',
+    lname: lname || row.last_name || '',
+    email: row.email,
+  });
+
+  if (clientId != null) {
+    const { error } = await admin
+      .from('users')
+      .update({ repliers_client_id: clientId })
+      .eq('clerk_id', clerkId);
+    if (!error) {
+      console.log('Clerk webhook: Repliers client created and linked', { ...logContext, clerkId });
+    }
+  }
 }
 
 /**

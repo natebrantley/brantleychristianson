@@ -1,11 +1,12 @@
 /**
  * PATCH /api/me/agent — set the current user's assigned broker (by slug).
  * Client-only: requires Clerk auth. Used from brokers page "Choose as my agent".
+ * Updates public.users.assigned_broker_slug; Clerk webhook preserves this on user.updated.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
-import { createClient } from '@supabase/supabase-js';
 import { getAgentBySlug } from '@/data/agents';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -60,5 +61,6 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
+  revalidatePath('/clients/dashboard');
   return NextResponse.json({ ok: true, slug });
 }

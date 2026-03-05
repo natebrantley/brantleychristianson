@@ -92,12 +92,12 @@ export interface CreateClientPayload {
 }
 
 /**
- * Create a new Repliers client.
+ * Create a new Repliers client. Returns clientId from response when available.
  */
 export async function createClient(
   config: RepliersConfig,
   payload: CreateClientPayload
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; clientId?: number }> {
   const body: Record<string, unknown> = {
     agentId: payload.agentId,
     fname: payload.fname || undefined,
@@ -117,7 +117,9 @@ export async function createClient(
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.message ?? `Repliers createClient ${res.status}`);
   }
-  return { ok: true };
+  const data = (await res.json().catch(() => ({}))) as { clientId?: number; id?: number };
+  const clientId = data?.clientId ?? data?.id;
+  return { ok: true, clientId: typeof clientId === 'number' ? clientId : undefined };
 }
 
 export interface UpdateClientPayload {

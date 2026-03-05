@@ -7,7 +7,7 @@ import type { Metadata } from 'next';
 
 const title = 'About Us';
 const description =
-  'A local, independent real estate brokerage in Oregon and Washington. Fiercely independent, strategically driven. Portland metro, SW Washington, coast & Mt. Hood.';
+  'A fully licensed, independently owned boutique real estate brokerage in Oregon and Washington. Members of RMLS, EMAR, OAR, WAR, NAR & NWMLS. Portland metro, SW Washington, coast & Mt. Hood.';
 
 export const metadata: Metadata = {
   title,
@@ -50,7 +50,7 @@ export default function AboutPage() {
     <main className="about-page">
       <Hero
         title="Fiercely independent. Strategically driven."
-        lead="A Pacific Northwest real estate brokerage built on local expertise and a client-first approach. We serve Oregon and Washington—no franchise, no corporate playbook."
+        lead="A fully licensed, independently owned boutique brokerage in Oregon and Washington. Built on local expertise and a client-first approach—no franchise, no corporate playbook."
         variant="short"
         imageSrc={`${assetPaths.stock}/living.jpeg`}
         imageAlt="Living space in a Pacific Northwest home"
@@ -74,7 +74,10 @@ export default function AboutPage() {
           </header>
           <RevealSection className="stack--lg about-content">
             <p className="about-lead">
-              Brantley Christianson Real Estate is a local, independent brokerage serving Oregon and Washington. We are not a national franchise—we are a Pacific Northwest firm built on deep market knowledge and a commitment to exceptional service.
+              Brantley Christianson Real Estate is a fully independently owned and operated boutique real estate brokerage serving Oregon and Washington. We are fully licensed in both states and are not a national franchise—we are a Pacific Northwest firm built on deep market knowledge and a commitment to exceptional service.
+            </p>
+            <p>
+              We are members of the RMLS, EMAR, OAR, WAR, NAR, and NWMLS.
             </p>
             <blockquote className="about-quote" cite="https://brantleychristianson.com">
               <p className="about-quote__text">

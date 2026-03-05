@@ -33,6 +33,7 @@ export function AssignAgentButton({ slug, label = 'Choose as my agent', variant 
       }
       router.push('/clients/dashboard');
       router.refresh();
+      setLoading(false);
     } catch (err) {
       console.error(err);
       setLoading(false);

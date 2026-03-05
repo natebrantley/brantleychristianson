@@ -8,8 +8,10 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { repliersClient } from '@/lib/repliers';
 import { syncRepliersListingsToSupabase } from '@/lib/repliers-listings';
 
-/** Validate Vercel Cron secret (set in Vercel project → Settings → Environment Variables) */
+/** Validate Vercel Cron or CRON_SECRET (set in Vercel project → Settings → Environment Variables) */
 function isAuthorized(request: NextRequest): boolean {
+  const vercelCron = request.headers.get('x-vercel-cron');
+  if (vercelCron === '1') return true;
   const authHeader = request.headers.get('authorization');
   const secret = process.env.CRON_SECRET;
   if (!secret?.trim()) return false;
@@ -60,7 +62,13 @@ export async function GET(request: NextRequest) {
     }
 
     const durationMs = Date.now() - start;
-    console.log('sync-mls: success', { durationMs, repliers: repliersResult ?? 'not configured' });
+    console.log('sync-mls: success', {
+      correlationId: crypto.randomUUID(),
+      route: '/api/cron/sync-mls',
+      statusCode: 200,
+      durationMs,
+      repliers: repliersResult ?? 'not configured',
+    });
     return NextResponse.json({
       ok: true,
       durationMs,
