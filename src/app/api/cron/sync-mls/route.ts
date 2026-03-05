@@ -7,15 +7,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { repliersClient } from '@/lib/repliers';
 import { syncRepliersListingsToSupabase } from '@/lib/repliers-listings';
+import { secureCompare } from '@/lib/webhook-utils';
 
-/** Validate Vercel Cron or CRON_SECRET (set in Vercel project → Settings → Environment Variables) */
+/** Validate Vercel Cron or CRON_SECRET (set in Vercel project → Settings → Environment Variables). Uses constant-time compare for secret. */
 function isAuthorized(request: NextRequest): boolean {
   const vercelCron = request.headers.get('x-vercel-cron');
   if (vercelCron === '1') return true;
   const authHeader = request.headers.get('authorization');
-  const secret = process.env.CRON_SECRET;
-  if (!secret?.trim()) return false;
-  return authHeader === `Bearer ${secret}`;
+  const secret = process.env.CRON_SECRET?.trim();
+  if (!secret) return false;
+  if (!authHeader?.startsWith('Bearer ')) return false;
+  const token = authHeader.slice(7).trim();
+  return secureCompare(token, secret);
 }
 
 export const dynamic = 'force-dynamic';

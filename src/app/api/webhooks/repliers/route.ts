@@ -3,31 +3,24 @@
  * Set REPLIERS_WEBHOOK_SECRET in env; Repliers may send X-Hook-Secret or similar for verification.
  */
 
+import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { RepliersListingItem } from '@/lib/repliers-types';
 import { normalizeListingsResponse } from '@/lib/repliers-types';
+import { isBodySizeAllowed, MAX_WEBHOOK_BODY_BYTES, secureCompare } from '@/lib/webhook-utils';
 
 export const dynamic = 'force-dynamic';
 
 const SOURCE = 'repliers';
-
-function constantTimeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let out = 0;
-  for (let i = 0; i < a.length; i++) {
-    out |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return out === 0;
-}
 
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.REPLIERS_WEBHOOK_SECRET?.trim();
   if (!secret) return false;
   const header = request.headers.get('x-repliers-signature') ?? request.headers.get('x-hook-secret') ?? request.headers.get('authorization');
   if (!header) return false;
-  const provided = header.startsWith('Bearer ') ? header.slice(7) : header;
-  return constantTimeCompare(provided, secret);
+  const provided = header.startsWith('Bearer ') ? header.slice(7).trim() : header.trim();
+  return secureCompare(provided, secret);
 }
 
 /** Map Repliers listing to our listings row (no restricted fields). */
@@ -94,12 +87,28 @@ function toRow(item: RepliersListingItem): Record<string, unknown> {
   };
 }
 
+/** GET /api/webhooks/repliers — health check (env configured). Does not reveal secret. */
+export async function GET() {
+  const secret = process.env.REPLIERS_WEBHOOK_SECRET?.trim();
+  const body = secret
+    ? { status: 'ok', webhook: 'repliers', env: 'configured' }
+    : { status: 'error', message: 'Missing REPLIERS_WEBHOOK_SECRET' };
+  return NextResponse.json(body, { status: secret ? 200 : 503 });
+}
+
 export async function POST(request: NextRequest) {
   const correlationId = crypto.randomUUID();
 
   if (!isAuthorized(request)) {
     console.log('repliers webhook: unauthorized', { correlationId });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (!isBodySizeAllowed(request)) {
+    return NextResponse.json(
+      { error: `Request body exceeds ${MAX_WEBHOOK_BODY_BYTES} bytes` },
+      { status: 413 }
+    );
   }
 
   let raw: string;

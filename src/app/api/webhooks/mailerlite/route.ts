@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { supabaseAdmin, formatSupabaseError } from '@/lib/supabase';
+import { isBodySizeAllowed, MAX_WEBHOOK_BODY_BYTES } from '@/lib/webhook-utils';
 
 /**
  * MailerLite webhook: when subscribers unsubscribe, bounce, report spam, or are deleted,
@@ -35,6 +36,14 @@ type MailerLiteEvent = {
   data?: { subscriber?: { email?: string } };
 };
 
+/** GET /api/webhooks/mailerlite — health check (env configured). Does not reveal secret. */
+export async function GET() {
+  const body = MAILERLITE_WEBHOOK_SECRET
+    ? { status: 'ok', webhook: 'mailerlite', env: 'configured' }
+    : { status: 'error', message: 'Missing MAILERLITE_WEBHOOK_SECRET' };
+  return NextResponse.json(body, { status: MAILERLITE_WEBHOOK_SECRET ? 200 : 503 });
+}
+
 export async function POST(request: NextRequest) {
   if (!MAILERLITE_WEBHOOK_SECRET) {
     console.error('Missing MAILERLITE_WEBHOOK_SECRET');
@@ -47,6 +56,13 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('signature');
   if (!signature || !signature.trim()) {
     return NextResponse.json({ error: 'Missing Signature header' }, { status: 400 });
+  }
+
+  if (!isBodySizeAllowed(request)) {
+    return NextResponse.json(
+      { error: `Request body exceeds ${MAX_WEBHOOK_BODY_BYTES} bytes` },
+      { status: 413 }
+    );
   }
 
   let rawBody: string;
@@ -79,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     const email =
       typeof event?.data?.subscriber?.email === 'string'
-        ? event.data.subscriber.email.trim()
+        ? event.data.subscriber.email.trim().toLowerCase()
         : '';
     if (!email) {
       continue;

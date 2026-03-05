@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { Webhook } from 'svix';
 import type { WebhookEvent } from '@clerk/nextjs/server';
 import { repliersClient, createClient as createRepliersClient, parseNameToFnameLname } from '@/lib/repliers';
+import { isBodySizeAllowed, MAX_WEBHOOK_BODY_BYTES } from '@/lib/webhook-utils';
 
 const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 
@@ -375,6 +376,10 @@ export async function POST(request: NextRequest) {
   if (envError) {
     console.error('Clerk webhook: env check failed', { error: envError });
     return errResponse(envError, 500, { code: 'ENV_MISSING' });
+  }
+
+  if (!isBodySizeAllowed(request)) {
+    return errResponse(`Request body exceeds ${MAX_WEBHOOK_BODY_BYTES} bytes`, 413, { code: 'PAYLOAD_TOO_LARGE' });
   }
 
   let rawBody: string;

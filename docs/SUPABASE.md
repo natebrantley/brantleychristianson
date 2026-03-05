@@ -86,12 +86,24 @@ Ensure:
 
 The migration leaves RLS **disabled** so the anon key can read **users** when the request includes the Clerk JWT (your app sends it in `Authorization: Bearer <token>`). If your Supabase project does not use a custom JWT template to validate Clerk tokens, Supabase will not recognize the JWT and RLS would block access. So for the current setup (Clerk JWT passed as Bearer token, no Supabase JWT template), keep RLS **off** on **users**, or add a Clerk JWT template in Supabase and then enable RLS with a policy that allows select where `auth.jwt() ->> 'sub' = clerk_id`.
 
-## 5. Verify configuration
+## 5. Realtime
+
+Supabase Realtime is enabled for the following tables (configure in Dashboard → Database → Realtime):
+
+| Table | Use |
+|-------|-----|
+| **public.users** | Live user/role updates; clients can subscribe to their row to react to role or profile changes. |
+| **public.leads** | Live lead updates for agent dashboards (new leads, assignment changes). |
+| **public.saved_properties** | Live updates to saved properties; use with a client subscription if the app exposes this table. |
+
+The app does not yet subscribe to these channels; you can add `supabase.channel().on('postgres_changes', ...)` in client components when you need live updates.
+
+## 6. Verify configuration
 
 1. **Env** – Restart the app and confirm no startup errors about missing Supabase env.
 2. **Table** – In Supabase → **Table Editor** → **users**, confirm the table exists and has the columns above.
 3. **Webhook** – In Clerk, create or update a user and check Clerk → Webhooks → Logs for a successful **user.created** / **user.updated** to your endpoint; then check **users** in Supabase for the row (or updated role).
-4. **Dashboard** – Sign in and open `/dashboard`; you should be redirected to `/agents` or `/clients` based on **users.role** (see **docs/BROKER-SETUP.md** for marking brokers).
+4. **Dashboard** – Sign in and open `/dashboard`; you should be redirected to `/agents`, `/clients`, or `/lenders/dashboard` based on **users.role** (see **docs/BROKER-SETUP.md** for marking brokers).
 
 ## Troubleshooting
 
