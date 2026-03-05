@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { isBrokerRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
@@ -65,8 +65,23 @@ export default async function AgentsDashboardPage() {
     console.error('Unexpected error loading agent dashboard:', { userId, ...formatSupabaseError(err) });
   }
 
-  if (!user || !isBrokerRole(user.role)) {
+  // Allow access if Supabase has broker role, or if Clerk public_metadata has it (e.g. before webhook sync)
+  const clerkUser = await currentUser();
+  const roleFromClerk = typeof clerkUser?.publicMetadata?.role === 'string' ? clerkUser.publicMetadata.role : null;
+  const isAgent = isBrokerRole(user?.role) || isBrokerRole(roleFromClerk);
+
+  if (!isAgent) {
     redirect('/clients');
+  }
+
+  // If Supabase had no user, build a minimal user from Clerk for display
+  if (!user && clerkUser) {
+    user = {
+      first_name: clerkUser.firstName ?? null,
+      last_name: clerkUser.lastName ?? null,
+      email: clerkUser.emailAddresses?.[0]?.emailAddress ?? null,
+      role: roleFromClerk ?? 'agent',
+    };
   }
 
   const displayName = user

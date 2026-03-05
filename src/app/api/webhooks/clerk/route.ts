@@ -273,7 +273,7 @@ async function handleUserUpsert(
       supabaseError: detail,
     });
     return errResponse(detail.message ?? 'Database sync failed', 500, {
-      code: detail.code,
+      code: detail.code ?? 'SUPABASE_ERROR',
       details: detail.details,
     });
   }
@@ -310,7 +310,7 @@ export async function POST(request: NextRequest) {
   const envError = getEnvError();
   if (envError) {
     console.error('Clerk webhook: env check failed', { error: envError });
-    return errResponse(envError, 500);
+    return errResponse(envError, 500, { code: 'ENV_MISSING' });
   }
 
   let rawBody: string;
@@ -338,7 +338,9 @@ export async function POST(request: NextRequest) {
     }) as WebhookEvent;
   } catch (err) {
     console.error('Clerk webhook: signature verification failed', { err });
-    return errResponse('Invalid signature', 400);
+    return errResponse('Invalid signature — check CLERK_WEBHOOK_SECRET matches Clerk dashboard', 400, {
+      code: 'INVALID_SIGNATURE',
+    });
   }
 
   const eventType = evt.type;
