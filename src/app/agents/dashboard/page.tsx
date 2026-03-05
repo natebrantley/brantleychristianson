@@ -3,6 +3,8 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { isBrokerRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
+import { Hero } from '@/components/Hero';
+import { assetPaths } from '@/config/theme';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -89,13 +91,23 @@ export default async function AgentsDashboardPage() {
     : null;
 
   return (
-    <main className="section">
-      <div className="container stack--lg">
-        <header className="stack--sm">
-          <div className="dashboard-actions" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <div>
-              <p className="section-tag">Agent dashboard</p>
-              <h1 className="section-title">Welcome back</h1>
+    <main>
+      <Hero
+        variant="short"
+        title="Agent dashboard"
+        lead="Pipeline, leads, and client management."
+        imageSrc={`${assetPaths.stock}/table.jpeg`}
+        imageAlt="Agent dashboard – pipeline and leads"
+      />
+      <div className="section">
+        <div className="container stack--lg">
+          <header className="stack--sm">
+            <div className="dashboard-actions" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <p className="section-tag">Welcome back</p>
+                <h1 className="section-title">
+                  {displayName ? `Hi, ${displayName.split(' ')[0]}` : 'Dashboard'}
+                </h1>
               {displayName && (
                 <p className="section-lead">
                   Signed in as <strong>{displayName}</strong>
@@ -217,6 +229,7 @@ export default async function AgentsDashboardPage() {
             </div>
           </div>
         </section>
+        </div>
       </div>
     </main>
   );
