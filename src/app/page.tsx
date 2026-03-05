@@ -82,6 +82,18 @@ export default function HomePage() {
           </div>
         </div>
 
+        <section className="section section--alt" aria-labelledby="who-we-are-heading">
+          <div className="container stack--md text-center mx-auto" style={{ maxWidth: '42rem' }}>
+            <p className="section-tag">Who we are</p>
+            <h2 id="who-we-are-heading" className="section-title">
+              Local, family & independently owned
+            </h2>
+            <p className="section-lead">
+              We&apos;re real people with a community focus—not stock-market owned. We promise safe, quality service for all walks of life and circumstances.
+            </p>
+          </div>
+        </section>
+
         <section className="section" aria-labelledby="markets-heading">
           <div className="container stack--xl">
             <header className="stack--md text-center mx-auto">

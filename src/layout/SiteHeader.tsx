@@ -18,7 +18,6 @@ const NAV_LINKS = [
   { href: '/agents', label: 'Agents' },
   { href: '/lenders', label: 'Lenders' },
   { href: '/about', label: 'About' },
-  { href: '/social', label: 'Social' },
 ];
 
 export function SiteHeader() {
