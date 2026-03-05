@@ -355,7 +355,7 @@ async function syncRepliersClientIfNeeded(
  *
  * Supported events: user.created, user.updated, user.deleted.
  * - user.deleted: delete row in public.users by clerk_id.
- * - user.created / user.updated: upsert into public.users (role: agent | broker | user); optional MailerLite sync on user.created only; optional lead bridge (leads.clerk_id by email).
+ * - user.created / user.updated: upsert into public.users (role: agent | broker | lender | user); optional MailerLite sync on user.created only; optional lead bridge (leads.clerk_id by email).
  *
  * Env: CLERK_WEBHOOK_SECRET, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
  * Optional: MAILERLITE_API_KEY, MAILERLITE_GROUP_ID.

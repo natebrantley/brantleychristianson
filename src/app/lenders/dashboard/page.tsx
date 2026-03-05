@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
+import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
@@ -38,6 +39,12 @@ export default async function LendersDashboardPage() {
       console.error('Error loading lender user from Supabase:', { userId, ...formatSupabaseError(error) });
     }
     user = data ?? null;
+
+    // If no row in Supabase, sync from Clerk so future requests see the user
+    if (!user && !error) {
+      const clerkUser = await currentUser();
+      if (clerkUser) await ensureUserInSupabase(clerkUser);
+    }
   } catch (err) {
     console.error('Unexpected error loading lender dashboard:', { userId, ...formatSupabaseError(err) });
   }

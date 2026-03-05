@@ -38,8 +38,8 @@
 
 | System | Notes |
 |--------|------|
-| **Auth** | Clerk; webhook syncs user.created/updated/deleted to `public.users`; preserves `assigned_broker_id`, `repliers_client_id`, `marketing_opt_in`. |
-| **Dashboard routing** | Role from Supabase (or Clerk metadata fallback); broker/agent → `/agents`, client → `/clients/dashboard`. |
+| **Auth** | Clerk; webhook syncs user.created/updated/deleted to `public.users`; sign-in sync (`src/lib/sync-clerk-user.ts`) upserts when user has no row on dashboard access; preserves `assigned_broker_id`, `repliers_client_id`, `marketing_opt_in`. |
+| **Dashboard routing** | Role from Supabase (or Clerk metadata fallback); agent/broker → `/agents`, lender → `/lenders/dashboard`, client → `/clients/dashboard`. |
 | **Agent assignment** | PATCH `/api/me/agent` writes `assigned_broker_id`; full-page nav to `/clients/dashboard` for fresh data; dashboard shows agent + phone/email. |
 | **API routes** | 16 route handlers (consultation, cron, favorites, listings, search, webhooks clerk/mailerlite/repliers, etc.). |
 | **Security headers** | next.config: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. |

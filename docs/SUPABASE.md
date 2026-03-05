@@ -14,7 +14,7 @@ This app uses Supabase for the **users** table (synced from Clerk) and for role-
 5. **Test dashboard (local)** – Sign in at `/sign-in`, then go to `/dashboard`. If you see "Error loading user" or redirect issues, check the terminal for the Supabase error message.
 6. **Webhook (production)** – Clerk → **Webhooks** → endpoint `https://your-production-domain.com/api/webhooks/clerk`, events **user.created**, **user.updated**, and **user.deleted**. Set `CLERK_WEBHOOK_SECRET` in Vercel to the signing secret from that endpoint. Redeploy. Create a test user and check Clerk webhook Logs (200) and Supabase **users** table (new row).
 
-If something fails, the exact error is in: browser console (client), terminal (local server), or Vercel → Logs (production).
+If something fails, the exact error is in: browser console (client), terminal (local server), or Vercel → Logs (production). See **docs/INTEGRATIONS-BEST-PRACTICES.md** for a best-practices checklist across all integrations.
 
 ---
 
@@ -71,7 +71,7 @@ alter table public.users add constraint users_role_check check (role is null or 
 
 ## 3. Clerk webhook
 
-The webhook at **POST /api/webhooks/clerk** is **self-contained**: it does not import `@/lib/supabase`, so it will not throw at load time if the anon key is missing. It only needs `CLERK_WEBHOOK_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY`. It upserts into **users** on `user.created` and `user.updated` (and optionally adds the user to MailerLite). If the user’s email matches a row in **leads** (e.g. from a CSV import or consultation), it sets that lead’s `clerk_id` so the lead is linked to the new account (bridge). On `user.deleted`, it deletes the user row by `clerk_id`.
+The webhook at **POST /api/webhooks/clerk** is **self-contained**: it does not import `@/lib/supabase`, so it will not throw at load time if the anon key is missing. It only needs `CLERK_WEBHOOK_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY`. It upserts into **users** on `user.created` and `user.updated` (and optionally adds the user to MailerLite). **Sign-in sync:** if a user signs in and has no row in **users** (e.g. webhook missed), the app upserts them when they hit `/dashboard` or any dashboard page via `src/lib/sync-clerk-user.ts`. If the user’s email matches a row in **leads** (e.g. from a CSV import or consultation), the webhook sets that lead’s `clerk_id` so the lead is linked to the new account (bridge). On `user.deleted`, it deletes the user row by `clerk_id`.
 
 - **clerk_id**, **email**, **first_name**, **last_name** from Clerk payload
 - **role** from Clerk `public_metadata.role` (only if set; `'agent'` or `'broker'`)
@@ -84,7 +84,98 @@ Ensure:
 
 ## 4. Row Level Security (optional)
 
-The migration leaves RLS **disabled** so the anon key can read **users** when the request includes the Clerk JWT (your app sends it in `Authorization: Bearer <token>`). If your Supabase project does not use a custom JWT template to validate Clerk tokens, Supabase will not recognize the JWT and RLS would block access. So for the current setup (Clerk JWT passed as Bearer token, no Supabase JWT template), keep RLS **off** on **users**, or add a Clerk JWT template in Supabase and then enable RLS with a policy that allows select where `auth.jwt() ->> 'sub' = clerk_id`.
+The migration leaves RLS **disabled** so the anon key can read **users** when the request includes the Clerk JWT (your app sends it in `Authorization: Bearer <token>`). If your Supabase project does not use a custom JWT template to validate Clerk tokens, Supabase will not recognize the JWT and RLS would block access. So for the current setup (Clerk JWT passed as Bearer token, no Supabase JWT template), keep RLS **off** on **users**, or use the optional JWT template below and then enable RLS.
+
+### 4.1 Optional: Clerk JWT template for RLS
+
+To enable RLS on `users`, `favorites`, or `saved_searches` while still using the Clerk token as the Bearer token, use a **Clerk JWT template** that Supabase can verify. The app already supports this: set `CLERK_JWT_TEMPLATE_SUPABASE=supabase` (or your template name) and create the template in Clerk as follows.
+
+**1. Get Supabase JWT secret**
+
+- Supabase Dashboard → **Project Settings** → **API** → **JWT Settings** → **JWT Secret** (copy the secret).
+
+**2. Create JWT template in Clerk**
+
+- Clerk Dashboard → **Configure** → **JWT Templates** → **New template**.
+- **Name:** `supabase` (or any name; use that same name in `CLERK_JWT_TEMPLATE_SUPABASE`).
+- **Signing key:** Paste the **Supabase JWT secret** from step 1. Supabase will verify the token with this same key.
+- **Claims:** Add only the claims Supabase needs that are not already in the session token. **Do not add `sub`** — Clerk reserves it and includes the user ID automatically; Supabase RLS uses `auth.jwt()->>'sub'` and it will match `clerk_id`. Add `role` (and optionally `aud`) so RLS policies with `TO authenticated` apply.
+
+Example claims in Clerk (if editing JSON):
+
+```json
+{
+  "aud": "authenticated",
+  "role": "authenticated",
+  "email": "{{user.primary_email_address}}",
+  "app_metadata": {},
+  "user_metadata": {}
+}
+```
+
+Save the template.
+
+**3. Set env and use in app**
+
+In `.env.local` and Vercel:
+
+```bash
+CLERK_JWT_TEMPLATE_SUPABASE=supabase
+```
+
+The app uses it here (`src/lib/supabase.ts`):
+
+```ts
+const template = process.env.CLERK_JWT_TEMPLATE_SUPABASE?.trim();
+const token = await getToken(template ? { template } : undefined);
+// ... token is sent as Authorization: Bearer <token>
+```
+
+**4. Enable RLS and add policies**
+
+In Supabase SQL Editor (or a migration), enable RLS and allow access where the JWT `sub` matches your table’s Clerk ID column. For `public.users` the column is `clerk_id`; for `favorites` / `saved_searches` it’s also `clerk_id`.
+
+Example for **users** (users can read/update their own row):
+
+```sql
+alter table public.users enable row level security;
+
+create policy "Users can read own row"
+on public.users for select
+to authenticated
+using (auth.jwt()->>'sub' = clerk_id);
+
+create policy "Users can update own row"
+on public.users for update
+to authenticated
+using (auth.jwt()->>'sub' = clerk_id);
+```
+
+Example for **favorites** (users can only see/insert/delete their own):
+
+```sql
+alter table public.favorites enable row level security;
+
+create policy "Users can read own favorites"
+on public.favorites for select to authenticated
+using (auth.jwt()->>'sub' = clerk_id);
+
+create policy "Users can insert own favorites"
+on public.favorites for insert to authenticated
+with check (auth.jwt()->>'sub' = clerk_id);
+
+create policy "Users can delete own favorites"
+on public.favorites for delete to authenticated
+using (auth.jwt()->>'sub' = clerk_id);
+```
+
+Same pattern applies to **saved_searches** (replace table name and use `clerk_id`).
+
+**5. Service role unchanged**
+
+Webhooks and server-only admin code use `supabaseAdmin()` (service role), which bypasses RLS. Only requests that use `createClerkSupabaseClient()` and the Clerk token are subject to these policies.
+
+**Note:** Clerk now recommends Supabase’s native third-party auth (Clerk as IdP) for new setups. The JWT template approach above is still valid for this app’s “Clerk token as Bearer to Supabase” flow. See [Clerk + Supabase](https://clerk.com/docs/guides/development/integrations/databases/supabase) and [Supabase RLS](https://supabase.com/docs/guides/auth/row-level-security).
 
 ## 5. Realtime
 
@@ -130,7 +221,8 @@ The app does not yet subscribe to these channels; you can add `supabase.channel(
 If sign-ups reach Clerk but no row appears in **users** (or the webhook fails):
 
 1. **Webhook URL** – Clerk can only call a **public** URL. Use your **production** URL (e.g. `https://yourdomain.com/api/webhooks/clerk`). Localhost will not receive webhooks unless you use a tunnel (e.g. ngrok).
-2. **Clerk Dashboard → Webhooks** – Confirm the endpoint URL is correct and that **user.created**, **user.updated**, and **user.deleted** are selected. Check **Logs** for each event: 200 = success; 400 = bad request (e.g. invalid signature); 500 = server error (see step 4).
-3. **Environment (Vercel)** – In the project that serves the webhook (usually production), set `CLERK_WEBHOOK_SECRET` (from Clerk → Webhooks → your endpoint → Signing secret) and `SUPABASE_SERVICE_ROLE_KEY`. Redeploy after changing env.
-4. **Error details** – On 500, the app logs the Supabase error (event, clerkId, supabaseError). Check **Vercel → Project → Logs** (or your host’s function logs) for the exact message (e.g. column constraint, missing column).
-5. **Table schema** – The webhook sends `clerk_id`, `email`, `first_name`, `last_name`, and optionally `role`. If **users.email** is NOT NULL in your database, sign-ups without an email will fail; the migration defines **email** as nullable. Fix in Supabase with `ALTER TABLE public.users ALTER COLUMN email DROP NOT NULL;` if needed.
+2. **Sign-in sync** – Even if the webhook failed, once the user signs in and visits `/dashboard` (or any dashboard page), the app will upsert them into **users** via `src/lib/sync-clerk-user.ts`. Check that `SUPABASE_SERVICE_ROLE_KEY` and `NEXT_PUBLIC_SUPABASE_URL` are set in the environment that serves the app.
+3. **Clerk Dashboard → Webhooks** – Confirm the endpoint URL is correct and that **user.created**, **user.updated**, and **user.deleted** are selected. Check **Logs** for each event: 200 = success; 400 = bad request (e.g. invalid signature); 500 = server error (see step 5).
+4. **Environment (Vercel)** – In the project that serves the webhook (usually production), set `CLERK_WEBHOOK_SECRET` (from Clerk → Webhooks → your endpoint → Signing secret) and `SUPABASE_SERVICE_ROLE_KEY`. Redeploy after changing env.
+5. **Error details** – On 500, the app logs the Supabase error (event, clerkId, supabaseError). Check **Vercel → Project → Logs** (or your host’s function logs) for the exact message (e.g. column constraint, missing column).
+6. **Table schema** – The webhook sends `clerk_id`, `email`, `first_name`, `last_name`, and optionally `role`. If **users.email** is NOT NULL in your database, sign-ups without an email will fail; the migration defines **email** as nullable. Fix in Supabase with `ALTER TABLE public.users ALTER COLUMN email DROP NOT NULL;` if needed.

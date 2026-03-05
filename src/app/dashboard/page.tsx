@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
+import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isBrokerRole, isLenderRole } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * Agent dashboard: /agents (pipeline, leads, clients, marketing).
  * Lender dashboard: /lenders/dashboard (lender-specific tools and resources).
  * Client dashboard: /clients (saved homes, searches, next steps).
- * Role is read from Supabase (synced by webhook); if missing, falls back to Clerk public_metadata.role.
+ * Role is read from Supabase (synced by webhook or sign-in sync); if missing, falls back to Clerk public_metadata.role.
  */
 export default async function DashboardRouterPage() {
   const { userId } = await auth();
@@ -35,6 +36,16 @@ export default async function DashboardRouterPage() {
     }
 
     roleFromSupabase = user?.role;
+
+    // If no row in Supabase (e.g. webhook missed or user signed in before webhook ran), sync from Clerk now
+    if (!user && !error) {
+      const clerkUser = await currentUser();
+      if (clerkUser) {
+        const synced = await ensureUserInSupabase(clerkUser);
+        if (synced) roleFromSupabase = synced.role;
+      }
+    }
+
     if (isBrokerRole(roleFromSupabase)) {
       redirect('/agents');
     }
@@ -45,7 +56,7 @@ export default async function DashboardRouterPage() {
     console.error('Unexpected error during dashboard routing:', { userId, ...formatSupabaseError(err) });
   }
 
-  // Fallback: if Supabase had no row or no special role, check Clerk public_metadata (e.g. before webhook sync)
+  // Fallback: if Supabase had no row or no special role, check Clerk public_metadata (e.g. before sync ran)
   const clerkUser = await currentUser();
   const roleFromClerk = clerkUser?.publicMetadata?.role;
   if (typeof roleFromClerk === 'string' && isBrokerRole(roleFromClerk)) {

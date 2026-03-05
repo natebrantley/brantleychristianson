@@ -9,7 +9,7 @@
 
 | Endpoint | Method | Verification | Body limit | Idempotency / notes |
 |----------|--------|--------------|------------|----------------------|
-| `/api/webhooks/clerk` | POST | Svix (svix-id, svix-timestamp, svix-signature) | 512 KB | Per-event; user upsert/delete by clerk_id |
+| `/api/webhooks/clerk` | POST | Svix (svix-id, svix-timestamp, svix-signature) | 512 KB | Per-event; user upsert/delete by clerk_id. **Sign-in sync:** when user has no Supabase row, dashboard pages call `ensureUserInSupabase()` from `src/lib/sync-clerk-user.ts` to upsert from Clerk. |
 | `/api/webhooks/clerk` | GET | — | — | Health check; no secrets |
 | `/api/webhooks/mailerlite` | POST | HMAC-SHA256 (Signature header) | 512 KB | Per-event; update users.marketing_opt_in by email (lowercase) |
 | `/api/webhooks/mailerlite` | GET | — | — | Health check; no secrets |
@@ -99,8 +99,11 @@ Use for monitoring/uptime checks without exposing secrets.
 | File | Purpose |
 |------|---------|
 | `src/lib/webhook-utils.ts` | Body size limit, secureCompare |
+| `src/lib/sync-clerk-user.ts` | Sign-in sync: ensureUserInSupabase(clerkUser) for dashboard when no Supabase row |
 | `src/app/api/webhooks/clerk/route.ts` | Clerk user lifecycle → Supabase (+ optional MailerLite/Repliers) |
 | `src/app/api/webhooks/mailerlite/route.ts` | MailerLite opt-out events → users.marketing_opt_in |
 | `src/app/api/webhooks/repliers/route.ts` | Repliers listing events → listings upsert; idempotency via webhook_events |
 | `src/app/api/cron/sync-mls/route.ts` | Expire old listings; optional Repliers sync |
 | `src/app/api/consultation/route.ts` | Contact form → MailerLite; rate limit, validation |
+
+See **docs/INTEGRATIONS-BEST-PRACTICES.md** for a full best-practices and leverage checklist.

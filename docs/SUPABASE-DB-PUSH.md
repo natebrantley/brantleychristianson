@@ -2,6 +2,8 @@
 
 Use this to apply migrations (e.g. `users`, `leads`, `assigned_broker_id`, `listings`) to your **remote** Supabase project via the CLI.
 
+**GitHub Integration (optional):** If you connect the repo in Supabase Dashboard → **Project Settings → Integrations → GitHub**, Supabase can deploy migrations automatically: pushes to your production branch (e.g. `master`) deploy to production; PRs can get preview branches. Working directory can stay empty when `supabase/` is at the repo root. See **Supabase GitHub integration** in the dashboard for branch and billing options.
+
 ## 1. One-time: log in to Supabase CLI
 
 The CLI needs an access token before you can link or push. From the project root:

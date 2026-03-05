@@ -32,7 +32,8 @@ export async function createClerkSupabaseClient(): Promise<SupabaseClient> {
   }
 
   const { getToken } = await auth();
-  const token = await getToken();
+  const template = process.env.CLERK_JWT_TEMPLATE_SUPABASE?.trim();
+  const token = await getToken(template ? { template } : undefined);
 
   if (!token) {
     throw new Error('No Clerk session token available for Supabase client.');

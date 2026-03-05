@@ -21,12 +21,20 @@ Set these **environment variables** in the Vercel project (Settings → Environm
 | `CLERK_WEBHOOK_SECRET` | Clerk Dashboard → Webhooks → your endpoint → Signing secret |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project → Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Same |
-| `SUPABASE_SERVICE_ROLE_KEY` | Same (server-only; used by webhook) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same (server-only; used by webhook and sign-in sync) |
+
+Sign-in sync (`src/lib/sync-clerk-user.ts`) also uses the same Supabase env when a user has no row on dashboard access; no extra variables needed.
 
 ## Optional
 
+- **Clerk redirect overrides:** `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL` (e.g. `/dashboard`)
+- **Clerk JWT for Supabase RLS:** `CLERK_JWT_TEMPLATE_SUPABASE=supabase` (only if you use a Clerk JWT template; see docs/INTEGRATIONS-BEST-PRACTICES.md)
 - **MailerLite** (consultation form): `MAILERLITE_API_TOKEN`, optional `MAILERLITE_GROUP_ID`
-- **Analytics**: `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+- **MailerLite** (Clerk webhook – add new sign-ups to list): `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`
+- **MailerLite webhook** (unsubscribe/bounce → users.marketing_opt_in): `MAILERLITE_WEBHOOK_SECRET`
+- **Repliers** (IDX/CRM): `REPLIERS_API_KEY`, `REPLIERS_DEFAULT_AGENT_ID`; webhook: `REPLIERS_WEBHOOK_SECRET`
+- **Cron** (sync-mls): `CRON_SECRET`
+- **Analytics:** `NEXT_PUBLIC_GA_MEASUREMENT_ID`
 
 After adding variables, redeploy (or push a new commit). Clear the build cache and redeploy if a previous build failed due to missing keys.
 

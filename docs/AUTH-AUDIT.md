@@ -35,13 +35,14 @@
 ### Dashboard routing
 
 - **Route:** `/dashboard` → `src/app/dashboard/page.tsx`
-- **Behavior:** If not signed in → `redirect('/sign-in')`. If signed in: load role from Supabase (or Clerk `public_metadata.role` fallback); if broker/agent → `redirect('/agents')`, else → `redirect('/clients')`
-- **Role source of truth:** Supabase `users.role` (synced by Clerk webhook); fallback to Clerk `public_metadata.role` before webhook has run
+- **Behavior:** If not signed in → `redirect('/sign-in')`. If signed in: load role from Supabase (or Clerk `public_metadata.role` fallback); if broker/agent → `redirect('/agents')`, if lender → `redirect('/lenders/dashboard')`, else → `redirect('/clients')`. If no Supabase row exists, the app syncs the user from Clerk via `ensureUserInSupabase()` (see **Sign-in sync** below) then redirects by role.
+- **Role source of truth:** Supabase `users.role` (synced by Clerk webhook or sign-in sync); fallback to Clerk `public_metadata.role` before sync has run.
 
-### Agent vs client dashboards
+### Agent, lender, and client dashboards
 
-- **`/agents`** (`src/app/agents/dashboard/page.tsx`): Requires `userId`; allows access only if `isBrokerRole(user.role)` or `isBrokerRole(roleFromClerk)`. Otherwise redirects to `/clients`.
-- **`/clients`** (`src/app/clients/dashboard/page.tsx`): Requires `userId`; if `isBrokerRole(user.role)` redirects to `/agents`. Shows assigned agent, saved homes placeholder, saved searches placeholder, consultation requests (leads linked by `clerk_id`).
+- **`/agents`** (`src/app/agents/dashboard/page.tsx`): Requires `userId`; allows access only if `isBrokerRole(user.role)` or `isBrokerRole(roleFromClerk)`. Otherwise redirects to `/clients` or `/lenders/dashboard` by role.
+- **`/lenders/dashboard`** (`src/app/lenders/dashboard/page.tsx`): Requires `userId`; allows access only if `isLenderRole(user.role)` or `isLenderRole(roleFromClerk)`. Otherwise redirects to `/agents` or `/clients`.
+- **`/clients`** (`src/app/clients/dashboard/page.tsx`): Requires `userId`; if `isBrokerRole(user.role)` redirects to `/agents`; if `isLenderRole(user.role)` redirects to `/lenders/dashboard`. Shows assigned agent, saved homes placeholder, saved searches placeholder, consultation requests (leads linked by `clerk_id`).
 
 ---
 
@@ -55,7 +56,7 @@
 
 | Path pattern | Purpose |
 |--------------|---------|
-| `/dashboard(.*)` | All dashboard routes (e.g. `/dashboard`, `/agents`, `/clients` not under `/dashboard` but dashboard redirect lands on `/agents` or `/clients`) |
+| `/dashboard(.*)` | All dashboard routes (e.g. `/dashboard`, `/agents`, `/clients`, `/lenders/dashboard`) |
 | `/api/favorites` | GET/POST/DELETE favorites; requires auth |
 | `/api/saved-searches` | GET/POST saved searches; requires auth |
 | `/api/me/agent` | PATCH assign agent; requires auth (proxy + handler 401) |
@@ -77,17 +78,19 @@ All return proper status codes and use `apiErrorResponse` / typed errors where a
 
 ---
 
-## 5. Clerk → Supabase Sync (Webhook)
+## 5. Clerk → Supabase Sync (Webhook + Sign-in sync)
 
-**Endpoint:** `POST /api/webhooks/clerk`  
+**Webhook endpoint:** `POST /api/webhooks/clerk`  
 **File:** `src/app/api/webhooks/clerk/route.ts`
 
 **Verification:** Svix signature using `CLERK_WEBHOOK_SECRET`; invalid signature → 400.
 
 **Events:**
 
-- **user.created / user.updated:** Upsert into `public.users` (clerk_id, email, first_name, last_name, role). Role from `public_metadata.role` (agent/broker) or `@brantleychristianson.com` email → agent, else user. Preserves `assigned_broker_id`, `repliers_client_id`, `marketing_opt_in`. Optional: MailerLite subscribe on user.created; optional: bridge `leads` by email to set `clerk_id`; optional: create Repliers client and set `repliers_client_id` on user.created.
+- **user.created / user.updated:** Upsert into `public.users` (clerk_id, email, first_name, last_name, role). Role from `public_metadata.role` (agent/broker/lender) or `@brantleychristianson.com` email → agent, else user. Preserves `assigned_broker_id`, `repliers_client_id`, `marketing_opt_in`. Optional: MailerLite subscribe on user.created; optional: bridge `leads` by email to set `clerk_id`; optional: create Repliers client and set `repliers_client_id` on user.created.
 - **user.deleted:** Delete row in `public.users` where `clerk_id` = payload id.
+
+**Sign-in sync** (`src/lib/sync-clerk-user.ts`): When a signed-in user hits `/dashboard` or any of `/clients/dashboard`, `/agents/dashboard`, or `/lenders/dashboard` and has **no row** in `public.users`, the server calls `ensureUserInSupabase(clerkUser)` to upsert from Clerk (same role and preserve-column logic as the webhook). This ensures sign-ins are always reflected in Supabase even if the webhook was delayed or failed.
 
 **Health check:** `GET /api/webhooks/clerk` returns `{ status, message? }` and 503 if required env is missing (no secrets exposed).
 
@@ -161,15 +164,17 @@ See `.env.example` and `docs/VERCEL.md` for full list and deployment notes.
 | `src/app/layout.tsx` | ClerkProvider, header switch (SiteHeader vs SiteHeaderPublic) |
 | `src/app/sign-in/[[...sign-in]]/page.tsx` | Sign-in page |
 | `src/app/sign-up/[[...sign-up]]/page.tsx` | Sign-up page + VOW disclosure |
-| `src/app/dashboard/page.tsx` | Dashboard router (role-based redirect) |
+| `src/app/dashboard/page.tsx` | Dashboard router (role-based redirect; triggers sign-in sync when no Supabase row) |
 | `src/app/agents/dashboard/page.tsx` | Agent dashboard (broker-only) |
 | `src/app/clients/dashboard/page.tsx` | Client dashboard |
+| `src/app/lenders/dashboard/page.tsx` | Lender dashboard |
 | `src/app/api/webhooks/clerk/route.ts` | Clerk webhook (user sync) |
+| `src/lib/sync-clerk-user.ts` | Sign-in sync: ensureUserInSupabase() for dashboard when no Supabase row |
 | `src/app/api/favorites/route.ts` | Favorites API (auth required) |
 | `src/app/api/saved-searches/route.ts` | Saved searches API (auth required) |
 | `src/app/api/me/agent/route.ts` | Assign agent (auth required; protected by proxy) |
 | `src/lib/supabase.ts` | createClerkSupabaseClient, supabaseAdmin |
-| `src/lib/roles.ts` | isBrokerRole |
+| `src/lib/roles.ts` | isBrokerRole, isLenderRole |
 | `src/layout/SiteHeader.tsx` | Header with Clerk (SignInButton, UserButton) |
 | `src/layout/SiteHeaderPublic.tsx` | Header without Clerk (link to /sign-in) |
 | `src/components/AssignAgentButton.tsx` | Client component calling PATCH /api/me/agent |
