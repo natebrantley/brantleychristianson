@@ -1,7 +1,7 @@
 /**
  * PATCH /api/me/agent — set the current user's assigned broker (by slug).
  * Client-only: requires Clerk auth. Used from brokers page "Choose as my agent".
- * Updates public.users.assigned_broker_slug; Clerk webhook preserves this on user.updated.
+ * Updates public.users.assigned_broker_id (stores broker slug); Clerk webhook preserves this on user.updated.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -38,7 +38,7 @@ export async function PATCH(request: NextRequest) {
   const supabase = supabaseAdmin();
   const { data: updated, error: updateError } = await supabase
     .from('users')
-    .update({ assigned_broker_slug: slug })
+    .update({ assigned_broker_id: slug })
     .eq('clerk_id', userId)
     .select('id')
     .maybeSingle();
@@ -53,7 +53,7 @@ export async function PATCH(request: NextRequest) {
     const { error: insertError } = await supabase.from('users').insert({
       clerk_id: userId,
       role: 'user',
-      assigned_broker_slug: slug,
+      assigned_broker_id: slug,
     });
     if (insertError) {
       console.error('PATCH /api/me/agent insert:', insertError);

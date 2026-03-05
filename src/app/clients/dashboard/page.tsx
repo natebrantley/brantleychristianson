@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description: 'Saved homes, searches, and next steps with your BCRE agent.',
 };
 
-type UserFields = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_slug?: string | null };
+type UserFields = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null };
 
 function formatLeadDate(iso: string): string {
   try {
@@ -42,7 +42,7 @@ export default async function ClientsDashboardPage() {
     const [userRes, leadsRes] = await Promise.all([
       supabase
         .from('users')
-        .select('first_name, last_name, email, role, assigned_broker_slug')
+        .select('first_name, last_name, email, role, assigned_broker_id')
         .eq('clerk_id', userId)
         .maybeSingle(),
       supabase
@@ -73,7 +73,7 @@ export default async function ClientsDashboardPage() {
     ? ([user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null)
     : null;
 
-  const assignedAgent = user?.assigned_broker_slug ? getAgentBySlug(user.assigned_broker_slug) : null;
+  const assignedAgent = user?.assigned_broker_id ? getAgentBySlug(user.assigned_broker_id) : null;
 
   return (
     <main>

@@ -1,6 +1,6 @@
 # Supabase DB push setup
 
-Use this to apply migrations (e.g. `users`, `leads`, `assigned_broker_slug`, `listings`) to your **remote** Supabase project via the CLI.
+Use this to apply migrations (e.g. `users`, `leads`, `assigned_broker_id`, `listings`) to your **remote** Supabase project via the CLI.
 
 ## 1. One-time: log in to Supabase CLI
 
@@ -64,4 +64,5 @@ Migrations that affect this app:
 - `20260307000000_backfill_agent_role_by_domain.sql` — backfill
 - `20260307000001_add_users_updated_at_if_missing.sql` — updated_at column
 - `20260308000000_create_listings_table_rmls.sql` — RMLS listings
-- `20260309000000_add_users_assigned_broker_slug.sql` — assigned broker for clients
+- `20260309000000_add_users_assigned_broker_slug.sql` — legacy (adds slug column if present)
+- `20260310000003_add_users_assigned_broker_id.sql` — assigned broker for clients (app uses this)
