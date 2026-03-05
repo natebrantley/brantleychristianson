@@ -58,6 +58,8 @@ The webhook reads **Public metadata** from the Clerk user and syncs it to Supaba
 
 If role is set in Clerk but stays `user` in Supabase, the webhook may be failing (check Clerk → Webhooks → Message Attempts) or the metadata key might be different (e.g. `userRole` instead of `role`). The webhook only looks for `public_metadata.role`.
 
+**Fallback:** If `public_metadata.role` is missing but the user’s primary email domain is `@brantleychristianson.com`, the webhook sets `role` to `agent` so team emails always get agent access. To fix existing rows that were synced before metadata or fallback existed, run the migration `20260307000000_backfill_agent_role_by_domain.sql` in the Supabase SQL Editor (or `supabase db push`).
+
 ## See also
 
 - **docs/SUPABASE.md** – Full Supabase and webhook setup

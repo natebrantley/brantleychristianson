@@ -5,6 +5,9 @@ import type { WebhookEvent } from '@clerk/nextjs/server';
 
 const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 
+/** Email domain treated as agent when public_metadata.role is missing (e.g. webhook ran before metadata was set). */
+const AGENT_EMAIL_DOMAIN = 'brantleychristianson.com';
+
 const SUPPORTED_EVENTS = ['user.created', 'user.updated', 'user.deleted'] as const;
 type SupportedEventType = (typeof SUPPORTED_EVENTS)[number];
 
@@ -108,12 +111,20 @@ function buildUsersRow(
   const lastName =
     typeof d.last_name === 'string' && d.last_name.trim().length > 0 ? d.last_name.trim() : null;
   const roleFromMeta = getRoleFromMetadata(data);
+  const email = getPrimaryEmail(data);
+  const isAgentDomain =
+    typeof email === 'string' &&
+    email.trim().toLowerCase().endsWith('@' + AGENT_EMAIL_DOMAIN);
   const role: 'agent' | 'broker' | 'user' =
-    roleFromMeta === 'agent' || roleFromMeta === 'broker' ? roleFromMeta : 'user';
+    roleFromMeta === 'agent' || roleFromMeta === 'broker'
+      ? roleFromMeta
+      : isAgentDomain
+        ? 'agent'
+        : 'user';
   if (logContext) logRoleResolution(logContext, role, roleFromMeta);
   return {
     clerk_id: clerkId,
-    email: getPrimaryEmail(data),
+    email,
     first_name: firstName,
     last_name: lastName,
     role,
