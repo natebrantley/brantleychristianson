@@ -63,6 +63,27 @@ export default async function AgentsDashboardPage() {
           )}
         </header>
 
+        {/* Role / metadata – confirms Clerk → webhook → Supabase sync */}
+        <section className="dashboard-section" aria-labelledby="role-heading">
+          <header className="dashboard-section-header stack--xs">
+            <p className="section-tag">Account</p>
+            <h2 id="role-heading" className="section-title">Role & metadata</h2>
+            <p className="section-lead">
+              Your role is synced from Clerk (Public metadata <code>role</code>) via the webhook into Supabase. This value drives dashboard routing.
+            </p>
+          </header>
+          <div className="card">
+            <dl className="stack--xs" style={{ margin: 0 }}>
+              <div>
+                <dt className="text--muted" style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Current role (Supabase)</dt>
+                <dd style={{ margin: 0, fontWeight: 600 }}>
+                  {user?.role ?? '—'}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
         {/* Overview stats – placeholder counts until wired to CRM/data */}
         <section className="dashboard-section" aria-labelledby="overview-heading">
           <header className="dashboard-section-header stack--xs">

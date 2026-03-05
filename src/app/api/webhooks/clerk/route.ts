@@ -80,8 +80,25 @@ function getRoleFromMetadata(data: WebhookEvent['data']): 'agent' | 'broker' | n
   return null;
 }
 
+/** Log role resolution for debugging (no PII). Call when processing user.created / user.updated. */
+function logRoleResolution(
+  logContext: Record<string, unknown>,
+  resolvedRole: 'agent' | 'broker' | 'user',
+  fromMetadata: 'agent' | 'broker' | null | undefined
+): void {
+  console.log('Clerk webhook: role resolved', {
+    ...logContext,
+    resolvedRole,
+    fromMetadata: fromMetadata ?? 'none',
+  });
+}
+
 /** Build users row from Clerk user payload; clerkId required. Role falls back to 'user'. */
-function buildUsersRow(clerkId: string, data: WebhookEvent['data']): UsersRow {
+function buildUsersRow(
+  clerkId: string,
+  data: WebhookEvent['data'],
+  logContext?: Record<string, unknown>
+): UsersRow {
   if (!data || typeof data !== 'object') {
     return { clerk_id: clerkId, email: null, first_name: null, last_name: null, role: 'user' };
   }
@@ -93,6 +110,7 @@ function buildUsersRow(clerkId: string, data: WebhookEvent['data']): UsersRow {
   const roleFromMeta = getRoleFromMetadata(data);
   const role: 'agent' | 'broker' | 'user' =
     roleFromMeta === 'agent' || roleFromMeta === 'broker' ? roleFromMeta : 'user';
+  if (logContext) logRoleResolution(logContext, role, roleFromMeta);
   return {
     clerk_id: clerkId,
     email: getPrimaryEmail(data),
@@ -211,7 +229,7 @@ async function handleUserUpsert(
   const clerkId = typeof (data as { id?: unknown }).id === 'string' ? (data as { id: string }).id.trim() : null;
   if (!clerkId) return okResponse();
 
-  const row = buildUsersRow(clerkId, data);
+  const row = buildUsersRow(clerkId, data, logContext);
 
   const apiKey = process.env.MAILERLITE_API_KEY?.trim();
   const groupId = process.env.MAILERLITE_GROUP_ID?.trim();

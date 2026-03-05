@@ -38,6 +38,26 @@ Use this for uptime monitoring; it does not reveal secrets.
 - **user.deleted** – Delete user from Supabase by `clerk_id`.
 - Other events (e.g. **role.\***) – Return 200 with no action.
 
+## Setting the agent/broker role in Clerk
+
+The webhook reads **Public metadata** from the Clerk user and syncs it to Supabase `users.role`. The app uses `users.role` for dashboard routing (agent/broker → `/agents`, everyone else → `/clients`).
+
+**In Clerk Dashboard:**
+
+1. Go to **User & authentication** → **Users** (or **Configure** → **Users**).
+2. Open the user who should be an agent/broker.
+3. Find **Public metadata** and add a field:
+   - **Key:** `role` (exactly)
+   - **Value:** `agent` or `broker` (lowercase is fine; the webhook normalizes it)
+4. Save. Clerk will send a **user.updated** webhook; the handler will upsert the user with `role: 'agent'` or `role: 'broker'` into Supabase.
+
+**Check that it’s relayed:**
+
+- In **Vercel** → your project → **Logs**, trigger a sign-in or update that user again (or change metadata and save). Look for a log line: `Clerk webhook: role resolved { eventType, svixId, resolvedRole: 'agent', fromMetadata: 'agent' }`. If you see `fromMetadata: 'none'`, the payload did not include `public_metadata.role` — confirm the key is exactly `role` and that you saved.
+- In **Supabase** → **Table Editor** → **users**, find the row by `clerk_id` (or email) and confirm the **role** column is `agent` or `broker`.
+
+If role is set in Clerk but stays `user` in Supabase, the webhook may be failing (check Clerk → Webhooks → Message Attempts) or the metadata key might be different (e.g. `userRole` instead of `role`). The webhook only looks for `public_metadata.role`.
+
 ## See also
 
 - **docs/SUPABASE.md** – Full Supabase and webhook setup
