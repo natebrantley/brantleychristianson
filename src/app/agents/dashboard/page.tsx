@@ -12,6 +12,18 @@ export const metadata: Metadata = {
   description: 'Pipeline, leads, and client management for BCRE agents.',
 };
 
+type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null };
+type LeadRow = { id: string; email: string; created_at: string };
+
+function formatLeadDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return iso;
+  }
+}
+
 export default async function AgentsDashboardPage() {
   const { userId } = await auth();
 
@@ -19,85 +31,90 @@ export default async function AgentsDashboardPage() {
     redirect('/sign-in');
   }
 
-  let user: { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null } | null =
-    null;
+  let user: AgentUser | null = null;
+  let leads: LeadRow[] = [];
+  let leadsCount = 0;
 
   try {
     const supabase = await createClerkSupabaseClient();
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('clerk_id', userId)
-      .maybeSingle();
+    const [userRes, leadsRes] = await Promise.all([
+      supabase
+        .from('users')
+        .select('first_name, last_name, email, role')
+        .eq('clerk_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('leads')
+        .select('id, email, created_at')
+        .or(`assigned_broker_id.eq.${userId},assigned_broker_id.is.null`)
+        .order('created_at', { ascending: false })
+        .limit(20),
+    ]);
 
-    if (error) {
-      console.error('Error loading agent user record from Supabase:', { userId, ...formatSupabaseError(error) });
+    if (userRes.error) {
+      console.error('Error loading agent user from Supabase:', { userId, ...formatSupabaseError(userRes.error) });
     }
+    user = userRes.data ?? null;
 
-    user = data ?? null;
+    if (!leadsRes.error && Array.isArray(leadsRes.data)) {
+      leads = leadsRes.data as LeadRow[];
+      leadsCount = leadsRes.data.length;
+    }
   } catch (err) {
-    console.error('Unexpected error loading agent user record:', { userId, ...formatSupabaseError(err) });
+    console.error('Unexpected error loading agent dashboard:', { userId, ...formatSupabaseError(err) });
   }
 
   if (!user || !isBrokerRole(user.role)) {
     redirect('/clients');
   }
 
+  const displayName = user
+    ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null
+    : null;
+
   return (
     <main className="section">
       <div className="container stack--lg">
         <header className="stack--sm">
-          <p className="section-tag">Agent dashboard</p>
-          <h1 className="section-title">Welcome back</h1>
-          {user && (
-            <p className="section-lead">
-              Signed in as <strong>{user.first_name ?? ''} {user.last_name ?? ''}</strong>
-              {user.email ? ` (${user.email})` : null}
-            </p>
-          )}
-          {!user && (
-            <p className="section-lead">
-              Your profile is set up in Clerk. We&apos;ll finish syncing details into the dashboard shortly.
-            </p>
-          )}
+          <div className="dashboard-actions" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div>
+              <p className="section-tag">Agent dashboard</p>
+              <h1 className="section-title">Welcome back</h1>
+              {displayName && (
+                <p className="section-lead">
+                  Signed in as <strong>{displayName}</strong>
+                  {user.email ? ` (${user.email})` : ''}
+                </p>
+              )}
+              {!displayName && (
+                <p className="section-lead">
+                  Your profile is syncing from Clerk. Refresh in a moment.
+                </p>
+              )}
+            </div>
+            <span
+              className="text--muted"
+              style={{ fontSize: '0.8125rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+              title="Synced from Clerk (Public metadata role)"
+            >
+              Role: {user?.role ?? '—'}
+            </span>
+          </div>
         </header>
 
-        {/* Role / metadata – confirms Clerk → webhook → Supabase sync */}
-        <section className="dashboard-section" aria-labelledby="role-heading">
-          <header className="dashboard-section-header stack--xs">
-            <p className="section-tag">Account</p>
-            <h2 id="role-heading" className="section-title">Role & metadata</h2>
-            <p className="section-lead">
-              Your role is synced from Clerk (Public metadata <code>role</code>) via the webhook into Supabase. This value drives dashboard routing.
-            </p>
-          </header>
-          <div className="card">
-            <dl className="stack--xs" style={{ margin: 0 }}>
-              <div>
-                <dt className="text--muted" style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>Current role (Supabase)</dt>
-                <dd style={{ margin: 0, fontWeight: 600 }}>
-                  {user?.role ?? '—'}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </section>
-
-        {/* Overview stats – placeholder counts until wired to CRM/data */}
         <section className="dashboard-section" aria-labelledby="overview-heading">
           <header className="dashboard-section-header stack--xs">
             <p className="section-tag">Overview</p>
-            <h2 id="overview-heading" className="section-title">Your pipeline</h2>
+            <h2 id="overview-heading" className="section-title">Pipeline</h2>
             <p className="section-lead">
-              High-level counts for leads, active clients, and recent activity. Data will sync from your CRM and
-              consultations.
+              Leads assigned to you or unassigned. Client and consultation counts will sync from your CRM when connected.
             </p>
           </header>
           <div className="dashboard-stats">
             <div className="dashboard-stat">
-              <div className="dashboard-stat-value">—</div>
-              <div className="dashboard-stat-label">New leads</div>
+              <div className="dashboard-stat-value">{leadsCount > 0 ? leadsCount : '—'}</div>
+              <div className="dashboard-stat-label">Leads (visible)</div>
             </div>
             <div className="dashboard-stat">
               <div className="dashboard-stat-value">—</div>
@@ -110,51 +127,70 @@ export default async function AgentsDashboardPage() {
           </div>
         </section>
 
-        {/* Leads */}
         <section className="dashboard-section" aria-labelledby="leads-heading">
           <header className="dashboard-section-header stack--xs">
             <p className="section-tag">Leads</p>
             <h2 id="leads-heading" className="section-title">Recent leads</h2>
             <p className="section-lead">
-              Incoming consultation requests and lead sources. Follow up from here or in your CRM.
+              Incoming leads assigned to you or unassigned. Follow up from here or in your CRM.
             </p>
           </header>
-          <div className="empty-state">
-            <p>Leads from the site and your marketing will appear here. Integration with Repliers or your CRM is coming.</p>
-            <Button href="/contact" variant="outline">
-              View contact form
-            </Button>
-          </div>
+          {leads.length > 0 ? (
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              <ul className="stack--none" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {leads.map((lead) => (
+                  <li
+                    key={lead.id}
+                    style={{
+                      padding: 'var(--space-md) var(--space-lg)',
+                      borderBottom: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <span style={{ fontWeight: 500 }}>{lead.email}</span>
+                      <span className="text--muted" style={{ fontSize: '0.875rem' }}>
+                        {formatLeadDate(lead.created_at)}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <p>Leads will appear here when assigned to you or when RLS allows. Connect your CRM or Repliers for full pipeline sync.</p>
+              <Button href="/contact" variant="outline">
+                View contact form
+              </Button>
+            </div>
+          )}
         </section>
 
-        {/* Active clients */}
         <section className="dashboard-section" aria-labelledby="clients-heading">
           <header className="dashboard-section-header stack--xs">
             <p className="section-tag">Clients</p>
             <h2 id="clients-heading" className="section-title">Active clients</h2>
             <p className="section-lead">
-              Clients you&apos;re currently working with—saved homes, searches, and next steps in one place.
+              Clients you&apos;re working with—saved homes, searches, and next steps. CRM sync coming.
             </p>
           </header>
           <div className="empty-state">
-            <p>Active client cards will show here once linked to your account. Use your CRM for now; we&apos;ll sync soon.</p>
+            <p>Active client cards will show here once linked. Use your CRM for now.</p>
           </div>
         </section>
 
-        {/* Marketing insights */}
         <section className="dashboard-section" aria-labelledby="marketing-heading">
           <header className="dashboard-section-header stack--xs">
             <p className="section-tag">Marketing</p>
             <h2 id="marketing-heading" className="section-title">Marketing insights</h2>
             <p className="section-lead">
-              How your listings and content are performing—views, inquiries, and top markets.
+              Listings and content performance—views, inquiries, top markets.
             </p>
           </header>
           <div className="card">
             <h3>Coming soon</h3>
             <p>
-              We&apos;re adding views and engagement metrics for your listings and market pages. You&apos;ll see which
-              content drives the most consultations and how to prioritize your time.
+              Views and engagement metrics for your listings and market pages. We&apos;ll show which content drives consultations.
             </p>
             <div className="dashboard-actions">
               <Button href="/resources" variant="outline">

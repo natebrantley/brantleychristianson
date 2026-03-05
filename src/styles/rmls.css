@@ -1,0 +1,156 @@
+/* RMLS compliance: disclaimer and listing attribution */
+
+.rmls-disclaimer {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--color-light-alt, #f9f9f9);
+  border-top: 1px solid rgba(10, 36, 56, 0.1);
+  font-size: 0.875rem;
+  color: var(--color-muted, rgba(10, 36, 56, 0.65));
+}
+
+.rmls-disclaimer__inner {
+  max-width: 72ch;
+  margin: 0 auto;
+}
+
+.rmls-disclaimer__logo-wrap {
+  margin-bottom: var(--space-sm);
+}
+
+.rmls-disclaimer__logo {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+}
+
+.rmls-disclaimer__logo-fallback {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+}
+
+.rmls-disclaimer__text {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Listing attribution: firm name adjacent to property details */
+.listing-attribution {
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid rgba(10, 36, 56, 0.08);
+  font-size: 0.9375rem;
+}
+
+.listing-attribution__label {
+  color: var(--color-muted);
+}
+
+.listing-attribution__firm {
+  margin: 0 0 0.25rem 0;
+}
+
+.listing-attribution__agent {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+/* Property card (IDX grid) */
+.property-card--idx .property-card__attribution {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-bottom: none;
+}
+
+.property-card__image-link {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.property-card__image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 400 / 260;
+  object-fit: cover;
+}
+
+.property-card__body {
+  padding: var(--space-md) 0;
+}
+
+.property-card__price {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: var(--color-primary);
+}
+
+.property-card__address {
+  margin: 0 0 var(--space-xs) 0;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.property-card__specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  margin: 0 0 var(--space-sm) 0;
+  font-size: 0.875rem;
+}
+
+.property-card__specs dt {
+  margin: 0;
+  font-weight: 500;
+}
+
+.property-card__specs dd {
+  margin: 0 0.25rem 0 0;
+}
+
+.property-card__link {
+  margin-top: var(--space-sm);
+}
+
+/* Property details page wrapper */
+.property-details__content {
+  margin-top: var(--space-md);
+}
+
+/* VOW sign-up disclosure (sign-up page) */
+.vow-disclosure {
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+.vow-disclosure h2 {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: 1rem;
+}
+
+.vow-disclosure p {
+  margin: 0 0 var(--space-md) 0;
+  line-height: 1.5;
+}
+
+.vow-disclosure label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.vow-disclosure input[type='checkbox'] {
+  margin-top: 0.2rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.vow-pending-message {
+  padding: var(--space-md);
+  text-align: center;
+  border-radius: var(--radius-md);
+}

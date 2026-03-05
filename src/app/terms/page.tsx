@@ -53,6 +53,9 @@ export default function TermsPage() {
               <strong>Real estate services.</strong> Contacting us through the site does not create a client relationship. Real estate services are subject to separate agreements and applicable law in Oregon and Washington. Listing details and availability are subject to change.
             </p>
             <p>
+              <strong>MLS data (VOW).</strong> Where you register for an account to view listing data, you agree that MLS data provided through this site is exclusively for your personal, non-commercial use, and you have a bona fide interest in the purchase, sale, or lease of real estate of the type being offered. You may not scrape, redistribute, or use listing data for commercial purposes.
+            </p>
+            <p>
               <strong>Intellectual property.</strong> The BCRE name, logo, and site content are owned by Brantley Christianson Real Estate or our licensors. You may not copy, modify, or use our marks or content for commercial purposes without permission.
             </p>
             <p>

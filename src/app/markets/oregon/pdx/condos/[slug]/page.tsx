@@ -6,7 +6,9 @@ import { CondoMapSection } from '@/components/CondoMapSection';
 import { WalkScoreSection } from '@/components/WalkScoreSection';
 import { ConsultationForm } from '@/components/ConsultationForm';
 import { CondoImageWithFallback } from '@/components/CondoImageWithFallback';
+import { RMLSDisclaimer } from '@/components/rmls/RMLSDisclaimer';
 import { CONDO_FALLBACK_IMAGE } from '@/config/theme';
+import { SITE_NAME, defaultOgImage } from '@/config/site';
 import {
   getCondoBySlug,
   getCondoSlugs,
@@ -14,7 +16,6 @@ import {
 } from '@/data/portland-condo-guide';
 import type { PortlandCondoEntry } from '@/data/portland-condo-guide-types';
 import { CONDITION_COLOR_LEGEND } from '@/data/portland-condo-guide-types';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 function formatPrice(n: number): string {
@@ -585,6 +586,13 @@ export default async function CondoBuildingPage({ params }: PageProps) {
           <Button href="#request-assistance" variant="white">
             Request assistance
           </Button>
+        </div>
+      </section>
+
+      {/* RMLS IDX/VOW compliance: disclaimer at bottom of property/listings content */}
+      <section className="section" aria-label="Listing data disclaimer">
+        <div className="container container-narrow">
+          <RMLSDisclaimer brokerageName={SITE_NAME} />
         </div>
       </section>
     </main>

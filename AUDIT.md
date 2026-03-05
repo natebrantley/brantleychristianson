@@ -43,9 +43,9 @@
 | `/privacy` | `app/privacy/page.tsx` | |
 | `/terms` | `app/terms/page.tsx` | |
 
-**API:** `POST /api/consultation` → `app/api/consultation/route.ts` (MailerLite + rate limit).  
+**API:** `POST /api/consultation` (MailerLite + rate limit), `GET /api/listings` (public IDX listings), `GET /api/cron/sync-mls` (Vercel Cron, Bearer CRON_SECRET).  
 **Webhooks:** `POST /api/webhooks/clerk` (Clerk → Supabase users + optional MailerLite), `POST /api/webhooks/mailerlite` (unsubscribe/bounce → users.marketing_opt_in).  
-**Auth:** `/dashboard` (role-based redirect), `/agents`, `/agents/dashboard`, `/clients`, `/clients/dashboard`, `/sign-in/[[...sign-in]]` (Clerk).
+**Auth:** `/dashboard` (role-based redirect), `/agents`, `/agents/dashboard`, `/clients`, `/clients/dashboard`, `/sign-in/[[...sign-in]]`, `/sign-up/[[...sign-up]]` (Clerk; sign-up has VOW disclosure).
 
 **Special:** `error.tsx` (error boundary), `not-found.tsx` (404). Proxy at `src/proxy.ts` (Clerk when keys set).
 
@@ -83,15 +83,22 @@
 | `portland/PortlandFinancingBreakdown` | Financing breakdown | Portland city page only |
 | `portland/PortlandNeighborhoodSpotlight` | Neighborhood spotlight | Portland city page only |
 
-### Unused components
+### RMLS / IDX components (`src/components/rmls/`)
+
+| Component | Purpose |
+|-----------|---------|
+| `RMLSDisclaimer` | Required disclaimer + RMLS logo/fallback; used on condo detail and in PropertyDetails |
+| `ListingAttribution` | Displays `listing_firm_name` (and optional agent) adjacent to property details |
+| `PropertyCard` | IDX listing card with attribution; for future listing grids |
+| `PropertyDetails` | Wrapper: attribution + content + disclaimer; for future listing detail pages |
+
+### Unused / reserved components
 
 | Component | Status |
 |-----------|--------|
-| `BrokerGrid.tsx` | Not imported anywhere (brokers section removed from home) |
+| `BrokerGrid.tsx` | Not imported (brokers section removed from home) |
 | `FeaturedListingCard.tsx` | Not imported |
-| `PropertyCard.tsx` | Not imported |
-
-**Recommendation:** Remove unused components or document if reserved for future use.
+| (Legacy `PropertyCard`) | AUDIT previously noted removal; IDX grids use `rmls/PropertyCard.tsx` |
 
 ---
 
@@ -278,6 +285,8 @@ All pages rely on the same design system; no page-specific CSS imports.
 | `/api/consultation` | MailerLite consultation form; rate-limited |
 | `/api/webhooks/clerk` | Clerk user sync → Supabase (+ optional MailerLite); Svix-verified; MailerLite best-effort; lead bridge try/catch |
 | `/api/webhooks/mailerlite` | Unsubscribe/bounce → `users.marketing_opt_in`; signature-verified |
+| `GET /api/listings` | Public IDX listings (Active/Pending only; no seller_contact/showing_instructions) |
+| `GET /api/cron/sync-mls` | Vercel Cron every 12h; CRON_SECRET; expiration + Repliers IDX sync when configured |
 
 ### Security
 
@@ -307,14 +316,70 @@ All pages rely on the same design system; no page-specific CSS imports.
 - Getting started: two cards in `dashboard-card-grid` (responsive).
 - Ternary for `displayName` written with explicit `: null` to satisfy Turbopack parser.
 
+---
+
+## RMLS & IDX / VOW compliance audit
+
+**Scope:** Listing attribution, disclaimers, VOW terms, 12-hour sync, restricted data.  
+**Reference:** `docs/RMLS-COMPLIANCE.md`.
+
+### 1. UI: listing attribution & disclaimers
+
+| Check | Status | Notes |
+|-------|--------|--------|
+| Listing firm name adjacent to details | ✅ | `ListingAttribution` shows `listing_firm_name`; used in `PropertyCard` and `PropertyDetails` |
+| RMLS disclaimer (exact text + brokerage name) | ✅ | `RMLSDisclaimer` in `src/components/rmls/RMLSDisclaimer.tsx`; brokerage configurable |
+| Disclaimer on property/listings content | ✅ | Rendered at bottom of condo detail (`/markets/oregon/pdx/condos/[slug]`); `PropertyDetails` includes it for future listing pages |
+| RMLS logo | ⚠️ | Expects `public/media/img/logos/rmls-logo.png`; fallback text "RMLS" if missing |
+
+### 2. VOW terms (Clerk sign-up)
+
+| Check | Status | Notes |
+|-------|--------|--------|
+| Required disclosure on registration | ✅ | `/sign-up` shows exact VOW text and required checkbox before Clerk form |
+| Terms of Use include MLS/VOW language | ✅ | `/terms` has "MLS data (VOW)" paragraph |
+| Checkbox blocks form until agreed | ✅ | Sign-up form only shown when `agreed === true` |
+
+### 3. Data freshness (12-hour sync)
+
+| Check | Status | Notes |
+|-------|--------|--------|
+| Cron schedule | ✅ | `vercel.json`: `0 */12 * * *` → `/api/cron/sync-mls` |
+| Cron auth | ✅ | `CRON_SECRET` Bearer token; 401 if missing/wrong |
+| Expiration cleanup | ✅ | Listings with `expiration_date` &lt; today set to Expired |
+| IDX feed source | ✅ | Repliers.io via `syncRepliersListingsToSupabase` when `REPLIERS_API_KEY` + `REPLIERS_DEFAULT_AGENT_ID` set |
+| Off-market handling | ✅ | Active/Pending listings not in current Repliers response marked Expired |
+
+### 4. Restricted data (no seller info to public)
+
+| Check | Status | Notes |
+|-------|--------|--------|
+| Public API omits seller_contact, showing_instructions | ✅ | `GET /api/listings` selects explicit columns; neither included |
+| listings-rmls helpers | ✅ | `toPublicListing` strips restricted fields; `filterPublicListings` enforces Active/Pending |
+| DB schema | ✅ | `listings` has seller_contact, showing_instructions with comments; sync sets them null, never from Repliers to public |
+| No other listing endpoints expose restricted | ✅ | Only `api/listings` and cron/sync touch listings; cron uses admin, not public |
+
+### 5. Gaps / recommendations
+
+| Item | Priority | Action |
+|------|----------|--------|
+| RMLS logo asset | Medium | Add `public/media/img/logos/rmls-logo.png` or keep text fallback |
+| Sign-up entry point | Low | Ensure nav/CTAs link to `/sign-up` for new VOW users |
+| Listings table + RLS | Low | Migration creates `listings`; RLS not enabled. If enabling RLS later, add policy for anon SELECT on non-restricted columns only |
+| Repliers POST /listings | Low | Uses query params (status=A, pageNum, resultsPerPage); if Repliers expects body params, adjust `fetchRepliersListingsPage` |
+| Rate limit on GET /api/listings | Low | Consider rate limit if listing API is hit by anonymous traffic |
+
+---
+
 ### Summary
 
 | Area | Status |
 |------|--------|
 | Build & deploy | ✅ |
 | Dependencies | ✅ No vulnerabilities |
-| Routes & auth | ✅ Dashboards and webhooks documented |
+| Routes & auth | ✅ Dashboards, webhooks, sign-up, cron documented |
 | Security (headers, env, webhooks) | ✅ |
-| Docs | ✅ VERCEL + AUDIT updated for proxy and redirect_uri_mismatch |
+| RMLS / IDX / VOW | ✅ Attribution, disclaimer, VOW terms, 12h sync, restricted data enforced |
+| Docs | ✅ VERCEL + AUDIT + RMLS-COMPLIANCE |
 | Accessibility | ✅ Empty alt texts fixed (logo, broker/lender/condo images) |
 | Lint | ⚠️ Use `npx next lint` from project root |

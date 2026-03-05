@@ -92,13 +92,15 @@ export function SiteHeader() {
                 </SignInButton>
               </Show>
               <Show when="signed-in">
-                <UserButton
-                  appearance={{
-                    elements: {
-                      avatarBox: 'w-8 h-8',
-                    },
-                  }}
-                />
+                <div className="nav-user-avatar-wrap">
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        avatarBox: 'nav-user-avatar',
+                      },
+                    }}
+                  />
+                </div>
               </Show>
             </li>
           </ul>
