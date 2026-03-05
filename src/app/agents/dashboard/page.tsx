@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
-import { isBrokerRole } from '@/lib/roles';
+import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
@@ -73,6 +73,9 @@ export default async function AgentsDashboardPage() {
   const isAgent = isBrokerRole(user?.role) || isBrokerRole(roleFromClerk);
 
   if (!isAgent) {
+    if (isLenderRole(user?.role) || isLenderRole(roleFromClerk)) {
+      redirect('/lenders/dashboard');
+    }
     redirect('/clients');
   }
 
