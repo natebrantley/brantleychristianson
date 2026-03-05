@@ -33,4 +33,6 @@ export interface Lender {
   specialties: string[];
   address?: string;
   bio: string;
+  /** Languages the lender can work in (e.g. English, Spanish). Used for filtering. */
+  languages?: string[];
 }

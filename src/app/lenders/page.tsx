@@ -1,6 +1,6 @@
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
-import { LendersList } from '@/components/LendersList';
+import { LendersFilterable } from '@/components/LendersFilterable';
 import { assetPaths } from '@/config/theme';
 import { lenders } from '@/data/lenders';
 import { SITE_NAME, SITE_URL, defaultOgImage } from '@/config/site';
@@ -52,12 +52,10 @@ export default function LendersPage() {
               Meet our preferred lenders
             </h2>
             <p className="section-lead mx-auto">
-              Click a lender for their profile, NMLS details, and contact info. Reach out directly by email or phone.
+              Click a lender for their profile, NMLS details, and contact info. Filter by location or language, or sort by name.
             </p>
           </header>
-          <div className="lenders-list-wrap">
-            <LendersList lenders={lenders} />
-          </div>
+          <LendersFilterable lenders={lenders} />
         </div>
       </section>
     </main>

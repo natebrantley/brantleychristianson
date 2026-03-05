@@ -14,7 +14,8 @@
     "licenses": ["WA", "MT", "FL"],
     "specialties": ["Residential & Investment Lending"],
     "address": "5559 S Sossaman Rd Bldg #1\nSuite #101\nMesa, AZ 85212",
-    "bio": "Dedicated to offering more options, flexibility, and exceptional service to help you build a strategic plan for your home loan."
+    "bio": "Dedicated to offering more options, flexibility, and exceptional service to help you build a strategic plan for your home loan.",
+    "languages": ["English"]
   },
   {
     "name": "Taylor Winkler",
@@ -31,7 +32,8 @@
     "licenses": ["WA", "OR", "CA"],
     "specialties": ["Purchase Loans", "Refinancing", "Investment Properties"],
     "address": "5559 S Sossaman Rd Bldg #1\nSuite #101\nMesa, AZ 85212",
-    "bio": "Providing unmatched care and trust, Taylor leverages NEXA Mortgage's expansive options to secure the perfect financing tailored to your needs."
+    "bio": "Providing unmatched care and trust, Taylor leverages NEXA Mortgage's expansive options to secure the perfect financing tailored to your needs.",
+    "languages": ["English"]
   },
   {
     "name": "Madisyn Donnelly",
@@ -48,6 +50,25 @@
     "licenses": ["WA", "OR"],
     "specialties": ["Residential Lending"],
     "address": "216 NE 4th Ave. Ste 101\nCamas, WA 98607",
-    "bio": "Mortgage broker with DC Lending, serving Washington and Oregon with personalized home loan solutions."
+    "bio": "Mortgage broker with DC Lending, serving Washington and Oregon with personalized home loan solutions.",
+    "languages": ["English"]
+  },
+  {
+    "name": "Ian Humphrey",
+    "slug": "ian-humphrey",
+    "title": "Executive Branch Manager",
+    "company": "West Capital Lending",
+    "logo": "/media/img/logos/west.png",
+    "nmls": "NMLS #2224042",
+    "co_nmls": "Co. NMLS #1566096",
+    "phone": "(949) 620-6623",
+    "email": "ihumphrey@westcapitallending.com",
+    "image": "/media/img/lenders/ian.PNG",
+    "url": "https://westcapitallending.com",
+    "licenses": ["CA", "WA"],
+    "specialties": ["Residential Lending", "DRE Licensed"],
+    "address": "17911 Von Karman Ave Suite 400\nIrvine, CA 92614",
+    "bio": "Executive Branch Manager with West Capital Lending. Licensed in California (DRE) and NMLS. Direct: (949) 620-6623, Cell: (360) 448-3100.",
+    "languages": ["English"]
   }
 ]

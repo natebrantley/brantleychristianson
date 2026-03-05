@@ -31,6 +31,115 @@
 }
 
 /* Center the card grid; when few cards they stay centered */
+.lenders-filterable {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.lenders-filters {
+  width: 100%;
+  max-width: 1040px;
+  margin-inline: auto;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-light-alt);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.08);
+  text-align: center;
+}
+
+@media (min-width: 480px) {
+  .lenders-filters {
+    padding: var(--space-lg);
+  }
+}
+
+.lenders-filters-heading {
+  font-family: var(--font-headings);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 var(--space-md);
+  line-height: 1.3;
+}
+
+.lenders-filters-row {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+@media (min-width: 600px) {
+  .lenders-filters-row {
+    flex-direction: row;
+  }
+}
+
+.lenders-filter-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 12rem;
+}
+
+@media (min-width: 600px) {
+  .lenders-filter-group {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    max-width: none;
+  }
+}
+
+.lenders-filter-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.lenders-filter-select {
+  font-size: 0.9375rem;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.25);
+  border-radius: var(--radius-md);
+  background: var(--color-light);
+  color: var(--color-primary);
+  cursor: pointer;
+  min-width: 10rem;
+  width: 100%;
+  max-width: 14rem;
+  min-height: 2.75rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 600px) {
+  .lenders-filter-select {
+    width: auto;
+    max-width: none;
+  }
+}
+
+.lenders-filter-select:hover,
+.lenders-filter-select:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.lenders-filters-result {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  margin: var(--space-sm) 0 0 0;
+  text-align: center;
+}
+
 .lenders-list-wrap {
   width: 100%;
   display: flex;
@@ -47,6 +156,13 @@
   width: 100%;
   max-width: 380px;
   margin-inline: auto;
+  padding-inline: var(--space-sm);
+}
+
+@media (min-width: 480px) {
+  .lenders-list {
+    padding-inline: 0;
+  }
 }
 @media (min-width: 768px) {
   .lenders-list {
@@ -100,13 +216,20 @@
 
 .lender-tile-image-wrap {
   position: relative;
-  width: 200px;
-  height: 260px;
+  width: 180px;
+  height: 234px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: var(--space-md);
   border: 2px solid rgba(var(--color-accent-rgb), 0.25);
   flex-shrink: 0;
+}
+
+@media (min-width: 480px) {
+  .lender-tile-image-wrap {
+    width: 200px;
+    height: 260px;
+  }
 }
 
 .lender-tile-img {
