@@ -92,7 +92,7 @@ export default async function ClientsDashboardPage() {
               Your agent
             </h2>
             {assignedAgent ? (
-              <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
+              <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
                 <div style={{ flexShrink: 0 }}>
                   <Image
                     src={assignedAgent.image}
@@ -102,9 +102,29 @@ export default async function ClientsDashboardPage() {
                     style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
                   />
                 </div>
-                <div style={{ flex: '1 1 200px' }}>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                   <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{assignedAgent.name}</p>
                   <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{assignedAgent.title}</p>
+                  {(assignedAgent.phone || assignedAgent.email) && (
+                    <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
+                      {assignedAgent.phone && (
+                        <li style={{ marginTop: '0.25rem' }}>
+                          <span className="text--muted">Phone: </span>
+                          <a href={`tel:${assignedAgent.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
+                            {assignedAgent.phone}
+                          </a>
+                        </li>
+                      )}
+                      {assignedAgent.email && (
+                        <li style={{ marginTop: '0.25rem' }}>
+                          <span className="text--muted">Email: </span>
+                          <a href={`mailto:${assignedAgent.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
+                            {assignedAgent.email}
+                          </a>
+                        </li>
+                      )}
+                    </ul>
+                  )}
                   <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
                     {assignedAgent.phone && (
                       <Button href={`tel:${assignedAgent.phone.replace(/\D/g, '')}`} variant="primary">

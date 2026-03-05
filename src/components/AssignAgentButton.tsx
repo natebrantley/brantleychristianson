@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/Button';
 
 interface AssignAgentButtonProps {
@@ -14,7 +13,6 @@ interface AssignAgentButtonProps {
 
 export function AssignAgentButton({ slug, label = 'Choose as my agent', variant = 'outline', className = '' }: AssignAgentButtonProps) {
   const { isSignedIn } = useAuth();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   if (!isSignedIn) return null;
@@ -31,9 +29,8 @@ export function AssignAgentButton({ slug, label = 'Choose as my agent', variant 
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error ?? 'Failed to assign');
       }
-      router.push('/clients/dashboard');
-      router.refresh();
-      setLoading(false);
+      // Full navigation so dashboard loads fresh from server with updated agent
+      window.location.href = '/clients/dashboard';
     } catch (err) {
       console.error(err);
       setLoading(false);
