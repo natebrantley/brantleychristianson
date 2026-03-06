@@ -5,6 +5,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getAgentBySlug } from '@/data/agents';
 
 const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 
@@ -20,7 +21,7 @@ type LeadRow = {
   zip?: string | null;
   source?: string | null;
   address?: string | null;
-  agent?: string | null;
+  assigned_broker_id?: string | null;
   opted_in_email?: string | null;
   [key: string]: unknown;
 };
@@ -50,7 +51,10 @@ function leadToSubscriberPayload(
   set('zip', lead.zip, 20);
   set('source', lead.source, 100);
   set('address', lead.address, 200);
-  set('agent', lead.agent, 200);
+  if (lead.assigned_broker_id) {
+    const agentName = getAgentBySlug(lead.assigned_broker_id)?.name;
+    if (agentName) set('agent', agentName, 200);
+  }
 
   const payload: {
     email: string;
@@ -85,7 +89,7 @@ export async function syncLeadsToMailerLite(
   const { data: rows, error } = await admin
     .from('leads')
     .select(
-      'id, email, email_address, first_name, last_name, phone, city, state, zip, source, address, agent, opted_in_email'
+      'id, email, email_address, first_name, last_name, phone, city, state, zip, source, address, assigned_broker_id, opted_in_email'
     )
     .limit(limit);
 

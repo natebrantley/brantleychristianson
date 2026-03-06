@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getAgentBySlug } from '@/data/agents';
 
 /**
  * Fetches broker/agent display names from public.users for the given Clerk user IDs.
@@ -31,17 +32,21 @@ export async function getBrokerDisplayNamesByClerkId(
 }
 
 /**
- * Resolves a lead's assigned broker for display: prefer name from users (by assigned_broker_id),
- * otherwise use the lead's agent (text) column from import.
+ * Resolves a lead's assigned broker for display: prefer name from users (by clerk_id),
+ * else name from agents.json by slug (assigned_broker_id may be slug), else fallback text.
  */
 export function resolveLeadAssignedAgentName(
-  assignedBrokerClerkId: string | null | undefined,
-  agentText: string | null | undefined,
+  assignedBrokerId: string | null | undefined,
+  agentTextFallback: string | null | undefined,
   brokerNameByClerkId: Map<string, string>
 ): string {
-  if (assignedBrokerClerkId && brokerNameByClerkId.has(assignedBrokerClerkId)) {
-    return brokerNameByClerkId.get(assignedBrokerClerkId)!;
+  if (assignedBrokerId && brokerNameByClerkId.has(assignedBrokerId)) {
+    return brokerNameByClerkId.get(assignedBrokerId)!;
   }
-  if (agentText && agentText.trim()) return agentText.trim();
+  if (assignedBrokerId) {
+    const bySlug = getAgentBySlug(assignedBrokerId);
+    if (bySlug?.name) return bySlug.name;
+  }
+  if (agentTextFallback && agentTextFallback.trim()) return agentTextFallback.trim();
   return 'Unassigned';
 }

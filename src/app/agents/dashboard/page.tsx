@@ -22,7 +22,6 @@ type LeadRow = {
   email: string;
   created_at: string;
   assigned_broker_id?: string | null;
-  agent?: string | null;
   clerk_id?: string | null;
   first_name?: string | null;
   last_name?: string | null;
@@ -89,7 +88,7 @@ export default async function AgentsDashboardPage() {
         .maybeSingle(),
       supabase
         .from('leads')
-        .select('id, email, created_at, assigned_broker_id, agent, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
+        .select('id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
         .eq('assigned_broker_id', userId)
         .order('created_at', { ascending: false })
         .limit(50),
@@ -120,7 +119,7 @@ export default async function AgentsDashboardPage() {
       const admin = supabaseAdmin();
       const { data: fallbackLeads, error: fallbackErr } = await admin
         .from('leads')
-        .select('id, email, created_at, assigned_broker_id, agent, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
+        .select('id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
         .in('assigned_broker_id', uniqWithCase)
         .order('created_at', { ascending: false })
         .limit(50);

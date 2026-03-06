@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 type LenderUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
-type LeadRow = { id: string; email: string; created_at: string; assigned_broker_id?: string | null; agent?: string | null };
+type LeadRow = { id: string; email: string; created_at: string; assigned_broker_id?: string | null };
 
 function formatLeadDate(iso: string): string {
   try {
@@ -76,7 +76,7 @@ export default async function LendersDashboardPage() {
         .maybeSingle(),
       supabase
         .from('leads')
-        .select('id, email, created_at, assigned_broker_id, agent')
+        .select('id, email, created_at, assigned_broker_id')
         .eq('assigned_lender_id', userId)
         .order('created_at', { ascending: false })
         .limit(20),
@@ -218,7 +218,7 @@ export default async function LendersDashboardPage() {
                             {formatLeadDate(lead.created_at)}
                           </time>
                           <p className="text--muted lender-dashboard__list-meta" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                            Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, lead.agent, brokerNamesByClerkId)}
+                            Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, null, brokerNamesByClerkId)}
                           </p>
                         </li>
                       ))}
@@ -238,7 +238,7 @@ export default async function LendersDashboardPage() {
                             {formatLeadDate(lead.created_at)}
                           </time>
                           <p className="text--muted lender-dashboard__list-meta" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                            Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, lead.agent, brokerNamesByClerkId)}
+                            Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, null, brokerNamesByClerkId)}
                           </p>
                         </li>
                       ))}

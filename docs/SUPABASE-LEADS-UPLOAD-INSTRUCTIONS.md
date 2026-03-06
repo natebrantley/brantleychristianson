@@ -13,9 +13,8 @@ Use this document to prepare a database or dataset so it can be uploaded into th
 | **id** | uuid | NO (PK) | Omit on insert to auto-generate. |
 | **email** | text | NO | **Required.** |
 | **address** | text | YES | |
-| **agent** | text | YES | Display name of assigned agent from your system (e.g. "Nate Brantley"). Shown when **assigned_broker_id** is not set or not found in **users**. |
-| **assigned_broker_id** | text | YES | **Clerk user ID** of the assigned agent/broker (e.g. `user_2abc...`). Must match a **users.clerk_id** so the agent sees the lead and RLS allows access. Use **agent** for display name if you don't have Clerk ID. |
-| **assigned_lender_id** | text | YES | Clerk user ID of assigned lender. |
+| **assigned_broker_id** | text | YES | **Agent slug** (e.g. `nate`, `corey-allen`) or Clerk user ID. The agent dashboard shows leads where this matches their slug or clerk_id. Use slugs from `src/data/agents.json`. |
+| **assigned_lender_id** | text | YES | Clerk user ID or lender slug. |
 | **average_price** | number | YES | |
 | **buyer_seller** | text | YES | |
 | **city** | text | YES | |
@@ -46,7 +45,7 @@ Use this document to prepare a database or dataset so it can be uploaded into th
 | **zip** | text | YES | |
 
 **Full field list (names only):**  
-`id`, `email`, `address`, `agent`, `assigned_broker_id`, `assigned_lender_id`, `average_price`, `buyer_seller`, `city`, `clerk_id`, `created_at`, `email_address`, `favorite_city`, `favorite_properties`, `first_name`, `house_to_sell`, `last_login`, `last_name`, `login_count`, `median_price`, `notes`, `notes_2`, `opted_in_email`, `opted_in_text`, `phone`, `pre_qualified_for_mortgage`, `property_inquiries`, `property_views`, `registered`, `saved_searches`, `source`, `state`, `timeframe`, `zip`
+`id`, `email`, `address`, `assigned_broker_id`, `assigned_lender_id`, `average_price`, `buyer_seller`, `city`, `clerk_id`, `created_at`, `email_address`, `favorite_city`, `favorite_properties`, `first_name`, `house_to_sell`, `last_login`, `last_name`, `login_count`, `median_price`, `notes`, `notes_2`, `opted_in_email`, `opted_in_text`, `phone`, `pre_qualified_for_mortgage`, `property_inquiries`, `property_views`, `registered`, `saved_searches`, `source`, `state`, `timeframe`, `zip`
 
 ---
 
@@ -64,32 +63,21 @@ Use this document to prepare a database or dataset so it can be uploaded into th
 Every column except **email** may be null or omitted on insert.
 
 - **id** — Omit to auto-generate. If supplied, use a valid UUID string.
-- **clerk_id**, **assigned_broker_id**, **assigned_lender_id** — Clerk user IDs (e.g. `user_2abc...`). Leave null if unknown. For **assigned_broker_id**: use the agent’s **Clerk user ID** so that agent sees the lead on their dashboard and RLS works; the app resolves that ID to a display name from **public.users**. Use **agent** (text) for the agent’s display name from your system; it is used as a fallback when the broker isn’t in **users** or **assigned_broker_id** is null.
+- **clerk_id**, **assigned_broker_id**, **assigned_lender_id** — Clerk user IDs or agent/lender slugs (e.g. `user_2abc...` or `nate`). Leave null if unknown. For **assigned_broker_id**: use the agent slug from `src/data/agents.json` so that agent sees the lead on their dashboard; the app resolves the slug to a display name.
 - **created_at**, **last_login**, **registered** — Use ISO 8601 with timezone; omit for defaults where applicable.
-- **Text columns** (e.g. **address**, **agent**, **first_name**, **last_name**, **phone**, **city**, **state**, **zip**, **source**, **notes**, **timeframe**, **buyer_seller**, **house_to_sell**, **pre_qualified_for_mortgage**, **opted_in_email**, **opted_in_text**, **email_address**, **favorite_city**) — Any string or null.
+- **Text columns** (e.g. **address**, **first_name**, **last_name**, **phone**, **city**, **state**, **zip**, **source**, **notes**, **timeframe**, **buyer_seller**, **house_to_sell**, **pre_qualified_for_mortgage**, **opted_in_email**, **opted_in_text**, **email_address**, **favorite_city**) — Any string or null.
 - **Numeric columns** (**average_price**, **median_price**, **favorite_properties**, **login_count**, **property_inquiries**, **property_views**, **saved_searches**) — Number or null.
 
-### 2.3 Syncing assigned agent names so they resolve correctly
+### 2.3 Assigning leads to agents
 
-- **assigned_broker_id** on leads must be the **Clerk user ID** of the agent (from Clerk / **public.users.clerk_id**). Then the app shows the agent’s name from **users** (first_name, last_name) on the agent and lender dashboards.
-- **agent** (text) is used as a fallback display name when **assigned_broker_id** is null or the user isn’t in **users**.
-- If your source data has agent **names** (e.g. "Nate Brantley") but not Clerk IDs:  
-  1. Populate **agent** with that name so it displays.  
-  2. Optionally backfill **assigned_broker_id**: match agent name (or email) to **public.users** where **role** is `agent` or `broker`, then set **leads.assigned_broker_id** = **users.clerk_id** for that agent. That way the lead appears on the correct agent’s dashboard and the resolved name stays in sync.
-
-**If leads were already imported with agent full name or slug in assigned_broker_id:** Run the migration `supabase/migrations/20260317000000_backfill_leads_assigned_broker_id_from_agent_name.sql` in the Supabase SQL Editor (or `supabase db push`). It maps full name (from **public.users** first_name + last_name) and known agent slugs to **users.clerk_id** and updates **leads.assigned_broker_id** so each agent’s dashboard shows their assigned leads.
-
-**Preferred: normalize both broker and lender in one step.** Run `supabase/migrations/20260318000000_normalize_leads_assigned_broker_lender.sql` (or `supabase db push`). It sets **assigned_broker_id** and **assigned_lender_id** to **users.clerk_id** by matching current values to agent/lender **email**, **full name**, or **slug** (case-insensitive). Only rows that are not already Clerk IDs (`user_%`) are updated. Run after agents and lenders have signed in so **public.users** has their **clerk_id**.
-
-**public.users** should also store Clerk IDs for consistency. Run `supabase/migrations/20260319000000_normalize_users_assigned_broker_lender.sql` to convert **users.assigned_broker_id** and **users.assigned_lender_id** from slug to **users.clerk_id** (so both tables use the same identifier for “who is the assigned agent/lender”).
+- **assigned_broker_id** holds the **agent slug** (e.g. `nate`, `corey-allen`) from `src/data/agents.json`. The agent dashboard shows leads where this matches the signed-in agent's slug (or Clerk ID). Display name is resolved from the slug.
+- If your import has agent **names** (e.g. "Nate Brantley") instead of slugs, run **`docs/fix-leads-now.sql`** in the Supabase SQL Editor once: it maps name to slug, writes slug into **assigned_broker_id**, and drops the **agent** column.
 
 ### 2.4 Validation before upload
 
-If **public.users** has an **agent** column (text) that was populated before **assigned_broker_id** existed, run `supabase/migrations/20260320000000_backfill_users_assigned_broker_id_from_agent.sql` to backfill **assigned_broker_id** from **agent** (by email, full name, or slug).
-
-1. **Email**  
-   - Not empty after trim.  
-   - Reasonable format (e.g. contains `@`, has domain).  
+1. **Email**
+   - Not empty after trim.
+   - Reasonable format (e.g. contains `@`, has domain).
    - No duplicate emails in the same batch if you require uniqueness (the table allows duplicates; dedupe in app if needed).
 
 2. **IDs**  
@@ -236,7 +224,7 @@ So when preparing data:
 **Required:** `email`
 
 **Optional (all others):**  
-`id`, `address`, `agent`, `assigned_broker_id`, `assigned_lender_id`, `average_price`, `buyer_seller`, `city`, `clerk_id`, `created_at`, `email_address`, `favorite_city`, `favorite_properties`, `first_name`, `house_to_sell`, `last_login`, `last_name`, `login_count`, `median_price`, `notes`, `notes_2`, `opted_in_email`, `opted_in_text`, `phone`, `pre_qualified_for_mortgage`, `property_inquiries`, `property_views`, `registered`, `saved_searches`, `source`, `state`, `timeframe`, `zip`
+`id`, `address`, `assigned_broker_id`, `assigned_lender_id`, `average_price`, `buyer_seller`, `city`, `clerk_id`, `created_at`, `email_address`, `favorite_city`, `favorite_properties`, `first_name`, `house_to_sell`, `last_login`, `last_name`, `login_count`, `median_price`, `notes`, `notes_2`, `opted_in_email`, `opted_in_text`, `phone`, `pre_qualified_for_mortgage`, `property_inquiries`, `property_views`, `registered`, `saved_searches`, `source`, `state`, `timeframe`, `zip`
 
 Omit **id** on insert to auto-generate. Omit **created_at** to use server time when applicable.
 
