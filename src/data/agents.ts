@@ -7,6 +7,14 @@ export function getAgentBySlug(slug: string): Agent | undefined {
   return agents.find((a) => a.slug === slug);
 }
 
+/** Resolve agent slug from email (e.g. nate@brantleychristianson.com → "nate"). */
+export function getAgentSlugByEmail(email: string | null | undefined): string | null {
+  if (!email || !email.trim()) return null;
+  const normalized = email.trim().toLowerCase();
+  const a = agents.find((agent) => agent.email?.toLowerCase() === normalized);
+  return a?.slug ?? null;
+}
+
 export function getAgentsByLicense(license: string): Agent[] {
   return agents.filter((a) =>
     a.licenses.some((l) => l.toUpperCase().startsWith(license.toUpperCase()))

@@ -3,6 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError, supabaseAdmin } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isBrokerRole, isLenderRole } from '@/lib/roles';
+import { getAgentSlugByEmail } from '@/data/agents';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
@@ -101,6 +102,35 @@ export default async function AgentsDashboardPage() {
 
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       leads = leadsRes.data as LeadRow[];
+    }
+
+    // Fallback: if no leads by Clerk ID, fetch by name/slug/email (legacy imports) and backfill
+    const forFallback = user ?? (clerkUser ? { first_name: clerkUser.firstName, last_name: clerkUser.lastName, email: clerkUser.emailAddresses?.[0]?.emailAddress } : null);
+    if (leads.length === 0 && forFallback) {
+      const fullName = [forFallback.first_name, forFallback.last_name].filter(Boolean).join(' ').trim();
+      const slug = getAgentSlugByEmail(forFallback.email ?? undefined);
+      const possibleIds: string[] = [userId];
+      if (forFallback.email) possibleIds.push(String(forFallback.email).trim());
+      if (fullName) possibleIds.push(fullName);
+      if (slug) possibleIds.push(slug);
+      const uniq = [...new Set(possibleIds)];
+
+      const admin = supabaseAdmin();
+      const { data: fallbackLeads, error: fallbackErr } = await admin
+        .from('leads')
+        .select('id, email, created_at, assigned_broker_id, agent, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
+        .in('assigned_broker_id', uniq)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (!fallbackErr && Array.isArray(fallbackLeads) && fallbackLeads.length > 0) {
+        leads = fallbackLeads as LeadRow[];
+        // Backfill so next load uses Clerk ID
+        const idsToUpdate = (fallbackLeads as LeadRow[]).filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
+        if (idsToUpdate.length > 0) {
+          await admin.from('leads').update({ assigned_broker_id: userId }).in('id', idsToUpdate);
+        }
+      }
     }
 
     // Saved searches for assigned leads who have signed in (clerk_id set) — use admin to bypass RLS
@@ -290,6 +320,9 @@ export default async function AgentsDashboardPage() {
           ) : (
             <div className="empty-state">
               <p>No leads assigned to you yet. Assigned leads will appear here with their activity and saved searches.</p>
+              <p className="text--muted" style={{ fontSize: '0.8125rem', marginTop: '0.5rem' }}>
+                Leads are matched by your Clerk ID. If your CRM uses your name or email for assignment, we’ll pick them up and sync on next load.
+              </p>
               <Button href="/contact" variant="outline">
                 View contact form
               </Button>
