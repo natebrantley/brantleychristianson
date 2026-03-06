@@ -67,6 +67,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errBody, { status });
     }
 
+    if (res.status === 406) {
+      const { body: errBody, status } = apiErrorResponse(API_ERROR_CODES.REPLIERS_NLP_NOT_SEARCH);
+      return NextResponse.json(errBody, { status });
+    }
+
     if (!res.ok) {
       const { body: errBody, status } = apiErrorResponse(API_ERROR_CODES.REPLIERS_UNAVAILABLE);
       return NextResponse.json(errBody, { status });

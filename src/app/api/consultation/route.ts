@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClientIp, isRateLimited } from '@/lib/rateLimit';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 
@@ -126,6 +127,43 @@ export async function POST(request: NextRequest) {
         },
         { status: 502 }
       );
+    }
+
+    // Best-effort: create/update lead in Supabase so agents see consultation in dashboard.
+    const leadSource = tagVal(body.source) || 'consultation';
+    const [leadFirst, ...leadLastParts] = name ? name.trim().split(/\s+/) : [];
+    const leadLastName = leadLastParts.length > 0 ? leadLastParts.join(' ').slice(0, 200) : null;
+    try {
+      const admin = supabaseAdmin();
+      const { data: existing } = await admin
+        .from('leads')
+        .select('id')
+        .ilike('email', email.toLowerCase())
+        .limit(1)
+        .maybeSingle();
+      if (existing?.id) {
+        await admin
+          .from('leads')
+          .update({
+            first_name: leadFirst?.slice(0, 200) || null,
+            last_name: leadLastName,
+            phone: phone || null,
+            source: leadSource,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id);
+      } else {
+        await admin.from('leads').insert({
+          email: email.toLowerCase(),
+          email_address: email.toLowerCase(),
+          first_name: leadFirst?.slice(0, 200) || null,
+          last_name: leadLastName,
+          phone: phone || null,
+          source: leadSource,
+        });
+      }
+    } catch (leadErr) {
+      console.warn('Consultation: lead upsert skipped (non-fatal)', { email: email.slice(0, 3) + '…', err: leadErr });
     }
 
     return NextResponse.json({ ok: true });

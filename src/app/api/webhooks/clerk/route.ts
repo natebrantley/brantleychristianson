@@ -158,7 +158,7 @@ async function handleUserDeleted(
   return okResponse();
 }
 
-/** Sync user to MailerLite (best-effort; never fails the webhook). Uses MAILERLITE_API_KEY. */
+/** Sync user to MailerLite (best-effort; never fails the webhook). Uses MAILERLITE_API_TOKEN (or MAILERLITE_API_KEY for backward compatibility). */
 async function syncMailerLite(
   email: string,
   firstName: string | null,
@@ -166,16 +166,17 @@ async function syncMailerLite(
   eventType: string,
   logContext: Record<string, unknown>
 ): Promise<void> {
-  const apiKey = process.env.MAILERLITE_API_KEY?.trim();
+  const apiToken =
+    process.env.MAILERLITE_API_TOKEN?.trim() || process.env.MAILERLITE_API_KEY?.trim();
   const groupId = process.env.MAILERLITE_GROUP_ID?.trim();
-  if (!apiKey || !groupId) return;
+  if (!apiToken || !groupId) return;
 
   const res = await fetch(`${MAILERLITE_API_BASE}/subscribers`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiToken}`,
     },
     body: JSON.stringify({
       email: email.toLowerCase(),
@@ -220,11 +221,12 @@ async function handleUserUpsert(
 
   const row = buildUsersRow(clerkId, data, logContext);
 
-  const apiKey = process.env.MAILERLITE_API_KEY?.trim();
+  const mailerliteToken =
+    process.env.MAILERLITE_API_TOKEN?.trim() || process.env.MAILERLITE_API_KEY?.trim();
   const groupId = process.env.MAILERLITE_GROUP_ID?.trim();
   // Only sync to MailerLite on user.created to avoid duplicate API calls and "already subscribed" noise
   const mailerlitePromise =
-    eventType === 'user.created' && row.email && apiKey && groupId
+    eventType === 'user.created' && row.email && mailerliteToken && groupId
       ? syncMailerLite(row.email, row.first_name, row.last_name, eventType, logContext)
       : Promise.resolve();
 
@@ -329,7 +331,7 @@ async function syncRepliersClientIfNeeded(
  * - user.created / user.updated: upsert into public.users (role: agent | broker | lender | user); optional MailerLite sync on user.created only; optional lead bridge (leads.clerk_id by email).
  *
  * Env: CLERK_WEBHOOK_SECRET, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
- * Optional: MAILERLITE_API_KEY, MAILERLITE_GROUP_ID.
+ * Optional: MAILERLITE_API_TOKEN (or MAILERLITE_API_KEY), MAILERLITE_GROUP_ID.
  *
  * Returns 200 for success or for unsupported event types. Returns 4xx/5xx with JSON { error, code?, details? } on failure.
  */

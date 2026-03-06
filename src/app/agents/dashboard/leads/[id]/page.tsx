@@ -1,8 +1,9 @@
 import { redirect, notFound } from 'next/navigation';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
+import { createClerkSupabaseClient, formatSupabaseError, supabaseAdmin } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isBrokerRole, isLenderRole } from '@/lib/roles';
+import { getAgentSlugByEmail } from '@/data/agents';
 import { Hero } from '@/components/Hero';
 import { LeadContactForm } from './LeadContactForm';
 import { assetPaths } from '@/config/theme';
@@ -77,7 +78,37 @@ export default async function LeadDetailPage({
       console.error('Lead detail load error:', formatSupabaseError(leadRes.error));
       notFound();
     }
-    if (!lead) notFound();
+    if (!lead) {
+      // Rescue: lead may have assigned_broker_id = email/name/slug; backfill then refetch
+      if (clerkUser) {
+        const fullName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ').trim();
+        const email = clerkUser.emailAddresses?.[0]?.emailAddress ?? '';
+        const slug = getAgentSlugByEmail(email);
+        const possibleIds: string[] = [userId];
+        if (email) possibleIds.push(String(email).trim());
+        if (fullName) possibleIds.push(fullName);
+        if (slug) possibleIds.push(slug);
+        const uniq = [...new Set(possibleIds)];
+        const uniqWithCase = new Set([...uniq, ...uniq.map((s) => s.toLowerCase())]);
+        const admin = supabaseAdmin();
+        const { data: rescueRow } = await admin
+          .from('leads')
+          .select('id, assigned_broker_id')
+          .eq('id', id)
+          .maybeSingle();
+        const assignedTrimmed = rescueRow?.assigned_broker_id?.trim();
+        if (rescueRow && assignedTrimmed && (uniqWithCase.has(assignedTrimmed) || uniqWithCase.has(assignedTrimmed.toLowerCase()))) {
+          await admin.from('leads').update({ assigned_broker_id: userId }).eq('id', id);
+          const { data: refetched } = await supabase
+            .from('leads')
+            .select('id, first_name, last_name, email, email_address, phone, notes, source, timeframe, city, state, clerk_id, created_at, last_login, property_views, property_inquiries')
+            .eq('id', id)
+            .maybeSingle();
+          if (refetched) lead = refetched as LeadRow;
+        }
+      }
+      if (!lead) notFound();
+    }
   } catch (err) {
     console.error('Lead detail page error:', formatSupabaseError(err));
     notFound();

@@ -7,6 +7,7 @@ export const API_ERROR_CODES = {
   REPLIERS_UNAVAILABLE: 'REPLIERS_UNAVAILABLE',
   REPLIERS_RATE_LIMIT: 'REPLIERS_RATE_LIMIT',
   REPLIERS_406_SAVED_SEARCH: 'REPLIERS_406_SAVED_SEARCH',
+  REPLIERS_NLP_NOT_SEARCH: 'REPLIERS_NLP_NOT_SEARCH',
   INVALID_INPUT: 'INVALID_INPUT',
   UNAUTHORIZED: 'UNAUTHORIZED',
   NOT_FOUND: 'NOT_FOUND',
@@ -24,6 +25,8 @@ const USER_MESSAGES: Record<ApiErrorCode, string> = {
     'Too many requests. Please wait a moment and try again.',
   [API_ERROR_CODES.REPLIERS_406_SAVED_SEARCH]:
     'Narrow your search (e.g. add city or price range) and try again.',
+  [API_ERROR_CODES.REPLIERS_NLP_NOT_SEARCH]:
+    'Try a search like "3 bed condo in Portland" or add a location or property type.',
   [API_ERROR_CODES.INVALID_INPUT]: 'Invalid request. Please check your search or filters.',
   [API_ERROR_CODES.UNAUTHORIZED]: 'Please sign in to continue.',
   [API_ERROR_CODES.NOT_FOUND]: 'The requested listing was not found.',
@@ -37,6 +40,7 @@ const HTTP_STATUS: Record<ApiErrorCode, number> = {
   [API_ERROR_CODES.REPLIERS_UNAVAILABLE]: 503,
   [API_ERROR_CODES.REPLIERS_RATE_LIMIT]: 429,
   [API_ERROR_CODES.REPLIERS_406_SAVED_SEARCH]: 400,
+  [API_ERROR_CODES.REPLIERS_NLP_NOT_SEARCH]: 400,
   [API_ERROR_CODES.INVALID_INPUT]: 400,
   [API_ERROR_CODES.UNAUTHORIZED]: 401,
   [API_ERROR_CODES.NOT_FOUND]: 404,

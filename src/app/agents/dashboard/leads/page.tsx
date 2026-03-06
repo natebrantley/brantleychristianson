@@ -218,6 +218,11 @@ export default async function AgentLeadsPage({
       if (Array.isArray(fallbackLeads)) {
         leads = fallbackLeads as LeadRow[];
         totalCount = typeof fallbackCount === 'number' ? fallbackCount : leads.length;
+        // Backfill so detail page and PATCH pass RLS
+        const idsToUpdate = (fallbackLeads as LeadRow[]).filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
+        if (idsToUpdate.length > 0) {
+          await admin.from('leads').update({ assigned_broker_id: userId }).in('id', idsToUpdate);
+        }
       }
     }
   } catch (err) {

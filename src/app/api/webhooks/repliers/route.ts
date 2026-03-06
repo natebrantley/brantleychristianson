@@ -99,6 +99,15 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const correlationId = crypto.randomUUID();
 
+  // Repliers subscription verification: echo X-Hook-Secret back on first POST to complete subscription.
+  const hookSecret = request.headers.get('x-hook-secret');
+  if (hookSecret) {
+    return new NextResponse(null, {
+      status: 200,
+      headers: { 'X-Hook-Secret': hookSecret },
+    });
+  }
+
   if (!isAuthorized(request)) {
     console.log('repliers webhook: unauthorized', { correlationId });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
