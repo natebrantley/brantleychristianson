@@ -32,7 +32,7 @@ Sign-in sync (`src/lib/sync-clerk-user.ts`) also uses the same Supabase env when
 - **MailerLite** (consultation form): `MAILERLITE_API_TOKEN`, optional `MAILERLITE_GROUP_ID`
 - **MailerLite** (Clerk webhook – add new sign-ups to list): `MAILERLITE_API_KEY`, `MAILERLITE_GROUP_ID`
 - **MailerLite webhook** (unsubscribe/bounce → users.marketing_opt_in): `MAILERLITE_WEBHOOK_SECRET`
-- **MailerLite** (push leads to list): `GET /api/cron/sync-leads-to-mailerlite` uses `MAILERLITE_API_TOKEN` + optional `MAILERLITE_GROUP_ID`; protect with `CRON_SECRET` (see docs/WEBHOOK-MAILERLITE.md)
+- **MailerLite** (push leads to list): `GET /api/cron/sync-leads-to-mailerlite` uses `MAILERLITE_API_TOKEN` + optional `MAILERLITE_GROUP_ID`; protect with `CRON_SECRET` (see docs/WEBHOOK-MAILERLITE.md). **Automated:** Vercel Cron runs this every hour so new/updated leads stay in sync with MailerLite.
 - **Repliers** (IDX/CRM): `REPLIERS_API_KEY`, `REPLIERS_DEFAULT_AGENT_ID`; webhook: `REPLIERS_WEBHOOK_SECRET`
 - **Cron** (sync-mls): `CRON_SECRET`
 - **Analytics:** `NEXT_PUBLIC_GA_MEASUREMENT_ID`

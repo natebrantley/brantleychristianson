@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/sync-mls",
       "schedule": "0 */12 * * *"
+    },
+    {
+      "path": "/api/cron/sync-leads-to-mailerlite",
+      "schedule": "0 * * * *"
     }
   ]
 }
