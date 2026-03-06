@@ -21,28 +21,7 @@ export const metadata: Metadata = {
 };
 
 type LenderUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
-type LeadRow = { id: string; email: string; created_at: string; assigned_broker_id?: string | null };
-
-function formatLeadDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  } catch {
-    return iso;
-  }
-}
-
-/** Lead is "priority" if created in the last 7 days */
-function isPriorityLead(createdAt: string): boolean {
-  try {
-    const d = new Date(createdAt);
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    return d >= sevenDaysAgo;
-  } catch {
-    return false;
-  }
-}
+type LeadRow = { id: string; email_address: string | null; assigned_broker_id?: string | null };
 
 export default async function LendersDashboardPage() {
   const { userId } = await auth();
@@ -76,9 +55,8 @@ export default async function LendersDashboardPage() {
         .maybeSingle(),
       supabase
         .from('leads')
-        .select('id, email, created_at, assigned_broker_id')
+        .select('id, email_address, assigned_broker_id')
         .eq('assigned_lender_id', userId)
-        .order('created_at', { ascending: false })
         .limit(20),
     ]);
 
@@ -143,9 +121,6 @@ export default async function LendersDashboardPage() {
     : null;
   const hasTeam = !!(agentContact || preferredLender);
 
-  const priorityLeads = assignedLeads.filter((l) => isPriorityLead(l.created_at));
-  const otherLeads = assignedLeads.filter((l) => !isPriorityLead(l.created_at));
-
   if (!user && clerkUser) {
     user = {
       first_name: clerkUser.firstName ?? null,
@@ -156,7 +131,7 @@ export default async function LendersDashboardPage() {
   }
 
   return (
-    <main className="dashboard-page lender-dashboard">
+    <main className="dashboard-page lender-dashboard" aria-label="Lender dashboard">
       <Hero
         variant="short"
         title="Lender dashboard"
@@ -202,49 +177,21 @@ export default async function LendersDashboardPage() {
             </h2>
             <p className="lender-dashboard__leads-lead">
               {assignedLeads.length > 0
-                ? `Referrals assigned to you. Follow up with the agent or client. ${priorityLeads.length > 0 ? `${priorityLeads.length} new in the last 7 days.` : ''}`
+                ? 'Referrals assigned to you. Follow up with the agent or client.'
                 : 'Referrals assigned to you by agents will appear here. Connect with your agent contact to receive leads.'}
             </p>
             {assignedLeads.length > 0 ? (
               <div className="card lender-dashboard__list-card">
-                {priorityLeads.length > 0 && (
-                  <div className="lender-dashboard__priority-block">
-                    <h3 className="lender-dashboard__priority-title">New (last 7 days)</h3>
-                    <ul className="lender-dashboard__list">
-                      {priorityLeads.map((lead) => (
-                        <li key={lead.id} className="lender-dashboard__list-item lender-dashboard__list-item--priority">
-                          <span className="lender-dashboard__list-email">{lead.email}</span>
-                          <time className="text--muted lender-dashboard__list-date" dateTime={lead.created_at}>
-                            {formatLeadDate(lead.created_at)}
-                          </time>
-                          <p className="text--muted lender-dashboard__list-meta" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                            Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, null, brokerNamesByClerkId)}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {otherLeads.length > 0 && (
-                  <div className="lender-dashboard__priority-block">
-                    <h3 className="lender-dashboard__priority-title">
-                      {priorityLeads.length > 0 ? 'Older' : 'Assigned to you'}
-                    </h3>
-                    <ul className="lender-dashboard__list">
-                      {otherLeads.map((lead) => (
-                        <li key={lead.id} className="lender-dashboard__list-item">
-                          <span className="lender-dashboard__list-email">{lead.email}</span>
-                          <time className="text--muted lender-dashboard__list-date" dateTime={lead.created_at}>
-                            {formatLeadDate(lead.created_at)}
-                          </time>
-                          <p className="text--muted lender-dashboard__list-meta" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                            Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, null, brokerNamesByClerkId)}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <ul className="lender-dashboard__list">
+                  {assignedLeads.map((lead) => (
+                    <li key={lead.id} className="lender-dashboard__list-item">
+                      <span className="lender-dashboard__list-email">{lead.email_address ?? '—'}</span>
+                      <p className="text--muted lender-dashboard__list-meta" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
+                        Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, null, brokerNamesByClerkId)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ) : (
               <div className="empty-state lender-dashboard__empty">

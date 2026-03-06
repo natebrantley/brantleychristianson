@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient } from '@/lib/supabase';
 import { apiErrorResponse, API_ERROR_CODES } from '@/lib/api-errors';
+import type { Json } from '@/types/database';
 import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
       .insert({
         clerk_id: userId,
         name: parsed.data.name ?? null,
-        criteria: parsed.data.criteria,
+        criteria: parsed.data.criteria as Json,
       })
       .select('id, name, criteria, created_at')
       .single();

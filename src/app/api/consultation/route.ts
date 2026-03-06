@@ -130,7 +130,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Best-effort: create/update lead in Supabase so agents see consultation in dashboard.
-    const leadSource = tagVal(body.source) || 'consultation';
     const [leadFirst, ...leadLastParts] = name ? name.trim().split(/\s+/) : [];
     const leadLastName = leadLastParts.length > 0 ? leadLastParts.join(' ').slice(0, 200) : null;
     try {
@@ -138,7 +137,7 @@ export async function POST(request: NextRequest) {
       const { data: existing } = await admin
         .from('leads')
         .select('id')
-        .ilike('email', email.toLowerCase())
+        .ilike('email_address', email.toLowerCase())
         .limit(1)
         .maybeSingle();
       if (existing?.id) {
@@ -148,18 +147,21 @@ export async function POST(request: NextRequest) {
             first_name: leadFirst?.slice(0, 200) || null,
             last_name: leadLastName,
             phone: phone || null,
-            source: leadSource,
-            updated_at: new Date().toISOString(),
           })
           .eq('id', existing.id);
       } else {
         await admin.from('leads').insert({
-          email: email.toLowerCase(),
           email_address: email.toLowerCase(),
           first_name: leadFirst?.slice(0, 200) || null,
           last_name: leadLastName,
           phone: phone || null,
-          source: leadSource,
+          crmc_score: null,
+          address: null,
+          city: null,
+          state: null,
+          zip: null,
+          assigned_broker_id: null,
+          assigned_lender_id: null,
         });
       }
     } catch (leadErr) {

@@ -9,60 +9,23 @@ export type LeadContactData = {
   id: string;
   first_name?: string | null;
   last_name?: string | null;
-  email?: string | null;
   email_address?: string | null;
+  crmc_score?: number | null;
   phone?: string | null;
-  notes?: string | null;
-  notes_2?: string | null;
-  source?: string | null;
-  timeframe?: string | null;
   address?: string | null;
   city?: string | null;
   state?: string | null;
   zip?: string | null;
-  clerk_id?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  last_login?: string | null;
-  property_views?: number | null;
-  property_inquiries?: number | null;
+  assigned_broker_id?: string | null;
+  assigned_lender_id?: string | null;
 };
-
-function formatDate(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  } catch {
-    return '—';
-  }
-}
-
-function formatLastActive(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try {
-    const d = new Date(iso);
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  } catch {
-    return '—';
-  }
-}
 
 function getInitials(lead: LeadContactData): string {
   const first = (lead.first_name ?? '').trim().slice(0, 1).toUpperCase();
   const last = (lead.last_name ?? '').trim().slice(0, 1).toUpperCase();
   if (first && last) return `${first}${last}`;
   if (first) return first;
-  const email = (lead.email ?? lead.email_address ?? '').trim();
+  const email = (lead.email_address ?? '').trim();
   if (email) return email.slice(0, 2).toUpperCase();
   return '?';
 }
@@ -70,16 +33,12 @@ function getInitials(lead: LeadContactData): string {
 export function LeadContactForm({ lead, backHref }: { lead: LeadContactData; backHref: string }) {
   const [first_name, setFirst_name] = useState(lead.first_name ?? '');
   const [last_name, setLast_name] = useState(lead.last_name ?? '');
-  const [email, setEmail] = useState(lead.email ?? lead.email_address ?? '');
+  const [email_address, setEmail_address] = useState(lead.email_address ?? '');
   const [phone, setPhone] = useState(lead.phone ?? '');
-  const [notes, setNotes] = useState(lead.notes ?? '');
-  const [notes_2, setNotes_2] = useState(lead.notes_2 ?? '');
   const [address, setAddress] = useState(lead.address ?? '');
   const [city, setCity] = useState(lead.city ?? '');
   const [state, setState] = useState(lead.state ?? '');
   const [zip, setZip] = useState(lead.zip ?? '');
-  const [source, setSource] = useState(lead.source ?? '');
-  const [timeframe, setTimeframe] = useState(lead.timeframe ?? '');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -94,16 +53,12 @@ export function LeadContactForm({ lead, backHref }: { lead: LeadContactData; bac
         body: JSON.stringify({
           first_name: first_name.trim() || null,
           last_name: last_name.trim() || null,
-          email: email.trim() || null,
+          email_address: email_address.trim() || null,
           phone: phone.trim() || null,
-          notes: notes.trim() || null,
-          notes_2: notes_2.trim() || null,
           address: address.trim() || null,
           city: city.trim() || null,
           state: state.trim() || null,
           zip: zip.trim() || null,
-          source: source.trim() || null,
-          timeframe: timeframe.trim() || null,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -117,7 +72,7 @@ export function LeadContactForm({ lead, backHref }: { lead: LeadContactData; bac
     }
   }
 
-  const displayName = [lead.first_name, lead.last_name].filter(Boolean).join(' ').trim() || lead.email || lead.email_address || 'Lead';
+  const displayName = [lead.first_name, lead.last_name].filter(Boolean).join(' ').trim() || lead.email_address || 'Lead';
   const pulseLevel = getLeadPulse(lead);
   const pulseLabel = getLeadPulseLabel(pulseLevel);
   const initials = getInitials(lead);
@@ -141,31 +96,21 @@ export function LeadContactForm({ lead, backHref }: { lead: LeadContactData; bac
               aria-label={pulseLabel}
               title={pulseLabel}
             />
-            {lead.clerk_id ? <span className="lead-badge">Client</span> : null}
           </span>
         </div>
       </header>
 
-      <section className="lead-detail__section" aria-label="Overview">
-        <h2 className="lead-detail__section-title">Overview</h2>
-        <ul className="lead-detail__meta-list">
-          <li><span className="lead-detail__meta-label">Created</span> {formatDate(lead.created_at)}</li>
-          <li><span className="lead-detail__meta-label">Last active</span> {formatLastActive(lead.last_login)}</li>
-          <li><span className="lead-detail__meta-label">Views</span> {lead.property_views ?? '—'} <span className="lead-detail__meta-sep">·</span> <span className="lead-detail__meta-label">Inquiries</span> {lead.property_inquiries ?? '—'}</li>
-          {(lead.source || lead.timeframe || lead.city || lead.address) && (
-            <li>
-              {lead.source && <><span className="lead-detail__meta-label">Source</span> {lead.source}</>}
-              {lead.timeframe && <> <span className="lead-detail__meta-sep">·</span> <span className="lead-detail__meta-label">Timeframe</span> {lead.timeframe}</>}
-              {(lead.city || lead.address) && <> <span className="lead-detail__meta-sep">·</span> <span className="lead-detail__meta-label">Location</span> {[lead.address, lead.city, lead.state].filter(Boolean).join(', ')}{lead.zip ? ` ${lead.zip}` : ''}</>}
-            </li>
-          )}
-        </ul>
-      </section>
+      {(lead.city || lead.address) && (
+        <section className="lead-detail__section" aria-label="Location">
+          <h2 className="lead-detail__section-title">Location</h2>
+          <p className="lead-detail__meta-list">{[lead.address, lead.city, lead.state].filter(Boolean).join(', ')}{lead.zip ? ` ${lead.zip}` : ''}</p>
+        </section>
+      )}
 
       <LeadRecentActivity lead={lead} />
 
-      <form onSubmit={handleSubmit} className="lead-detail__form">
-        <h2 className="lead-detail__form-title">Contact & profile</h2>
+      <form onSubmit={handleSubmit} className="lead-detail__form" aria-labelledby="lead-form-title" aria-describedby={message ? 'lead-form-message' : undefined}>
+        <h2 id="lead-form-title" className="lead-detail__form-title">Contact & profile</h2>
         <div className="lead-detail__grid">
           <label htmlFor="lead-first_name" className="lead-detail__label">First name</label>
           <input
@@ -189,13 +134,13 @@ export function LeadContactForm({ lead, backHref }: { lead: LeadContactData; bac
             autoComplete="family-name"
           />
 
-          <label htmlFor="lead-email" className="lead-detail__label">Email</label>
+          <label htmlFor="lead-email_address" className="lead-detail__label">Email</label>
           <input
-            id="lead-email"
+            id="lead-email_address"
             type="email"
             className="lead-detail__input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={email_address}
+            onChange={(e) => setEmail_address(e.target.value)}
             placeholder="email@example.com"
             autoComplete="email"
           />
@@ -254,50 +199,10 @@ export function LeadContactForm({ lead, backHref }: { lead: LeadContactData; bac
             placeholder="ZIP"
             autoComplete="postal-code"
           />
-
-          <label htmlFor="lead-source" className="lead-detail__label">Source</label>
-          <input
-            id="lead-source"
-            type="text"
-            className="lead-detail__input"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            placeholder="e.g. Website, referral"
-          />
-
-          <label htmlFor="lead-timeframe" className="lead-detail__label">Timeframe</label>
-          <input
-            id="lead-timeframe"
-            type="text"
-            className="lead-detail__input"
-            value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value)}
-            placeholder="e.g. 3–6 months"
-          />
-
-          <label htmlFor="lead-notes" className="lead-detail__label lead-detail__label--full">Notes</label>
-          <textarea
-            id="lead-notes"
-            className="lead-detail__input lead-detail__input--textarea"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Notes about this lead…"
-            rows={4}
-          />
-
-          <label htmlFor="lead-notes_2" className="lead-detail__label lead-detail__label--full">Notes (additional)</label>
-          <textarea
-            id="lead-notes_2"
-            className="lead-detail__input lead-detail__input--textarea"
-            value={notes_2}
-            onChange={(e) => setNotes_2(e.target.value)}
-            placeholder="Additional notes…"
-            rows={3}
-          />
         </div>
 
         {message && (
-          <p role="alert" className={message.type === 'success' ? 'lead-detail__message lead-detail__message--success' : 'lead-detail__message lead-detail__message--error'}>
+          <p id="lead-form-message" role="alert" className={message.type === 'success' ? 'lead-detail__message lead-detail__message--success' : 'lead-detail__message lead-detail__message--error'}>
             {message.text}
           </p>
         )}

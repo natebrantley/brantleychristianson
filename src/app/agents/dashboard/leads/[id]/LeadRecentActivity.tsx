@@ -2,7 +2,7 @@
 
 /**
  * Recent activity timeline for a lead: created, last login, site activity, profile updated.
- * Uses existing lead data only (no lead_activities table).
+ * Uses existing lead data only (no lead_activities table). Simplified leads with no activity fields show "No activity yet."
  */
 
 export type LeadRecentActivityData = {
@@ -45,27 +45,29 @@ function formatRelative(iso: string | null | undefined): string {
 
 type ActivityItem = { label: string; date: string; sortKey: number };
 
-export function LeadRecentActivity({ lead }: { lead: LeadRecentActivityData }) {
+/** Accepts any object; reads optional activity fields. Safe to pass simplified lead (no activity = empty list). */
+export function LeadRecentActivity({ lead }: { lead: Partial<LeadRecentActivityData> | Record<string, unknown> }) {
+  const l = lead as Partial<LeadRecentActivityData>;
   const items: ActivityItem[] = [];
 
-  if (lead.created_at) {
+  if (l.created_at) {
     items.push({
       label: 'Lead created',
-      date: formatDate(lead.created_at),
-      sortKey: new Date(lead.created_at).getTime(),
+      date: formatDate(l.created_at),
+      sortKey: new Date(l.created_at).getTime(),
     });
   }
 
-  if (lead.clerk_id && lead.last_login) {
+  if (l.clerk_id && l.last_login) {
     items.push({
       label: 'Last signed in',
-      date: formatRelative(lead.last_login),
-      sortKey: new Date(lead.last_login).getTime(),
+      date: formatRelative(l.last_login),
+      sortKey: new Date(l.last_login).getTime(),
     });
   }
 
-  const views = lead.property_views ?? 0;
-  const inquiries = lead.property_inquiries ?? 0;
+  const views = l.property_views ?? 0;
+  const inquiries = l.property_inquiries ?? 0;
   if (views > 0 || inquiries > 0) {
     const parts = [];
     if (views > 0) parts.push(`${views} listing${views !== 1 ? 's' : ''} viewed`);
@@ -77,11 +79,11 @@ export function LeadRecentActivity({ lead }: { lead: LeadRecentActivityData }) {
     });
   }
 
-  if (lead.updated_at && lead.updated_at !== lead.created_at) {
+  if (l.updated_at && l.updated_at !== l.created_at) {
     items.push({
       label: 'Profile updated',
-      date: formatRelative(lead.updated_at),
-      sortKey: new Date(lead.updated_at).getTime(),
+      date: formatRelative(l.updated_at),
+      sortKey: new Date(l.updated_at).getTime(),
     });
   }
 
@@ -106,7 +108,7 @@ export function LeadRecentActivity({ lead }: { lead: LeadRecentActivityData }) {
       </h2>
       <ul className="lead-recent-activity">
         {limited.map((item, i) => (
-          <li key={i} className="lead-recent-activity__item">
+          <li key={`${item.label}-${item.date}-${i}`} className="lead-recent-activity__item">
             <span className="lead-recent-activity__label">{item.label}</span>
             <span className="lead-recent-activity__date">{item.date}</span>
           </li>

@@ -5,8 +5,8 @@ import { isBodySizeAllowed, MAX_WEBHOOK_BODY_BYTES } from '@/lib/webhook-utils';
 
 /**
  * MailerLite webhook: keeps Supabase aligned with MailerLite subscriber state.
- * - Opt-out events (unsubscribe, bounce, spam, deleted) → users.marketing_opt_in = false, leads.opted_in_email = 'false'
- * - Opt-in events (created, updated/confirmed, added_to_group, active) → users.marketing_opt_in = true, leads.opted_in_email = 'true'
+ * - Opt-out events (unsubscribe, bounce, spam, deleted) → users.marketing_opt_in = false
+ * - Opt-in events (created, updated/confirmed, added_to_group, active) → users.marketing_opt_in = true
  * Handles both single-event payloads (root event/type + email or subscriber) and batched payloads (events[]).
  * Requires MAILERLITE_WEBHOOK_SECRET. Signature: HMAC-SHA256 of raw body (Signature header).
  */
@@ -103,14 +103,7 @@ async function applyMarketingOpt(
     });
   }
 
-  // Align leads.opted_in_email by email (best-effort; column must exist on leads)
-  try {
-    const val = value ? 'true' : 'false';
-    await admin.from('leads').update({ opted_in_email: val }).eq('email', email);
-    await admin.from('leads').update({ opted_in_email: val }).eq('email_address', email);
-  } catch {
-    // Ignore (e.g. column missing or RLS); users table is source of truth
-  }
+  // leads table was simplified and no longer has opted_in_email; users table is source of truth
 }
 
 /** GET /api/webhooks/mailerlite — health check. Does not reveal secret. */

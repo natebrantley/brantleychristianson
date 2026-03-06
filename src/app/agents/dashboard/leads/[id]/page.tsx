@@ -20,23 +20,15 @@ type LeadRow = {
   id: string;
   first_name?: string | null;
   last_name?: string | null;
-  email?: string | null;
   email_address?: string | null;
+  crmc_score?: number | null;
   phone?: string | null;
-  notes?: string | null;
-  notes_2?: string | null;
-  source?: string | null;
-  timeframe?: string | null;
   address?: string | null;
   city?: string | null;
   state?: string | null;
   zip?: string | null;
-  clerk_id?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  last_login?: string | null;
-  property_views?: number | null;
-  property_inquiries?: number | null;
+  assigned_broker_id?: string | null;
+  assigned_lender_id?: string | null;
 };
 
 export default async function LeadDetailPage({
@@ -64,7 +56,7 @@ export default async function LeadDetailPage({
     }
 
     const supabase = await createClerkSupabaseClient();
-    const leadSelect = 'id, first_name, last_name, email, email_address, phone, notes, notes_2, source, timeframe, address, city, state, zip, clerk_id, created_at, updated_at, last_login, property_views, property_inquiries';
+    const leadSelect = 'id, first_name, last_name, email_address, crmc_score, phone, address, city, state, zip, assigned_broker_id, assigned_lender_id';
     const [userRes, leadRes] = await Promise.all([
       supabase.from('users').select('role').eq('clerk_id', userId).maybeSingle(),
       supabase
@@ -133,7 +125,7 @@ export default async function LeadDetailPage({
   }
 
   return (
-    <main className="dashboard-page lead-detail-page agent-dashboard">
+    <main className="dashboard-page lead-detail-page agent-dashboard" aria-label="Lead detail – contact and profile">
       <Hero
         variant="short"
         title="Client detail"

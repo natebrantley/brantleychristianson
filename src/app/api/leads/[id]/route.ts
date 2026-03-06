@@ -1,6 +1,6 @@
 /**
  * GET /api/leads/[id] — fetch a single lead (for client detail view).
- * PATCH /api/leads/[id] — update lead contact info (first_name, last_name, email, phone, notes).
+ * PATCH /api/leads/[id] — update lead contact info (first_name, last_name, email_address, phone, address, etc.).
  * Requires Clerk auth. RLS: only assigned broker/lender can read/update.
  */
 
@@ -16,23 +16,15 @@ const CONTACT_FIELDS = [
   'id',
   'first_name',
   'last_name',
-  'email',
   'email_address',
+  'crmc_score',
   'phone',
-  'notes',
-  'notes_2',
-  'source',
-  'timeframe',
   'address',
   'city',
   'state',
   'zip',
-  'clerk_id',
-  'created_at',
-  'updated_at',
-  'last_login',
-  'property_views',
-  'property_inquiries',
+  'assigned_broker_id',
+  'assigned_lender_id',
 ] as const;
 
 type LeadIdParams = { params: Promise<{ id: string }> };
@@ -67,7 +59,7 @@ export async function GET(request: NextRequest, { params }: LeadIdParams) {
   return NextResponse.json(data);
 }
 
-const PATCH_BODY_KEYS = ['first_name', 'last_name', 'email', 'phone', 'notes', 'notes_2', 'address', 'city', 'state', 'zip', 'source', 'timeframe'] as const;
+const PATCH_BODY_KEYS = ['first_name', 'last_name', 'email_address', 'phone', 'address', 'city', 'state', 'zip'] as const;
 
 function sanitizePatchBody(body: unknown): Record<string, string | null> {
   const out: Record<string, string | null> = {};
@@ -75,16 +67,12 @@ function sanitizePatchBody(body: unknown): Record<string, string | null> {
   const b = body as Record<string, unknown>;
 
   const maxLen: Record<string, number> = {
-    email: 254,
+    email_address: 254,
     phone: 50,
-    notes: 5000,
-    notes_2: 5000,
     address: 500,
     city: 120,
     state: 60,
     zip: 20,
-    source: 200,
-    timeframe: 200,
     first_name: 120,
     last_name: 120,
   };
@@ -128,7 +116,7 @@ export async function PATCH(request: NextRequest, { params }: LeadIdParams) {
 
   const supabase = await createClerkSupabaseClient();
   let existing: { id: string } | null = null;
-  let leadRow: { id: string; clerk_id?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null; phone?: string | null } | null = null;
+  let leadRow: { id: string; first_name?: string | null; last_name?: string | null; email_address?: string | null; phone?: string | null } | null = null;
 
   const { data: existingData } = await supabase
     .from('leads')
@@ -171,7 +159,7 @@ export async function PATCH(request: NextRequest, { params }: LeadIdParams) {
     .from('leads')
     .update(updates)
     .eq('id', id)
-    .select('id, first_name, last_name, email, phone, notes, updated_at, clerk_id')
+    .select('id, first_name, last_name, email_address, phone, address, city, state, zip')
     .single();
 
   if (error) {
@@ -180,18 +168,6 @@ export async function PATCH(request: NextRequest, { params }: LeadIdParams) {
   }
 
   leadRow = data;
-
-  // Sync contact fields to public.users when lead has clerk_id (signed-in client); users table has first_name, last_name, email (no phone)
-  if (leadRow?.clerk_id && (updates.first_name !== undefined || updates.last_name !== undefined || updates.email !== undefined)) {
-    const userUpdates: Record<string, string | null> = {};
-    if (updates.first_name !== undefined) userUpdates.first_name = updates.first_name;
-    if (updates.last_name !== undefined) userUpdates.last_name = updates.last_name;
-    if (updates.email !== undefined) userUpdates.email = updates.email;
-    if (Object.keys(userUpdates).length > 0) {
-      const admin = supabaseAdmin();
-      await admin.from('users').update(userUpdates).eq('clerk_id', leadRow.clerk_id);
-    }
-  }
 
   revalidatePath('/agents/dashboard/leads');
   revalidatePath(`/agents/dashboard/leads/${id}`);

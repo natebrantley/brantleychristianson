@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 /** Serialize Supabase or Error for logging (avoids empty {} in console) */
 export function formatSupabaseError(error: unknown): Record<string, unknown> {
@@ -24,9 +25,9 @@ if (!supabaseAnonKey) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
-export async function createClerkSupabaseClient(): Promise<SupabaseClient> {
+export async function createClerkSupabaseClient(): Promise<SupabaseClient<Database>> {
   if (typeof window !== 'undefined') {
     throw new Error('createClerkSupabaseClient must not be used in client-side components.');
   }
@@ -51,7 +52,7 @@ export async function createClerkSupabaseClient(): Promise<SupabaseClient> {
     throw new Error('No Clerk session token available for Supabase client.');
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     global: {
       fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
         const headers = new Headers(init?.headers);
@@ -65,9 +66,9 @@ export async function createClerkSupabaseClient(): Promise<SupabaseClient> {
   });
 }
 
-let cachedAdminClient: SupabaseClient | null = null;
+let cachedAdminClient: SupabaseClient<Database> | null = null;
 
-export function supabaseAdmin(): SupabaseClient {
+export function supabaseAdmin(): SupabaseClient<Database> {
   if (typeof window !== 'undefined') {
     throw new Error('supabaseAdmin must not be used in client-side components.');
   }
@@ -77,7 +78,7 @@ export function supabaseAdmin(): SupabaseClient {
   }
 
   if (!cachedAdminClient) {
-    cachedAdminClient = createClient(supabaseUrl, supabaseServiceRoleKey as string);
+    cachedAdminClient = createClient<Database>(supabaseUrl, supabaseServiceRoleKey as string);
   }
 
   return cachedAdminClient;

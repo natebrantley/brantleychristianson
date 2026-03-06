@@ -5,21 +5,21 @@ export function LeadsFilterFavoriteCity({
   currentFavoriteCity,
   currentQ,
   currentSort,
-  currentStatus,
+  currentVerified,
   currentSource,
 }: {
   favoriteCities: string[];
   currentFavoriteCity: string;
   currentQ: string;
   currentSort: string;
-  currentStatus: string;
+  currentVerified: boolean;
   currentSource: string;
 }) {
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const params = new URLSearchParams();
     if (currentQ) params.set('q', currentQ);
     if (currentSort !== 'created_at-desc') params.set('sort', currentSort);
-    if (currentStatus !== 'all') params.set('status', currentStatus);
+    if (currentVerified) params.set('verified', '1');
     if (currentSource) params.set('source', currentSource);
     const city = e.target.value.trim();
     if (city) params.set('favorite_city', city);

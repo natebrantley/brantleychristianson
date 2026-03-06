@@ -6,6 +6,7 @@
 import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import type { TablesInsert } from '@/types/database';
 import type { RepliersListingItem } from '@/lib/repliers-types';
 import { normalizeListingsResponse } from '@/lib/repliers-types';
 import { isBodySizeAllowed, MAX_WEBHOOK_BODY_BYTES, secureCompare } from '@/lib/webhook-utils';
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
     const row = toRow(item);
     await admin
       .from('listings')
-      .upsert(row, { onConflict: 'mls_listing_id', ignoreDuplicates: false });
+      .upsert(row as TablesInsert<'listings'>, { onConflict: 'mls_listing_id', ignoreDuplicates: false });
   }
 
   console.log('repliers webhook: processed', { correlationId, eventId, listingCount: listings.length });

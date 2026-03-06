@@ -32,6 +32,9 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
 
 export default proxy;
 
+// Clerk best practice: protect routes in proxy (Next.js 16 proxy.ts).
+// Matcher skips static assets and _next; runs for API and app routes.
+// @see Clerk SDK: server-auth-nextjs (createRouteMatcher + auth.protect)
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params

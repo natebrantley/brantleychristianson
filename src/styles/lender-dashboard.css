@@ -129,6 +129,17 @@
     min-height: 48px;
     padding: var(--space-md) var(--space-lg);
   }
+
+  .lender-dashboard__quick-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lender-dashboard__quick-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .lender-dashboard__list-item:last-child {

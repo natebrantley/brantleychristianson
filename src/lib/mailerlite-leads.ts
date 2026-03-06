@@ -14,7 +14,6 @@ const DELAY_BETWEEN_BATCHES_MS = 3000; // Stay under 120 req/min (2 batches/min 
 
 type LeadRow = {
   id?: string;
-  email?: string | null;
   email_address?: string | null;
   first_name?: string | null;
   last_name?: string | null;
@@ -22,25 +21,17 @@ type LeadRow = {
   city?: string | null;
   state?: string | null;
   zip?: string | null;
-  source?: string | null;
   address?: string | null;
   assigned_broker_id?: string | null;
-  opted_in_email?: string | null;
   [key: string]: unknown;
 };
-
-function isOptedOut(optedInEmail: string | null | undefined): boolean {
-  if (!optedInEmail || !optedInEmail.trim()) return false;
-  const v = optedInEmail.trim().toLowerCase();
-  return v === 'false' || v === 'no' || v === 'opted out' || v === 'unsubscribed';
-}
 
 function leadToSubscriberPayload(
   lead: LeadRow,
   groupId: string | undefined
 ): { email: string; fields: Record<string, string>; groups?: string[]; status?: string } {
   const email =
-    (lead.email ?? lead.email_address ?? '').toString().trim().toLowerCase();
+    (lead.email_address ?? '').toString().trim().toLowerCase();
   const fields: Record<string, string> = {};
   const set = (key: string, val: string | null | undefined, max = 500) => {
     if (val != null && String(val).trim()) fields[key] = String(val).trim().slice(0, max);
@@ -52,7 +43,6 @@ function leadToSubscriberPayload(
   set('city', lead.city, 100);
   set('state', lead.state, 50);
   set('zip', lead.zip, 20);
-  set('source', lead.source, 100);
   set('address', lead.address, 200);
   if (lead.assigned_broker_id) {
     const agentName = getAgentBySlug(lead.assigned_broker_id)?.name;
@@ -66,7 +56,6 @@ function leadToSubscriberPayload(
     status?: string;
   } = { email, fields };
   if (groupId) payload.groups = [groupId];
-  if (isOptedOut(lead.opted_in_email)) payload.status = 'unsubscribed';
   return payload;
 }
 
@@ -144,23 +133,8 @@ export async function syncLeadsToMailerLite(
 
   let query = admin
     .from('leads')
-    .select(
-      'id, email, email_address, first_name, last_name, phone, city, state, zip, source, address, assigned_broker_id, opted_in_email'
-    )
-    .limit(limit)
-    .order('updated_at', { ascending: false });
-
-  if (options.since) {
-    const match = options.since.trim().match(/^(\d+)(h|d|m)$/i);
-    if (match) {
-      const [, num, unit] = match;
-      const n = parseInt(num, 10) || 24;
-      const unitLower = unit.toLowerCase();
-      const hours = unitLower === 'd' ? n * 24 : unitLower === 'm' ? n / 60 : n;
-      const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-      query = query.gte('updated_at', since);
-    }
-  }
+    .select('id, email_address, first_name, last_name, phone, city, state, zip, address, assigned_broker_id')
+    .limit(limit);
 
   const { data: rows, error } = await query;
 
@@ -174,7 +148,7 @@ export async function syncLeadsToMailerLite(
   const toSync: { lead: LeadRow; payload: ReturnType<typeof leadToSubscriberPayload> }[] = [];
   for (const lead of list) {
     const email =
-      (lead.email ?? lead.email_address ?? '').toString().trim().toLowerCase();
+      (lead.email_address ?? '').toString().trim().toLowerCase();
     if (!email || !email.includes('@')) {
       result.skipped++;
       continue;

@@ -9,6 +9,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export type LeadPulseLevel = 'warm' | 'medium' | 'cold';
 
+/** Input for pulse calculation. Simplified leads may have none of these (treated as cold). */
 export type LeadPulseInput = {
   last_login?: string | null;
   updated_at?: string | null;
@@ -33,10 +34,12 @@ function daysAgo(iso: string | null | undefined): number | null {
   }
 }
 
+/** Accepts any object; reads optional activity fields. Simplified leads with no activity fields return 'cold'. */
 export function getLeadPulse(
-  lead: LeadPulseInput,
+  lead: Partial<LeadPulseInput> | Record<string, unknown>,
   options?: LeadPulseOptions
 ): LeadPulseLevel {
+  const l = lead as Partial<LeadPulseInput>;
   const now = Date.now();
   let latestActivityDays: number | null = null;
 
@@ -49,17 +52,17 @@ export function getLeadPulse(
     }
   };
 
-  consider(lead.last_login);
-  consider(lead.updated_at);
-  consider(lead.created_at);
+  consider(l.last_login);
+  consider(l.updated_at);
+  consider(l.created_at);
   if (options?.lastFavoriteAt) consider(options.lastFavoriteAt);
   if (options?.lastSavedSearchAt) consider(options.lastSavedSearchAt);
 
   // If they have recent property views/inquiries we don't have a timestamp per event,
   // so we only use updated_at/last_login/favorites/saved_searches. Optionally treat
   // created_at as "activity" for brand-new leads (within WARM_DAYS) so they show warm.
-  if (latestActivityDays == null && lead.created_at) {
-    const createdDays = daysAgo(lead.created_at);
+  if (latestActivityDays == null && l.created_at) {
+    const createdDays = daysAgo(l.created_at);
     if (createdDays != null && createdDays >= 0 && createdDays <= WARM_DAYS) {
       latestActivityDays = createdDays;
     }

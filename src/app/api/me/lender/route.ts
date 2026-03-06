@@ -60,8 +60,15 @@ export async function PATCH(request: NextRequest) {
   if (!updated) {
     const { error: insertError } = await supabase.from('users').insert({
       clerk_id: userId,
+      email: '',
+      first_name: null,
+      last_name: null,
       role: 'user',
+      assigned_broker_id: null,
       assigned_lender_id: valueToStore,
+      marketing_opt_in: null,
+      repliers_client_id: null,
+      updated_at: null,
     });
     if (insertError) {
       console.error('PATCH /api/me/lender insert:', insertError);

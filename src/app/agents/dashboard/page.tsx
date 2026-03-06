@@ -20,16 +20,11 @@ export const metadata: Metadata = {
 type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
 type LeadRow = {
   id: string;
-  email: string;
-  created_at: string;
+  email_address: string | null;
   assigned_broker_id?: string | null;
-  clerk_id?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   phone?: string | null;
-  last_login?: string | null;
-  property_views?: number | null;
-  property_inquiries?: number | null;
 };
 type SavedSearchRow = { id: string; clerk_id: string; name: string | null; criteria: Record<string, unknown>; created_at: string };
 
@@ -90,9 +85,8 @@ export default async function AgentsDashboardPage() {
         .maybeSingle(),
       supabase
         .from('leads')
-        .select('id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
+        .select('id, email_address, assigned_broker_id, first_name, last_name, phone')
         .eq('assigned_broker_id', userId)
-        .order('created_at', { ascending: false })
         .limit(10),
       supabase
         .from('leads')
@@ -127,9 +121,8 @@ export default async function AgentsDashboardPage() {
       const admin = supabaseAdmin();
       const { data: fallbackLeads, error: fallbackErr } = await admin
         .from('leads')
-        .select('id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
+        .select('id, email_address, assigned_broker_id, first_name, last_name, phone')
         .in('assigned_broker_id', uniqWithCase)
-        .order('created_at', { ascending: false })
         .limit(10);
 
       if (fallbackErr) {
@@ -151,8 +144,8 @@ export default async function AgentsDashboardPage() {
       }
     }
 
-    // Saved searches for assigned leads who have signed in (clerk_id set) — use admin to bypass RLS
-    const clientClerkIds = leads.map((l) => l.clerk_id).filter(Boolean) as string[];
+    // Saved searches: leads no longer have clerk_id; skip fetching by lead client
+    const clientClerkIds: string[] = [];
     if (clientClerkIds.length > 0) {
       const admin = supabaseAdmin();
       const { data: searches } = await admin
@@ -202,17 +195,14 @@ export default async function AgentsDashboardPage() {
 
   function leadDisplayName(lead: LeadRow): string {
     const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ').trim();
-    return name || lead.email || '—';
+    return name || (lead.email_address ?? '') || '—';
   }
 
-  // Map clerk_id → lead display name for saved searches
+  // Map clerk_id → lead display name for saved searches (leads no longer have clerk_id; map stays empty)
   const clerkIdToName = new Map<string, string>();
-  leads.forEach((l) => {
-    if (l.clerk_id) clerkIdToName.set(l.clerk_id, leadDisplayName(l));
-  });
 
   return (
-    <main className="dashboard-page agent-dashboard">
+    <main className="dashboard-page agent-dashboard" aria-label="Agent dashboard">
       <Hero
         variant="short"
         title="Agent dashboard"

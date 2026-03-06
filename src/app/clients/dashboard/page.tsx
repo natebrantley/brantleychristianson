@@ -20,15 +20,6 @@ export const metadata: Metadata = {
 
 type UserFields = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
 
-function formatLeadDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  } catch {
-    return iso;
-  }
-}
-
 export default async function ClientsDashboardPage() {
   const { userId } = await auth();
 
@@ -37,12 +28,13 @@ export default async function ClientsDashboardPage() {
   }
 
   let user: UserFields | null = null;
-  let linkedLeads: { id: string; email: string; created_at: string }[] = [];
+  let linkedLeads: { id: string; email_address: string | null }[] = [];
   let brokerUserEmail: string | null = null;
   let lenderUserEmail: string | null = null;
 
   try {
     const clerkUser = await currentUser();
+    const userEmail = (clerkUser?.emailAddresses?.[0]?.emailAddress ?? '').trim().toLowerCase();
     if (clerkUser) {
       try {
         await ensureUserInSupabase(clerkUser);
@@ -58,12 +50,9 @@ export default async function ClientsDashboardPage() {
         .select('first_name, last_name, email, role, assigned_broker_id, assigned_lender_id')
         .eq('clerk_id', userId)
         .maybeSingle(),
-      supabase
-        .from('leads')
-        .select('id, email, created_at')
-        .eq('clerk_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(10),
+      userEmail
+        ? supabase.from('leads').select('id, email_address').eq('email_address', userEmail).limit(10)
+        : Promise.resolve({ data: [], error: null }),
     ]);
 
     if (userRes.error) {
@@ -72,7 +61,7 @@ export default async function ClientsDashboardPage() {
     user = userRes.data ?? null;
 
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
-      linkedLeads = leadsRes.data as { id: string; email: string; created_at: string }[];
+      linkedLeads = leadsRes.data as { id: string; email_address: string | null }[];
     }
 
     // Resolve assigned agent/lender when stored as Clerk ID (user_xxx); fetch their user row for email → agents/lenders.json
@@ -121,7 +110,7 @@ export default async function ClientsDashboardPage() {
   const hasTeam = !!(assignedAgent || assignedLender);
 
   return (
-    <main className="dashboard-page client-dashboard">
+    <main className="dashboard-page client-dashboard" aria-label="Your dashboard">
       <Hero
         variant="short"
         title="Your dashboard"
@@ -305,10 +294,7 @@ export default async function ClientsDashboardPage() {
                 <ul className="client-dashboard__list">
                   {linkedLeads.map((lead) => (
                     <li key={lead.id} className="client-dashboard__list-item">
-                      <span className="client-dashboard__list-email">{lead.email}</span>
-                      <time className="text--muted client-dashboard__list-date" dateTime={lead.created_at}>
-                        {formatLeadDate(lead.created_at)}
-                      </time>
+                      <span className="client-dashboard__list-email">{lead.email_address ?? '—'}</span>
                     </li>
                   ))}
                 </ul>
