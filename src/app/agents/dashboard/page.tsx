@@ -6,6 +6,7 @@ import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
+import { getAgentBySlug } from '@/data/agents';
 import { getLenderBySlug } from '@/data/lenders';
 import type { Metadata } from 'next';
 import Image from 'next/image';
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   description: 'Pipeline, leads, and client management for BCRE agents.',
 };
 
-type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_lender_id?: string | null };
+type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
 type LeadRow = { id: string; email: string; created_at: string };
 
 function formatLeadDate(iso: string): string {
@@ -46,7 +47,7 @@ export default async function AgentsDashboardPage() {
     const [userRes, leadsRes] = await Promise.all([
       supabase
         .from('users')
-        .select('first_name, last_name, email, role, assigned_lender_id')
+        .select('first_name, last_name, email, role, assigned_broker_id, assigned_lender_id')
         .eq('clerk_id', userId)
         .maybeSingle(),
       supabase
@@ -102,10 +103,11 @@ export default async function AgentsDashboardPage() {
     ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null
     : null;
 
+  const agentContact = user?.assigned_broker_id ? getAgentBySlug(user.assigned_broker_id) : null;
   const preferredLender = user?.assigned_lender_id ? getLenderBySlug(user.assigned_lender_id) : null;
 
   return (
-    <main>
+    <main className="dashboard-page">
       <Hero
         variant="short"
         title="Agent dashboard"
@@ -116,7 +118,7 @@ export default async function AgentsDashboardPage() {
       <div className="section">
         <div className="container stack--lg">
           <header className="stack--sm">
-            <div className="dashboard-actions" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div className="dashboard-actions">
               <div>
                 <p className="section-tag">Welcome back</p>
                 <h1 className="section-title">
@@ -144,13 +146,81 @@ export default async function AgentsDashboardPage() {
           </div>
         </header>
 
+        {/* Your agent contact (e.g. team lead) */}
+        <section className="dashboard-section" aria-labelledby="agent-contact-heading">
+          <h2 id="agent-contact-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
+            Your agent contact
+          </h2>
+          {agentContact ? (
+            <div className="card dashboard-contact-card">
+              <div style={{ flexShrink: 0 }}>
+                <Image
+                  src={agentContact.image}
+                  alt=""
+                  width={80}
+                  height={80}
+                  style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
+                />
+              </div>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{agentContact.name}</p>
+                <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{agentContact.title}</p>
+                {(agentContact.phone || agentContact.email) && (
+                  <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
+                    {agentContact.phone && (
+                      <li style={{ marginTop: '0.25rem' }}>
+                        <span className="text--muted">Phone: </span>
+                        <a href={`tel:${agentContact.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
+                          {agentContact.phone}
+                        </a>
+                      </li>
+                    )}
+                    {agentContact.email && (
+                      <li style={{ marginTop: '0.25rem' }}>
+                        <span className="text--muted">Email: </span>
+                        <a href={`mailto:${agentContact.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
+                          {agentContact.email}
+                        </a>
+                      </li>
+                    )}
+                  </ul>
+                )}
+                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
+                  {agentContact.phone && (
+                    <Button href={`tel:${agentContact.phone.replace(/\D/g, '')}`} variant="primary">
+                      Call {agentContact.name}
+                    </Button>
+                  )}
+                  <Button href={`mailto:${agentContact.email}`} variant="outline">
+                    Email
+                  </Button>
+                  <Button href={agentContact.url} variant="text">
+                    View profile
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="card">
+              <p style={{ margin: 0 }}>
+                Add a primary agent contact (e.g. team lead) for quick coordination. They&apos;ll appear here.
+              </p>
+              <div className="dashboard-actions">
+                <Button href="/agents" variant="primary">
+                  Choose agent contact
+                </Button>
+              </div>
+            </div>
+          )}
+        </section>
+
         {/* Preferred lender for easy contact */}
         <section className="dashboard-section" aria-labelledby="preferred-lender-heading">
           <h2 id="preferred-lender-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
             Your preferred lender
           </h2>
           {preferredLender ? (
-            <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
+            <div className="card dashboard-contact-card">
               <div style={{ flexShrink: 0 }}>
                 <Image
                   src={preferredLender.image}
@@ -201,11 +271,11 @@ export default async function AgentsDashboardPage() {
               </div>
             </div>
           ) : (
-            <div className="card" style={{ padding: 'var(--space-lg)' }}>
+            <div className="card">
               <p style={{ margin: 0 }}>
                 Add a preferred lender for quick contact when referring clients. They&apos;ll appear here.
               </p>
-              <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)' }}>
+              <div className="dashboard-actions">
                 <Button href="/lenders" variant="primary">
                   Choose preferred lender
                 </Button>

@@ -159,3 +159,114 @@
   gap: var(--space-sm);
   margin-top: var(--space-md);
 }
+
+/* ========== Dashboard page: mobile-first, center alignment ========== */
+.dashboard-page .section .container {
+  text-align: center;
+}
+
+.dashboard-page header.stack--sm,
+.dashboard-page .dashboard-section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.dashboard-page header.stack--sm .dashboard-actions {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.dashboard-page .dashboard-section > .section-title {
+  text-align: center;
+}
+
+.dashboard-page .dashboard-actions {
+  justify-content: center;
+}
+
+/* Contact cards (agent/lender): center on mobile, stack image above content */
+.dashboard-contact-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-lg);
+  padding: var(--space-lg);
+}
+
+@media (max-width: 767px) {
+  .dashboard-contact-card {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .dashboard-contact-card > div:first-child {
+    align-self: center;
+  }
+
+  .dashboard-contact-card .dashboard-actions {
+    justify-content: center;
+  }
+
+  .dashboard-contact-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+/* Lead/list rows: keep left-aligned for readability */
+.dashboard-page .card ul[class*="stack--none"] {
+  text-align: left;
+}
+
+/* Marketing/next-steps cards: center content on mobile */
+.dashboard-page .dashboard-card-grid .card {
+  text-align: center;
+}
+
+.dashboard-page .dashboard-card-grid .card .dashboard-actions {
+  justify-content: center;
+}
+
+/* Desktop: allow left-aligned content in wider viewports for scanability */
+@media (min-width: 768px) {
+  .dashboard-page .section .container {
+    text-align: left;
+  }
+
+  .dashboard-page header.stack--sm,
+  .dashboard-page .dashboard-section-header {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .dashboard-page header.stack--sm .dashboard-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .dashboard-page .dashboard-section > .section-title {
+    text-align: left;
+  }
+
+  .dashboard-page .dashboard-actions {
+    justify-content: flex-start;
+  }
+
+  .dashboard-contact-card {
+    text-align: left;
+  }
+
+  .dashboard-page .dashboard-card-grid .card {
+    text-align: left;
+  }
+
+  .dashboard-page .dashboard-card-grid .card .dashboard-actions {
+    justify-content: flex-start;
+  }
+}

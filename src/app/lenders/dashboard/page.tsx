@@ -7,6 +7,7 @@ import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
 import { getAgentBySlug } from '@/data/agents';
+import { getLenderBySlug } from '@/data/lenders';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-type LenderUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null };
+type LenderUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
 
 export default async function LendersDashboardPage() {
   const { userId } = await auth();
@@ -33,7 +34,7 @@ export default async function LendersDashboardPage() {
     const supabase = await createClerkSupabaseClient();
     const { data, error } = await supabase
       .from('users')
-      .select('first_name, last_name, email, role, assigned_broker_id')
+      .select('first_name, last_name, email, role, assigned_broker_id, assigned_lender_id')
       .eq('clerk_id', userId)
       .maybeSingle();
 
@@ -68,6 +69,7 @@ export default async function LendersDashboardPage() {
     : null;
 
   const agentContact = user?.assigned_broker_id ? getAgentBySlug(user.assigned_broker_id) : null;
+  const preferredLender = user?.assigned_lender_id ? getLenderBySlug(user.assigned_lender_id) : null;
 
   if (!user && clerkUser) {
     user = {
@@ -79,7 +81,7 @@ export default async function LendersDashboardPage() {
   }
 
   return (
-    <main>
+    <main className="dashboard-page">
       <Hero
         variant="short"
         title="Lender dashboard"
@@ -120,7 +122,7 @@ export default async function LendersDashboardPage() {
               Your agent contact
             </h2>
             {agentContact ? (
-              <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
+              <div className="card dashboard-contact-card">
                 <div style={{ flexShrink: 0 }}>
                   <Image
                     src={agentContact.image}
@@ -169,13 +171,83 @@ export default async function LendersDashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="card" style={{ padding: 'var(--space-lg)' }}>
+              <div className="card">
                 <p style={{ margin: 0 }}>
                   Add a primary BCRE agent contact for referrals and follow-up. They&apos;ll appear here for quick call and email.
                 </p>
-                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)' }}>
+                <div className="dashboard-actions">
                   <Button href="/agents" variant="primary">
                     Choose your agent contact
+                  </Button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Your preferred lender (partner in network) */}
+          <section className="dashboard-section" aria-labelledby="preferred-lender-heading">
+            <h2 id="preferred-lender-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
+              Your preferred lender
+            </h2>
+            {preferredLender ? (
+              <div className="card dashboard-contact-card">
+                <div style={{ flexShrink: 0 }}>
+                  <Image
+                    src={preferredLender.image}
+                    alt=""
+                    width={80}
+                    height={80}
+                    style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
+                  />
+                </div>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{preferredLender.name}</p>
+                  <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{preferredLender.title} · {preferredLender.company}</p>
+                  {(preferredLender.phone || preferredLender.email) && (
+                    <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
+                      {preferredLender.phone && (
+                        <li style={{ marginTop: '0.25rem' }}>
+                          <span className="text--muted">Phone: </span>
+                          <a href={`tel:${preferredLender.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
+                            {preferredLender.phone}
+                          </a>
+                        </li>
+                      )}
+                      {preferredLender.email && (
+                        <li style={{ marginTop: '0.25rem' }}>
+                          <span className="text--muted">Email: </span>
+                          <a href={`mailto:${preferredLender.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
+                            {preferredLender.email}
+                          </a>
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                  <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
+                    {preferredLender.phone && (
+                      <Button href={`tel:${preferredLender.phone.replace(/\D/g, '')}`} variant="primary">
+                        Call {preferredLender.name}
+                      </Button>
+                    )}
+                    <Button href={`mailto:${preferredLender.email}`} variant="outline">
+                      Email
+                    </Button>
+                    {preferredLender.url ? (
+                      <Button href={preferredLender.url} variant="text" target="_blank" rel="noopener noreferrer">
+                        Visit website
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="card">
+                <p style={{ margin: 0 }}>
+                  Add a preferred lender partner for co-loans or referrals. They&apos;ll appear here for quick contact.
+                </p>
+                <div className="dashboard-actions">
+                  <Button href="/lenders" variant="primary">
+                    Choose preferred lender
                   </Button>
                 </div>
               </div>

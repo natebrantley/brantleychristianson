@@ -90,7 +90,7 @@ export default async function ClientsDashboardPage() {
   const assignedLender = user?.assigned_lender_id ? getLenderBySlug(user.assigned_lender_id) : null;
 
   return (
-    <main>
+    <main className="dashboard-page">
       <Hero
         variant="short"
         title="Your dashboard"
@@ -106,7 +106,7 @@ export default async function ClientsDashboardPage() {
               Your agent
             </h2>
             {assignedAgent ? (
-              <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
+              <div className="card dashboard-contact-card">
                 <div style={{ flexShrink: 0 }}>
                   <Image
                     src={assignedAgent.image}
@@ -155,11 +155,11 @@ export default async function ClientsDashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="card" style={{ padding: 'var(--space-lg)' }}>
+              <div className="card">
                 <p style={{ margin: 0 }}>
                   You don&apos;t have an agent assigned yet. Choose one from our team and they&apos;ll be listed here for quick call and email.
                 </p>
-                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)' }}>
+                <div className="dashboard-actions">
                   <Button href="/agents" variant="primary">
                     Choose your agent
                   </Button>
@@ -174,7 +174,7 @@ export default async function ClientsDashboardPage() {
               Your lender
             </h2>
             {assignedLender ? (
-              <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
+              <div className="card dashboard-contact-card">
                 <div style={{ flexShrink: 0 }}>
                   <Image
                     src={assignedLender.image}
@@ -225,11 +225,11 @@ export default async function ClientsDashboardPage() {
                 </div>
               </div>
             ) : (
-              <div className="card" style={{ padding: 'var(--space-lg)' }}>
+              <div className="card">
                 <p style={{ margin: 0 }}>
                   You don&apos;t have a preferred lender assigned yet. Choose one from our network for financing and they&apos;ll be listed here.
                 </p>
-                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)' }}>
+                <div className="dashboard-actions">
                   <Button href="/lenders" variant="primary">
                     Choose your lender
                   </Button>
