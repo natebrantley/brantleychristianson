@@ -6,7 +6,9 @@ import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
+import { getAgentBySlug } from '@/data/agents';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-type LenderUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null };
+type LenderUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null };
 
 export default async function LendersDashboardPage() {
   const { userId } = await auth();
@@ -31,7 +33,7 @@ export default async function LendersDashboardPage() {
     const supabase = await createClerkSupabaseClient();
     const { data, error } = await supabase
       .from('users')
-      .select('first_name, last_name, email, role')
+      .select('first_name, last_name, email, role, assigned_broker_id')
       .eq('clerk_id', userId)
       .maybeSingle();
 
@@ -56,14 +58,16 @@ export default async function LendersDashboardPage() {
 
   if (!isLender) {
     if (isBrokerRole(user?.role) || isBrokerRole(roleFromClerk)) {
-      redirect('/agents');
+      redirect('/agents/dashboard');
     }
-    redirect('/clients');
+    redirect('/clients/dashboard');
   }
 
   const displayName = user
     ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null
     : null;
+
+  const agentContact = user?.assigned_broker_id ? getAgentBySlug(user.assigned_broker_id) : null;
 
   if (!user && clerkUser) {
     user = {
@@ -109,6 +113,74 @@ export default async function LendersDashboardPage() {
               Role: {user?.role ?? 'lender'}
             </span>
           </header>
+
+          {/* Agent contact for easy referral follow-up */}
+          <section className="dashboard-section" aria-labelledby="agent-contact-heading">
+            <h2 id="agent-contact-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
+              Your agent contact
+            </h2>
+            {agentContact ? (
+              <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
+                <div style={{ flexShrink: 0 }}>
+                  <Image
+                    src={agentContact.image}
+                    alt=""
+                    width={80}
+                    height={80}
+                    style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
+                  />
+                </div>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{agentContact.name}</p>
+                  <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{agentContact.title}</p>
+                  {(agentContact.phone || agentContact.email) && (
+                    <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
+                      {agentContact.phone && (
+                        <li style={{ marginTop: '0.25rem' }}>
+                          <span className="text--muted">Phone: </span>
+                          <a href={`tel:${agentContact.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
+                            {agentContact.phone}
+                          </a>
+                        </li>
+                      )}
+                      {agentContact.email && (
+                        <li style={{ marginTop: '0.25rem' }}>
+                          <span className="text--muted">Email: </span>
+                          <a href={`mailto:${agentContact.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
+                            {agentContact.email}
+                          </a>
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                  <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
+                    {agentContact.phone && (
+                      <Button href={`tel:${agentContact.phone.replace(/\D/g, '')}`} variant="primary">
+                        Call {agentContact.name}
+                      </Button>
+                    )}
+                    <Button href={`mailto:${agentContact.email}`} variant="outline">
+                      Email
+                    </Button>
+                    <Button href={agentContact.url} variant="text">
+                      View profile
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="card" style={{ padding: 'var(--space-lg)' }}>
+                <p style={{ margin: 0 }}>
+                  Add a primary BCRE agent contact for referrals and follow-up. They&apos;ll appear here for quick call and email.
+                </p>
+                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)' }}>
+                  <Button href="/agents" variant="primary">
+                    Choose your agent contact
+                  </Button>
+                </div>
+              </div>
+            )}
+          </section>
 
           <section className="dashboard-section" aria-labelledby="lenders-partners-heading">
             <header className="dashboard-section-header stack--xs">

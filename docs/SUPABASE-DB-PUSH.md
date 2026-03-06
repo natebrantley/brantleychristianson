@@ -68,3 +68,4 @@ Migrations that affect this app:
 - `20260308000000_create_listings_table_rmls.sql` — RMLS listings
 - `20260309000000_add_users_assigned_broker_slug.sql` — legacy (adds slug column if present)
 - `20260310000003_add_users_assigned_broker_id.sql` — assigned broker for clients (app uses this)
+- `20260314000000_add_users_assigned_lender_id.sql` — assigned lender for clients (app uses this)

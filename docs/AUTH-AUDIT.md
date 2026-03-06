@@ -35,14 +35,14 @@
 ### Dashboard routing
 
 - **Route:** `/dashboard` → `src/app/dashboard/page.tsx`
-- **Behavior:** If not signed in → `redirect('/sign-in')`. If signed in: load role from Supabase (or Clerk `public_metadata.role` fallback); if broker/agent → `redirect('/agents')`, if lender → `redirect('/lenders/dashboard')`, else → `redirect('/clients')`. If no Supabase row exists, the app syncs the user from Clerk via `ensureUserInSupabase()` (see **Sign-in sync** below) then redirects by role.
+- **Behavior:** If not signed in → `redirect('/sign-in')`. If signed in: load role from Supabase (or Clerk `public_metadata.role` fallback); if broker/agent → `redirect('/agents/dashboard')`, if lender → `redirect('/lenders/dashboard')`, else → `redirect('/clients/dashboard')`. If no Supabase row exists, the app syncs the user from Clerk via `ensureUserInSupabase()` (see **Sign-in sync** below) then redirects by role.
 - **Role source of truth:** Supabase `users.role` (synced by Clerk webhook or sign-in sync); fallback to Clerk `public_metadata.role` before sync has run.
 
 ### Agent, lender, and client dashboards
 
-- **`/agents`** (`src/app/agents/dashboard/page.tsx`): Requires `userId`; allows access only if `isBrokerRole(user.role)` or `isBrokerRole(roleFromClerk)`. Otherwise redirects to `/clients` or `/lenders/dashboard` by role.
-- **`/lenders/dashboard`** (`src/app/lenders/dashboard/page.tsx`): Requires `userId`; allows access only if `isLenderRole(user.role)` or `isLenderRole(roleFromClerk)`. Otherwise redirects to `/agents` or `/clients`.
-- **`/clients`** (`src/app/clients/dashboard/page.tsx`): Requires `userId`; if `isBrokerRole(user.role)` redirects to `/agents`; if `isLenderRole(user.role)` redirects to `/lenders/dashboard`. Shows assigned agent, saved homes placeholder, saved searches placeholder, consultation requests (leads linked by `clerk_id`).
+- **`/agents/dashboard`** (`src/app/agents/dashboard/page.tsx`): Requires `userId`; allows access only if `isBrokerRole(user.role)` or `isBrokerRole(roleFromClerk)`. Otherwise redirects to `/clients/dashboard` or `/lenders/dashboard` by role. Shows preferred lender card when `assigned_lender_id` is set.
+- **`/lenders/dashboard`** (`src/app/lenders/dashboard/page.tsx`): Requires `userId`; allows access only if `isLenderRole(user.role)` or `isLenderRole(roleFromClerk)`. Otherwise redirects to `/agents/dashboard` or `/clients/dashboard`. Shows agent contact card when `assigned_broker_id` is set.
+- **`/clients/dashboard`** (`src/app/clients/dashboard/page.tsx`): Requires `userId`; if `isBrokerRole(user.role)` redirects to `/agents/dashboard`; if `isLenderRole(user.role)` redirects to `/lenders/dashboard`. Shows assigned agent, assigned lender, saved homes placeholder, saved searches placeholder, consultation requests (leads linked by `clerk_id`).
 
 ---
 
@@ -137,7 +137,8 @@ See `.env.example` and `docs/VERCEL.md` for full list and deployment notes.
 
 ## 9. Client-Side Auth Usage
 
-- **`AssignAgentButton`** (`src/components/AssignAgentButton.tsx`): Uses `useAuth().isSignedIn`; only renders when signed in; calls `PATCH /api/me/agent` and then `window.location.href = '/clients/dashboard'`.
+- **`AssignAgentButton`** (`src/components/AssignAgentButton.tsx`): Uses `useAuth().isSignedIn`; only renders when signed in; calls `PATCH /api/me/agent` and then `window.location.href = '/dashboard'` so the role router sends the user to the correct dashboard (clients, agents, or lenders).
+- **`AssignLenderButton`** (`src/components/AssignLenderButton.tsx`): Same pattern for `PATCH /api/me/lender`; redirects to `/dashboard` after success.
 - **Clerk components:** `SignIn`, `SignUp`, `SignInButton`, `UserButton`, `Show` (when="signed-in" / "signed-out") are from `@clerk/nextjs` and used in layout/header and auth pages.
 
 ---
@@ -146,7 +147,7 @@ See `.env.example` and `docs/VERCEL.md` for full list and deployment notes.
 
 | Item | Status | Recommendation |
 |------|--------|----------------|
-| Proxy protection | OK | Protects dashboard and key APIs including `/api/me/agent`. |
+| Proxy protection | OK | Protects dashboard and key APIs including `/api/me/agent` and `/api/me/lender`. |
 | Sign-in / sign-up pages | OK | Layouts set `robots: { index: false, follow: false }` so auth pages are not indexed. |
 | Role resolution | OK | Supabase first, Clerk public_metadata fallback; agent domain fallback for webhook |
 | Webhook security | OK | Svix verification; no PII in logs; GET health check does not leak secrets |
@@ -173,8 +174,10 @@ See `.env.example` and `docs/VERCEL.md` for full list and deployment notes.
 | `src/app/api/favorites/route.ts` | Favorites API (auth required) |
 | `src/app/api/saved-searches/route.ts` | Saved searches API (auth required) |
 | `src/app/api/me/agent/route.ts` | Assign agent (auth required; protected by proxy) |
+| `src/app/api/me/lender/route.ts` | Assign lender (auth required; protected by proxy) |
 | `src/lib/supabase.ts` | createClerkSupabaseClient, supabaseAdmin |
 | `src/lib/roles.ts` | isBrokerRole, isLenderRole |
 | `src/layout/SiteHeader.tsx` | Header with Clerk (SignInButton, UserButton) |
 | `src/layout/SiteHeaderPublic.tsx` | Header without Clerk (link to /sign-in) |
-| `src/components/AssignAgentButton.tsx` | Client component calling PATCH /api/me/agent |
+| `src/components/AssignAgentButton.tsx` | Client component calling PATCH /api/me/agent; redirects to /dashboard |
+| `src/components/AssignLenderButton.tsx` | Client component calling PATCH /api/me/lender; redirects to /dashboard |

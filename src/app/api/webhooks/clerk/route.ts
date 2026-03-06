@@ -23,7 +23,7 @@ interface UsersRow {
 }
 
 /** App-managed columns we must preserve on webhook upsert (set by client or other flows). */
-const USERS_PRESERVE_COLUMNS = ['assigned_broker_id', 'repliers_client_id', 'marketing_opt_in'] as const;
+const USERS_PRESERVE_COLUMNS = ['assigned_broker_id', 'assigned_lender_id', 'repliers_client_id', 'marketing_opt_in'] as const;
 
 /** Standard error response for 4xx/5xx */
 function errResponse(
@@ -235,8 +235,8 @@ async function bridgeLeads(
 }
 
 /** Handle user.created / user.updated: upsert users, optional MailerLite, optional lead bridge.
- * Preserves app-managed columns (assigned_broker_id, repliers_client_id, marketing_opt_in) so
- * client agent selection and other app flows are never overwritten by Clerk sync. */
+ * Preserves app-managed columns (assigned_broker_id, assigned_lender_id, repliers_client_id, marketing_opt_in) so
+ * client agent/lender selection and other app flows are never overwritten by Clerk sync. */
 async function handleUserUpsert(
   admin: SupabaseClient,
   data: WebhookEvent['data'],
@@ -257,8 +257,8 @@ async function handleUserUpsert(
       ? syncMailerLite(row.email, row.first_name, row.last_name, eventType, logContext)
       : Promise.resolve();
 
-  // Preserve app-managed columns: when a client selects a broker, we store it in assigned_broker_id;
-  // do not overwrite it (or repliers_client_id, marketing_opt_in) when Clerk sends user.updated.
+  // Preserve app-managed columns: assigned_broker_id, assigned_lender_id, repliers_client_id, marketing_opt_in.
+  // Do not overwrite when Clerk sends user.updated.
   let upsertPayload: Record<string, unknown> = {
     clerk_id: row.clerk_id,
     email: row.email,

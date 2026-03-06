@@ -13,6 +13,7 @@ const isProtectedRoute = createRouteMatcher([
   '/api/favorites',
   '/api/saved-searches',
   '/api/me/agent',
+  '/api/me/lender',
   '/listings/saved',
 ]);
 

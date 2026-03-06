@@ -42,7 +42,7 @@ Use this for uptime monitoring; it does not reveal secrets.
 
 ## Setting the agent/broker role in Clerk
 
-The webhook reads **Public metadata** from the Clerk user and syncs it to Supabase `users.role`. The app uses `users.role` for dashboard routing (agent/broker → `/agents`, lender → `/lenders/dashboard`, everyone else → `/clients`).
+The webhook reads **Public metadata** from the Clerk user and syncs it to Supabase `users.role`. The app uses `users.role` for dashboard routing (agent/broker → `/agents/dashboard`, lender → `/lenders/dashboard`, everyone else → `/clients/dashboard`).
 
 **In Clerk Dashboard:**
 

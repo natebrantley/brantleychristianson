@@ -27,6 +27,7 @@ create unique index if not exists users_clerk_id_key on public.users (clerk_id);
 alter table public.users add column if not exists marketing_opt_in boolean default true;
 alter table public.users add column if not exists updated_at timestamptz default now();
 alter table public.users add column if not exists assigned_broker_id text;
+alter table public.users add column if not exists assigned_lender_id text;
 
 alter table public.users drop constraint if exists users_role_check;
 alter table public.users add constraint users_role_check
@@ -39,6 +40,7 @@ create trigger users_updated_at
 
 comment on column public.users.updated_at is 'Set automatically by trigger on row update.';
 comment on column public.users.assigned_broker_id is 'Broker slug from agents.json; set when client chooses an agent.';
+comment on column public.users.assigned_lender_id is 'Lender slug from lenders.json; set when client chooses a preferred lender.';
 
 -- 4. Leads table (if missing)
 create table if not exists public.leads (

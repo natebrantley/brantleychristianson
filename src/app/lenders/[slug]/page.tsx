@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
+import { AssignLenderButton } from '@/components/AssignLenderButton';
 import { lenders, getLenderBySlug } from '@/data/lenders';
 import { assetPaths } from '@/config/theme';
 import { SITE_NAME, SITE_URL, absoluteUrl } from '@/config/site';
@@ -235,6 +236,7 @@ export default async function LenderProfilePage({ params }: LenderPageProps) {
                       Visit website
                     </Button>
                   )}
+                  <AssignLenderButton slug={lender.slug} label="Choose as my lender" variant="outline" />
                   <Button href="/lenders" variant="text">
                     View all lenders
                   </Button>

@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic';
 
 /**
  * /dashboard redirects to the correct dashboard based on role.
- * Agent dashboard: /agents (pipeline, leads, clients, marketing).
+ * Agent/broker dashboard: /agents/dashboard (pipeline, leads, clients, marketing).
  * Lender dashboard: /lenders/dashboard (lender-specific tools and resources).
- * Client dashboard: /clients (saved homes, searches, next steps).
+ * Client dashboard: /clients/dashboard (saved homes, searches, next steps).
  * Role is read from Supabase (synced by webhook or sign-in sync); if missing, falls back to Clerk public_metadata.role.
  */
 export default async function DashboardRouterPage() {
@@ -47,7 +47,7 @@ export default async function DashboardRouterPage() {
     }
 
     if (isBrokerRole(roleFromSupabase)) {
-      redirect('/agents');
+      redirect('/agents/dashboard');
     }
     if (isLenderRole(roleFromSupabase)) {
       redirect('/lenders/dashboard');
@@ -60,12 +60,12 @@ export default async function DashboardRouterPage() {
   const clerkUser = await currentUser();
   const roleFromClerk = clerkUser?.publicMetadata?.role;
   if (typeof roleFromClerk === 'string' && isBrokerRole(roleFromClerk)) {
-    redirect('/agents');
+    redirect('/agents/dashboard');
   }
   if (typeof roleFromClerk === 'string' && isLenderRole(roleFromClerk)) {
     redirect('/lenders/dashboard');
   }
 
-  redirect('/clients');
+  redirect('/clients/dashboard');
 }
 

@@ -9,7 +9,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 const AGENT_EMAIL_DOMAIN = 'brantleychristianson.com';
 
-const USERS_PRESERVE_COLUMNS = ['assigned_broker_id', 'repliers_client_id', 'marketing_opt_in'] as const;
+const USERS_PRESERVE_COLUMNS = ['assigned_broker_id', 'assigned_lender_id', 'repliers_client_id', 'marketing_opt_in'] as const;
 
 export type UsersRow = {
   clerk_id: string;

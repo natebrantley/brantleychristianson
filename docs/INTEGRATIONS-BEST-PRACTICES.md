@@ -101,3 +101,4 @@
 - **docs/VERCEL.md** – Env and deployment
 - **docs/WEBHOOKS-INTEGRATIONS-AUDIT.md** – Webhook hardening
 - **docs/REDIRECTS-LINKS-WEBHOOKS-SUPABASE.md** – Endpoints and tables
+- **docs/REPLIERS-IMPLEMENTATION-PLAN.md** – Repliers post data-feed-approval plan (NLP, image search, webhooks, favorites, limits)

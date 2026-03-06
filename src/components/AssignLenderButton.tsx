@@ -4,14 +4,14 @@ import { useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { Button } from '@/components/Button';
 
-interface AssignAgentButtonProps {
+interface AssignLenderButtonProps {
   slug: string;
   label?: string;
   variant?: 'primary' | 'outline' | 'text';
   className?: string;
 }
 
-export function AssignAgentButton({ slug, label = 'Choose as my agent', variant = 'outline', className = '' }: AssignAgentButtonProps) {
+export function AssignLenderButton({ slug, label = 'Choose as my lender', variant = 'outline', className = '' }: AssignLenderButtonProps) {
   const { isSignedIn } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +20,7 @@ export function AssignAgentButton({ slug, label = 'Choose as my agent', variant 
   async function handleClick() {
     setLoading(true);
     try {
-      const res = await fetch('/api/me/agent', {
+      const res = await fetch('/api/me/lender', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug }),
@@ -29,7 +29,7 @@ export function AssignAgentButton({ slug, label = 'Choose as my agent', variant 
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error ?? 'Failed to assign');
       }
-      // Full navigation so dashboard loads fresh from server with updated agent
+      // Full navigation so dashboard loads fresh from server with updated lender
       window.location.href = '/dashboard';
     } catch (err) {
       console.error(err);

@@ -21,16 +21,16 @@
 | File | Condition | Redirect to |
 |------|-----------|-------------|
 | `src/app/dashboard/page.tsx` | No `userId` | `/sign-in` |
-| `src/app/dashboard/page.tsx` | Has `userId`, broker role (Supabase or Clerk) | `/agents` (dashboard) |
+| `src/app/dashboard/page.tsx` | Has `userId`, broker role (Supabase or Clerk) | `/agents/dashboard` |
 | `src/app/dashboard/page.tsx` | Has `userId`, lender role (Supabase or Clerk) | `/lenders/dashboard` |
-| `src/app/dashboard/page.tsx` | Has `userId`, not broker/lender | `/clients` (dashboard) |
+| `src/app/dashboard/page.tsx` | Has `userId`, not broker/lender | `/clients/dashboard` |
 | `src/app/agents/dashboard/page.tsx` | No `userId` | `/sign-in` |
-| `src/app/agents/dashboard/page.tsx` | Has `userId`, not broker role | `/clients` or `/lenders/dashboard` by role |
+| `src/app/agents/dashboard/page.tsx` | Has `userId`, not broker role | `/clients/dashboard` or `/lenders/dashboard` by role |
 | `src/app/clients/dashboard/page.tsx` | No `userId` | `/sign-in` |
-| `src/app/clients/dashboard/page.tsx` | Has `userId`, broker role | `/agents` |
+| `src/app/clients/dashboard/page.tsx` | Has `userId`, broker role | `/agents/dashboard` |
 | `src/app/clients/dashboard/page.tsx` | Has `userId`, lender role | `/lenders/dashboard` |
 | `src/app/lenders/dashboard/page.tsx` | No `userId` | `/sign-in` |
-| `src/app/lenders/dashboard/page.tsx` | Has `userId`, not lender role | `/agents` or `/clients` by role |
+| `src/app/lenders/dashboard/page.tsx` | Has `userId`, not lender role | `/agents/dashboard` or `/clients/dashboard` by role |
 
 All redirect targets are internal paths; no open redirects.
 
@@ -42,13 +42,14 @@ All redirect targets are internal paths; no open redirects.
 | `SignUp` component (`sign-up/[[...sign-up]]/page.tsx`) | `fallbackRedirectUrl="/dashboard"` | `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL` |
 | `SignInButton` in `SiteHeader.tsx` | `fallbackRedirectUrl="/dashboard"` | Same env as above |
 
-Dashboard then routes by role to `/agents`, `/lenders/dashboard`, or `/clients`. No external redirect URLs in code.
+Dashboard then routes by role to `/agents/dashboard`, `/lenders/dashboard`, or `/clients/dashboard`. No external redirect URLs in code.
 
 ### 1.4 Client-side navigation
 
 | File | Behavior |
 |------|----------|
-| `AssignAgentButton.tsx` | After successful `PATCH /api/me/agent`, sets `window.location.href = '/clients/dashboard'` for a full reload. |
+| `AssignAgentButton.tsx` | After successful `PATCH /api/me/agent`, sets `window.location.href = '/dashboard'` so role-based router sends user to the correct dashboard. |
+| `AssignLenderButton.tsx` | After successful `PATCH /api/me/lender`, sets `window.location.href = '/dashboard'` so role-based router sends user to the correct dashboard. |
 | `BrokersList.tsx` | Uses `window.history.replaceState` to update URL for filter state (no redirect). |
 
 ---
@@ -112,7 +113,7 @@ No user-controlled internal `href`; all from config or static data.
 |--------|--------|
 | **Verification** | Svix: `svix-id`, `svix-timestamp`, `svix-signature` with `CLERK_WEBHOOK_SECRET`. |
 | **Events** | `user.created`, `user.updated`, `user.deleted`. Others return 200 and are ignored. |
-| **Actions** | user.created/updated: upsert `public.users` (role, preserve assigned_broker_id, repliers_client_id, marketing_opt_in); optional MailerLite subscribe; optional lead bridge (`leads.clerk_id` by email); optional Repliers client create. user.deleted: delete from `users` by `clerk_id`. |
+| **Actions** | user.created/updated: upsert `public.users` (role, preserve assigned_broker_id, assigned_lender_id, repliers_client_id, marketing_opt_in); optional MailerLite subscribe; optional lead bridge (`leads.clerk_id` by email); optional Repliers client create. user.deleted: delete from `users` by `clerk_id`. |
 | **Sign-in sync** | If a user has no row in Supabase when they hit `/dashboard` or any dashboard page, the app upserts them from Clerk via `src/lib/sync-clerk-user.ts` (same role/preserve logic). Ensures sign-ins are always synced even if the webhook missed. |
 | **Health** | `GET /api/webhooks/clerk` returns env status (no secrets). |
 | **Env** | Required: `CLERK_WEBHOOK_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Optional: MailerLite, Repliers. |
@@ -156,7 +157,7 @@ Clerk webhook does **not** use `@/lib/supabase`; it creates its own Supabase cli
 
 | Table | Used by | Operations |
 |-------|--------|------------|
-| **users** | Dashboard pages, Clerk webhook, sign-in sync (`sync-clerk-user.ts`), MailerLite webhook, `/api/me/agent` | Select by `clerk_id` (role, profile); upsert/delete by webhook; sign-in sync upserts when no row; update `assigned_broker_id`, `marketing_opt_in`. |
+| **users** | Dashboard pages, Clerk webhook, sign-in sync (`sync-clerk-user.ts`), MailerLite webhook, `/api/me/agent`, `/api/me/lender` | Select by `clerk_id` (role, profile, assigned_broker_id, assigned_lender_id); upsert/delete by webhook; sign-in sync upserts when no row; update `assigned_broker_id`, `assigned_lender_id`, `marketing_opt_in`. |
 | **leads** | Agent/client dashboards, Clerk webhook | Select (by assigned_broker_id or clerk_id); webhook updates `leads.clerk_id` by email (bridge). |
 | **favorites** | `/api/favorites` | Select/insert/delete by `clerk_id` (Clerk JWT client). |
 | **saved_searches** | `/api/saved-searches` | Select/insert by `clerk_id`; cap 20 per user. |
@@ -165,7 +166,7 @@ Clerk webhook does **not** use `@/lib/supabase`; it creates its own Supabase cli
 
 ### 4.3 Cross-reference: files → tables
 
-- **users:** `dashboard/page.tsx`, `agents/dashboard/page.tsx`, `clients/dashboard/page.tsx`, `lenders/dashboard/page.tsx`, `api/webhooks/clerk/route.ts`, `api/webhooks/mailerlite/route.ts`, `api/me/agent/route.ts`, `lib/sync-clerk-user.ts`.
+- **users:** `dashboard/page.tsx`, `agents/dashboard/page.tsx`, `clients/dashboard/page.tsx`, `lenders/dashboard/page.tsx`, `api/webhooks/clerk/route.ts`, `api/webhooks/mailerlite/route.ts`, `api/me/agent/route.ts`, `api/me/lender/route.ts`, `lib/sync-clerk-user.ts`.
 - **leads:** `agents/dashboard/page.tsx`, `clients/dashboard/page.tsx`, `api/webhooks/clerk/route.ts`.
 - **favorites:** `api/favorites/route.ts`.
 - **saved_searches:** `api/saved-searches/route.ts`.
@@ -184,7 +185,7 @@ Clerk webhook does **not** use `@/lib/supabase`; it creates its own Supabase cli
 | Item | Status | Recommendation |
 |------|--------|----------------|
 | Config redirects | OK | `/brokers` → `/agents`; no open redirects. |
-| Code redirects | OK | All to `/sign-in`, `/agents`, or `/clients`. |
+| Code redirects | OK | All to `/sign-in`, `/agents/dashboard`, `/clients/dashboard`, or `/lenders/dashboard`. |
 | Clerk redirect URLs | OK | All to `/dashboard`; override via env. |
 | Internal links | OK | From config or static data; listing URLs built safely. |
 | Lender empty URL | OK | “Visit website” only when `lender.url` is set. |

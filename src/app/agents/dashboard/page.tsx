@@ -6,7 +6,9 @@ import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
+import { getLenderBySlug } from '@/data/lenders';
 import type { Metadata } from 'next';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
   description: 'Pipeline, leads, and client management for BCRE agents.',
 };
 
-type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null };
+type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_lender_id?: string | null };
 type LeadRow = { id: string; email: string; created_at: string };
 
 function formatLeadDate(iso: string): string {
@@ -44,7 +46,7 @@ export default async function AgentsDashboardPage() {
     const [userRes, leadsRes] = await Promise.all([
       supabase
         .from('users')
-        .select('first_name, last_name, email, role')
+        .select('first_name, last_name, email, role, assigned_lender_id')
         .eq('clerk_id', userId)
         .maybeSingle(),
       supabase
@@ -83,7 +85,7 @@ export default async function AgentsDashboardPage() {
     if (isLenderRole(user?.role) || isLenderRole(roleFromClerk)) {
       redirect('/lenders/dashboard');
     }
-    redirect('/clients');
+    redirect('/clients/dashboard');
   }
 
   // If Supabase had no user, build a minimal user from Clerk for display
@@ -99,6 +101,8 @@ export default async function AgentsDashboardPage() {
   const displayName = user
     ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null
     : null;
+
+  const preferredLender = user?.assigned_lender_id ? getLenderBySlug(user.assigned_lender_id) : null;
 
   return (
     <main>
@@ -139,6 +143,76 @@ export default async function AgentsDashboardPage() {
             </span>
           </div>
         </header>
+
+        {/* Preferred lender for easy contact */}
+        <section className="dashboard-section" aria-labelledby="preferred-lender-heading">
+          <h2 id="preferred-lender-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
+            Your preferred lender
+          </h2>
+          {preferredLender ? (
+            <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
+              <div style={{ flexShrink: 0 }}>
+                <Image
+                  src={preferredLender.image}
+                  alt=""
+                  width={80}
+                  height={80}
+                  style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
+                />
+              </div>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{preferredLender.name}</p>
+                <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{preferredLender.title} · {preferredLender.company}</p>
+                {(preferredLender.phone || preferredLender.email) && (
+                  <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
+                    {preferredLender.phone && (
+                      <li style={{ marginTop: '0.25rem' }}>
+                        <span className="text--muted">Phone: </span>
+                        <a href={`tel:${preferredLender.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
+                          {preferredLender.phone}
+                        </a>
+                      </li>
+                    )}
+                    {preferredLender.email && (
+                      <li style={{ marginTop: '0.25rem' }}>
+                        <span className="text--muted">Email: </span>
+                        <a href={`mailto:${preferredLender.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
+                          {preferredLender.email}
+                        </a>
+                      </li>
+                    )}
+                  </ul>
+                )}
+                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
+                  {preferredLender.phone && (
+                    <Button href={`tel:${preferredLender.phone.replace(/\D/g, '')}`} variant="primary">
+                      Call {preferredLender.name}
+                    </Button>
+                  )}
+                  <Button href={`mailto:${preferredLender.email}`} variant="outline">
+                    Email
+                  </Button>
+                  {preferredLender.url ? (
+                    <Button href={preferredLender.url} variant="text" target="_blank" rel="noopener noreferrer">
+                      Visit website
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="card" style={{ padding: 'var(--space-lg)' }}>
+              <p style={{ margin: 0 }}>
+                Add a preferred lender for quick contact when referring clients. They&apos;ll appear here.
+              </p>
+              <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)' }}>
+                <Button href="/lenders" variant="primary">
+                  Choose preferred lender
+                </Button>
+              </div>
+            </div>
+          )}
+        </section>
 
         <section className="dashboard-section" aria-labelledby="overview-heading">
           <header className="dashboard-section-header stack--xs">

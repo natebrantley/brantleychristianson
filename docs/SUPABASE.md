@@ -206,7 +206,7 @@ The app does not yet subscribe to these channels; you can add `supabase.channel(
 1. **Env** – Restart the app and confirm no startup errors about missing Supabase env.
 2. **Table** – In Supabase → **Table Editor** → **users**, confirm the table exists and has the columns above.
 3. **Webhook** – In Clerk, create or update a user and check Clerk → Webhooks → Logs for a successful **user.created** / **user.updated** to your endpoint; then check **users** in Supabase for the row (or updated role).
-4. **Dashboard** – Sign in and open `/dashboard`; you should be redirected to `/agents`, `/clients`, or `/lenders/dashboard` based on **users.role** (see **docs/BROKER-SETUP.md** for marking brokers).
+4. **Dashboard** – Sign in and open `/dashboard`; you should be redirected to `/agents/dashboard`, `/clients/dashboard`, or `/lenders/dashboard` based on **users.role** (see **docs/BROKER-SETUP.md** for marking brokers).
 
 ## Troubleshooting
 

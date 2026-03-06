@@ -8,6 +8,7 @@ import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
 import { getAgentBySlug } from '@/data/agents';
+import { getLenderBySlug } from '@/data/lenders';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   description: 'Saved homes, searches, and next steps with your BCRE agent.',
 };
 
-type UserFields = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null };
+type UserFields = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
 
 function formatLeadDate(iso: string): string {
   try {
@@ -43,7 +44,7 @@ export default async function ClientsDashboardPage() {
     const [userRes, leadsRes] = await Promise.all([
       supabase
         .from('users')
-        .select('first_name, last_name, email, role, assigned_broker_id')
+        .select('first_name, last_name, email, role, assigned_broker_id, assigned_lender_id')
         .eq('clerk_id', userId)
         .maybeSingle(),
       supabase
@@ -72,10 +73,12 @@ export default async function ClientsDashboardPage() {
     console.error('Unexpected error loading client dashboard:', { userId, ...formatSupabaseError(err) });
   }
 
-  if (isBrokerRole(user?.role)) {
-    redirect('/agents');
+  const clerkUser = await currentUser();
+  const roleFromClerk = typeof clerkUser?.publicMetadata?.role === 'string' ? clerkUser.publicMetadata.role : null;
+  if (isBrokerRole(user?.role) || isBrokerRole(roleFromClerk)) {
+    redirect('/agents/dashboard');
   }
-  if (isLenderRole(user?.role)) {
+  if (isLenderRole(user?.role) || isLenderRole(roleFromClerk)) {
     redirect('/lenders/dashboard');
   }
 
@@ -84,6 +87,7 @@ export default async function ClientsDashboardPage() {
     : null;
 
   const assignedAgent = user?.assigned_broker_id ? getAgentBySlug(user.assigned_broker_id) : null;
+  const assignedLender = user?.assigned_lender_id ? getLenderBySlug(user.assigned_lender_id) : null;
 
   return (
     <main>
@@ -158,6 +162,76 @@ export default async function ClientsDashboardPage() {
                 <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)' }}>
                   <Button href="/agents" variant="primary">
                     Choose your agent
+                  </Button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Your lender */}
+          <section className="dashboard-section" aria-labelledby="your-lender-heading">
+            <h2 id="your-lender-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
+              Your lender
+            </h2>
+            {assignedLender ? (
+              <div className="card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 'var(--space-lg)', padding: 'var(--space-lg)' }}>
+                <div style={{ flexShrink: 0 }}>
+                  <Image
+                    src={assignedLender.image}
+                    alt=""
+                    width={80}
+                    height={80}
+                    style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
+                  />
+                </div>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                  <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{assignedLender.name}</p>
+                  <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{assignedLender.title} · {assignedLender.company}</p>
+                  {(assignedLender.phone || assignedLender.email) && (
+                    <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
+                      {assignedLender.phone && (
+                        <li style={{ marginTop: '0.25rem' }}>
+                          <span className="text--muted">Phone: </span>
+                          <a href={`tel:${assignedLender.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
+                            {assignedLender.phone}
+                          </a>
+                        </li>
+                      )}
+                      {assignedLender.email && (
+                        <li style={{ marginTop: '0.25rem' }}>
+                          <span className="text--muted">Email: </span>
+                          <a href={`mailto:${assignedLender.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
+                            {assignedLender.email}
+                          </a>
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                  <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
+                    {assignedLender.phone && (
+                      <Button href={`tel:${assignedLender.phone.replace(/\D/g, '')}`} variant="primary">
+                        Call {assignedLender.name}
+                      </Button>
+                    )}
+                    <Button href={`mailto:${assignedLender.email}`} variant="outline">
+                      Email
+                    </Button>
+                    {assignedLender.url ? (
+                      <Button href={assignedLender.url} variant="text" target="_blank" rel="noopener noreferrer">
+                        Visit website
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="card" style={{ padding: 'var(--space-lg)' }}>
+                <p style={{ margin: 0 }}>
+                  You don&apos;t have a preferred lender assigned yet. Choose one from our network for financing and they&apos;ll be listed here.
+                </p>
+                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)' }}>
+                  <Button href="/lenders" variant="primary">
+                    Choose your lender
                   </Button>
                 </div>
               </div>
