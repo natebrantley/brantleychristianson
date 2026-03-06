@@ -15,6 +15,13 @@ export function getAgentSlugByEmail(email: string | null | undefined): string | 
   return a?.slug ?? null;
 }
 
+/** Resolve full agent by email (for display when we only have clerk_id → users.email). */
+export function getAgentByEmail(email: string | null | undefined): Agent | undefined {
+  if (!email || !email.trim()) return undefined;
+  const normalized = email.trim().toLowerCase();
+  return agents.find((a) => a.email?.toLowerCase() === normalized);
+}
+
 export function getAgentsByLicense(license: string): Agent[] {
   return agents.filter((a) =>
     a.licenses.some((l) => l.toUpperCase().startsWith(license.toUpperCase()))

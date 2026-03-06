@@ -1,7 +1,7 @@
 /**
  * PATCH /api/me/lender — set the current user's assigned lender (by slug).
  * Client-only: requires Clerk auth. Used from lenders page "Choose as my lender".
- * Updates public.users.assigned_lender_id (stores lender slug); Clerk webhook preserves this on user.updated.
+ * Stores Clerk user ID (users.clerk_id) when the lender has signed in; otherwise stores slug for migration to fix later.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -36,9 +36,18 @@ export async function PATCH(request: NextRequest) {
   }
 
   const supabase = supabaseAdmin();
+  // Resolve lender's Clerk ID from users so we store clerk_id (aligned with leads.assigned_lender_id)
+  const { data: lenderUser } = await supabase
+    .from('users')
+    .select('clerk_id')
+    .eq('email', lender.email)
+    .eq('role', 'lender')
+    .maybeSingle();
+  const valueToStore = (lenderUser?.clerk_id as string) ?? slug;
+
   const { data: updated, error: updateError } = await supabase
     .from('users')
-    .update({ assigned_lender_id: slug })
+    .update({ assigned_lender_id: valueToStore })
     .eq('clerk_id', userId)
     .select('id')
     .maybeSingle();
@@ -52,7 +61,7 @@ export async function PATCH(request: NextRequest) {
     const { error: insertError } = await supabase.from('users').insert({
       clerk_id: userId,
       role: 'user',
-      assigned_lender_id: slug,
+      assigned_lender_id: valueToStore,
     });
     if (insertError) {
       console.error('PATCH /api/me/lender insert:', insertError);

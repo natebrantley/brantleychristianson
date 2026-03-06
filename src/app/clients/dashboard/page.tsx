@@ -7,8 +7,8 @@ import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
-import { getAgentBySlug } from '@/data/agents';
-import { getLenderBySlug } from '@/data/lenders';
+import { getAgentBySlug, getAgentByEmail } from '@/data/agents';
+import { getLenderBySlug, getLenderByEmail } from '@/data/lenders';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -38,6 +38,8 @@ export default async function ClientsDashboardPage() {
 
   let user: UserFields | null = null;
   let linkedLeads: { id: string; email: string; created_at: string }[] = [];
+  let brokerUserEmail: string | null = null;
+  let lenderUserEmail: string | null = null;
 
   try {
     const clerkUser = await currentUser();
@@ -72,6 +74,21 @@ export default async function ClientsDashboardPage() {
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       linkedLeads = leadsRes.data as { id: string; email: string; created_at: string }[];
     }
+
+    // Resolve assigned agent/lender when stored as Clerk ID (user_xxx); fetch their user row for email → agents/lenders.json
+    const brokerClerkId = user?.assigned_broker_id?.startsWith('user_') ? user.assigned_broker_id : null;
+    const lenderClerkId = user?.assigned_lender_id?.startsWith('user_') ? user.assigned_lender_id : null;
+    const clerkIdsToFetch = [brokerClerkId, lenderClerkId].filter(Boolean) as string[];
+    if (clerkIdsToFetch.length > 0) {
+      const { data: assignedUsers } = await supabase
+        .from('users')
+        .select('clerk_id, email')
+        .in('clerk_id', clerkIdsToFetch);
+      for (const row of assignedUsers ?? []) {
+        if (row.clerk_id === brokerClerkId) brokerUserEmail = row.email as string | null;
+        if (row.clerk_id === lenderClerkId) lenderUserEmail = row.email as string | null;
+      }
+    }
   } catch (err) {
     console.error('Unexpected error loading client dashboard:', { userId, ...formatSupabaseError(err) });
   }
@@ -95,8 +112,12 @@ export default async function ClientsDashboardPage() {
     : null;
   const firstName = displayName?.split(' ')[0] ?? 'there';
 
-  const assignedAgent = user?.assigned_broker_id ? getAgentBySlug(user.assigned_broker_id) : null;
-  const assignedLender = user?.assigned_lender_id ? getLenderBySlug(user.assigned_lender_id) : null;
+  const assignedAgent = user?.assigned_broker_id
+    ? (getAgentByEmail(brokerUserEmail ?? undefined) ?? getAgentBySlug(user.assigned_broker_id))
+    : null;
+  const assignedLender = user?.assigned_lender_id
+    ? (getLenderByEmail(lenderUserEmail ?? undefined) ?? getLenderBySlug(user.assigned_lender_id))
+    : null;
   const hasTeam = !!(assignedAgent || assignedLender);
 
   return (

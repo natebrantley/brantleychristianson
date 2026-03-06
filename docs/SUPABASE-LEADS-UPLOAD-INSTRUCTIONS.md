@@ -81,7 +81,11 @@ Every column except **email** may be null or omitted on insert.
 
 **Preferred: normalize both broker and lender in one step.** Run `supabase/migrations/20260318000000_normalize_leads_assigned_broker_lender.sql` (or `supabase db push`). It sets **assigned_broker_id** and **assigned_lender_id** to **users.clerk_id** by matching current values to agent/lender **email**, **full name**, or **slug** (case-insensitive). Only rows that are not already Clerk IDs (`user_%`) are updated. Run after agents and lenders have signed in so **public.users** has their **clerk_id**.
 
+**public.users** should also store Clerk IDs for consistency. Run `supabase/migrations/20260319000000_normalize_users_assigned_broker_lender.sql` to convert **users.assigned_broker_id** and **users.assigned_lender_id** from slug to **users.clerk_id** (so both tables use the same identifier for “who is the assigned agent/lender”).
+
 ### 2.4 Validation before upload
+
+If **public.users** has an **agent** column (text) that was populated before **assigned_broker_id** existed, run `supabase/migrations/20260320000000_backfill_users_assigned_broker_id_from_agent.sql` to backfill **assigned_broker_id** from **agent** (by email, full name, or slug).
 
 1. **Email**  
    - Not empty after trim.  

@@ -1,7 +1,7 @@
 /**
  * PATCH /api/me/agent — set the current user's assigned broker (by slug).
  * Client-only: requires Clerk auth. Used from brokers page "Choose as my agent".
- * Updates public.users.assigned_broker_id (stores broker slug); Clerk webhook preserves this on user.updated.
+ * Stores Clerk user ID (users.clerk_id) when the agent has signed in; otherwise stores slug for migration to fix later.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -36,9 +36,18 @@ export async function PATCH(request: NextRequest) {
   }
 
   const supabase = supabaseAdmin();
+  // Resolve agent's Clerk ID from users so we store clerk_id (aligned with leads.assigned_broker_id)
+  const { data: brokerUser } = await supabase
+    .from('users')
+    .select('clerk_id')
+    .eq('email', agent.email)
+    .in('role', ['agent', 'broker'])
+    .maybeSingle();
+  const valueToStore = (brokerUser?.clerk_id as string) ?? slug;
+
   const { data: updated, error: updateError } = await supabase
     .from('users')
-    .update({ assigned_broker_id: slug })
+    .update({ assigned_broker_id: valueToStore })
     .eq('clerk_id', userId)
     .select('id')
     .maybeSingle();
@@ -53,7 +62,7 @@ export async function PATCH(request: NextRequest) {
     const { error: insertError } = await supabase.from('users').insert({
       clerk_id: userId,
       role: 'user',
-      assigned_broker_id: slug,
+      assigned_broker_id: valueToStore,
     });
     if (insertError) {
       console.error('PATCH /api/me/agent insert:', insertError);
