@@ -64,7 +64,17 @@ To sync **Supabase public.leads** into MailerLite as subscribers (e.g. after an 
 - **Auth:** Same as other cron routes: `Authorization: Bearer <CRON_SECRET>` or Vercel Cron (`x-vercel-cron: 1`).
 - **Env:** `MAILERLITE_API_TOKEN` (required; same as consultation form), optional `MAILERLITE_GROUP_ID`, and `CRON_SECRET` for manual runs.
 
-**Behavior:** Reads leads from `public.leads` (up to 500 by default, or `?limit=200` up to 2000), then POSTs each to MailerLite `POST /subscribers`. MailerLite upserts by email (create or update). Fields sent: name, last_name, first_name, phone, city, state, zip, source, address, agent. If `opted_in_email` is false / "Opted Out", the subscriber is sent with `status: unsubscribed`.
+**Behavior:** Reads leads from `public.leads`, then upserts them to MailerLite using the **batch API** (50 subscribers per request) with a 3s delay between batches to stay under MailerLite’s 120 requests/minute limit. Fields sent: name, last_name, first_name, phone, city, state, zip, source, address, agent. If `opted_in_email` is false / "Opted Out", the subscriber is sent with `status: unsubscribed`.
+
+**Query params:**
+
+| Param   | Default | Description |
+|--------|--------|-------------|
+| `limit` | 500   | Max leads to sync (1–2000). |
+| `since` | *(none)* | Only sync leads updated in the last period: `24h`, `7d`, `2h`, `30m`. When **Vercel Cron** calls the route (hourly), `since` defaults to `2h` so each run only pushes recently updated leads and avoids timeouts/rate limits. Omit for a **full sync**. |
+
+**Full sync (e.g. after a big import):**  
+Run manually without `since` so all leads (up to `limit`) are considered. For large tables, use a high limit and run during off-peak, or run multiple times (e.g. `limit=1000` then `limit=1000&since=7d` later for stragglers).
 
 **Manual run (bash / Git Bash):**  
 `curl -H "Authorization: Bearer YOUR_CRON_SECRET" "https://brantleychristianson.com/api/cron/sync-leads-to-mailerlite?limit=500"`
@@ -73,4 +83,4 @@ To sync **Supabase public.leads** into MailerLite as subscribers (e.g. after an 
 `Invoke-RestMethod -Uri "https://brantleychristianson.com/api/cron/sync-leads-to-mailerlite?limit=500" -Headers @{ Authorization = "Bearer YOUR_CRON_SECRET" }`  
 You must include the word **Bearer** and a space before the secret. Replace `YOUR_CRON_SECRET` with your actual `CRON_SECRET` value. If the route is not deployed yet, you’ll get HTML (404) instead of JSON; deploy first, then run.
 
-**Automated:** Vercel Cron runs this every hour (see `vercel.json`).
+**Automated:** Vercel Cron runs this every hour (see `vercel.json`). Each cron run uses incremental sync (last 2 hours) by default so new/updated leads stay in sync without hitting rate limits or timeouts.

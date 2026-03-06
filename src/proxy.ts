@@ -7,7 +7,7 @@ const hasClerkKeys =
 
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
-  '/agents/dashboard',
+  '/agents/dashboard(.*)',
   '/clients/dashboard',
   '/lenders/dashboard',
   '/api/favorites',
@@ -29,6 +29,8 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   }
   return NextResponse.next();
 }
+
+export default proxy;
 
 export const config = {
   matcher: [

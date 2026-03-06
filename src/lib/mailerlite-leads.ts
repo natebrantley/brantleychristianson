@@ -1,5 +1,6 @@
 /**
  * Push public.leads from Supabase to MailerLite as subscribers.
+ * Uses MailerLite batch API (up to 50 requests per batch) to stay under 120 req/min.
  * Uses MAILERLITE_API_TOKEN and optional MAILERLITE_GROUP_ID.
  * MailerLite POST /subscribers upserts by email (create or update).
  */
@@ -8,6 +9,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getAgentBySlug } from '@/data/agents';
 
 const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
+const BATCH_SIZE = 50;
+const DELAY_BETWEEN_BATCHES_MS = 3000; // Stay under 120 req/min (2 batches/min = 100 subscribers/min safe)
 
 type LeadRow = {
   id?: string;
@@ -73,25 +76,93 @@ export type SyncLeadsToMailerLiteResult = {
   errors: Array<{ email: string; message: string }>;
 };
 
+type BatchRequest = { method: string; path: string; body?: unknown };
+type BatchResponseItem = { code: number; body?: { message?: string; errors?: unknown } };
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 /**
- * Fetch leads from Supabase and upsert each to MailerLite.
+ * Call MailerLite batch API (up to 50 requests). On 429, retry after delay.
+ */
+async function sendBatch(
+  apiToken: string,
+  requests: BatchRequest[],
+  retries = 2
+): Promise<{ successful: number; failed: number; responses: BatchResponseItem[] }> {
+  const res = await fetch(`${MAILERLITE_API_BASE}/batch`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${apiToken}`,
+    },
+    body: JSON.stringify({ requests }),
+  });
+
+  if (res.status === 429) {
+    const retryAfter = Number(res.headers.get('X-RateLimit-Retry-After')) || 60;
+    if (retries > 0) {
+      await sleep(retryAfter * 1000);
+      return sendBatch(apiToken, requests, retries - 1);
+    }
+    throw new Error(`MailerLite rate limited; retry after ${retryAfter}s`);
+  }
+
+  const data = (await res.json().catch(() => ({}))) as {
+    successful?: number;
+    failed?: number;
+    responses?: BatchResponseItem[];
+    message?: string;
+  };
+
+  if (!res.ok) {
+    throw new Error(data?.message ?? `HTTP ${res.status}`);
+  }
+
+  return {
+    successful: data.successful ?? 0,
+    failed: data.failed ?? 0,
+    responses: data.responses ?? [],
+  };
+}
+
+/**
+ * Fetch leads from Supabase and upsert to MailerLite in batches of 50.
  * Uses email or email_address as primary email; skips rows with no valid email.
+ * Optionally only sync leads updated since a given interval (e.g. "2h", "24h", "7d").
  */
 export async function syncLeadsToMailerLite(
   admin: SupabaseClient,
   apiToken: string,
   groupId: string | undefined,
-  options: { limit?: number } = {}
+  options: { limit?: number; since?: string } = {}
 ): Promise<SyncLeadsToMailerLiteResult> {
   const limit = Math.min(Math.max(options.limit ?? 500, 1), 2000);
   const result: SyncLeadsToMailerLiteResult = { synced: 0, skipped: 0, errors: [] };
 
-  const { data: rows, error } = await admin
+  let query = admin
     .from('leads')
     .select(
       'id, email, email_address, first_name, last_name, phone, city, state, zip, source, address, assigned_broker_id, opted_in_email'
     )
-    .limit(limit);
+    .limit(limit)
+    .order('updated_at', { ascending: false });
+
+  if (options.since) {
+    const match = options.since.trim().match(/^(\d+)(h|d|m)$/i);
+    if (match) {
+      const [, num, unit] = match;
+      const n = parseInt(num, 10) || 24;
+      const unitLower = unit.toLowerCase();
+      const hours = unitLower === 'd' ? n * 24 : unitLower === 'm' ? n / 60 : n;
+      const since = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+      query = query.gte('updated_at', since);
+    }
+  }
+
+  const { data: rows, error } = await query;
 
   if (error) {
     result.errors.push({ email: '', message: `Supabase: ${String(error)}` });
@@ -100,6 +171,7 @@ export async function syncLeadsToMailerLite(
   const list = (rows ?? []) as LeadRow[];
   if (!list.length) return result;
 
+  const toSync: { lead: LeadRow; payload: ReturnType<typeof leadToSubscriberPayload> }[] = [];
   for (const lead of list) {
     const email =
       (lead.email ?? lead.email_address ?? '').toString().trim().toLowerCase();
@@ -107,37 +179,41 @@ export async function syncLeadsToMailerLite(
       result.skipped++;
       continue;
     }
+    toSync.push({ lead, payload: leadToSubscriberPayload(lead, groupId) });
+  }
 
-    const payload = leadToSubscriberPayload(lead, groupId);
+  for (let i = 0; i < toSync.length; i += BATCH_SIZE) {
+    const chunk = toSync.slice(i, i + BATCH_SIZE);
+    const batchRequests: BatchRequest[] = chunk.map(({ payload }) => ({
+      method: 'POST',
+      path: 'api/subscribers',
+      body: payload,
+    }));
+
     try {
-      const res = await fetch(`${MAILERLITE_API_BASE}/subscribers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${apiToken}`,
-        },
-        body: JSON.stringify(payload),
+      const batchResult = await sendBatch(apiToken, batchRequests);
+      result.synced += batchResult.successful;
+
+      batchResult.responses.forEach((item, idx) => {
+        const entry = chunk[idx];
+        if (!entry) return;
+        const email = entry.payload.email;
+        if (item.code >= 200 && item.code < 300) return;
+        const msg = item.body?.message ?? (item.body?.errors ? JSON.stringify(item.body.errors) : `HTTP ${item.code}`);
+        result.errors.push({ email, message: msg });
       });
 
-      const body = (await res.json().catch(() => ({}))) as { message?: string; errors?: unknown };
-      if (!res.ok) {
-        result.errors.push({
-          email,
-          message: body?.message ?? `HTTP ${res.status}`,
-        });
-        continue;
+      if (i + BATCH_SIZE < toSync.length) {
+        await sleep(DELAY_BETWEEN_BATCHES_MS);
       }
-      result.synced++;
     } catch (err) {
-      result.errors.push({
-        email,
-        message: err instanceof Error ? err.message : String(err),
-      });
+      for (const { payload } of chunk) {
+        result.errors.push({
+          email: payload.email,
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
-
-    // Avoid rate limits: short delay between requests
-    await new Promise((r) => setTimeout(r, 80));
   }
 
   return result;

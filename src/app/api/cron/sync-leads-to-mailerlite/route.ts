@@ -39,10 +39,14 @@ export async function GET(request: NextRequest) {
     Math.max(parseInt(request.nextUrl.searchParams.get('limit') ?? '500', 10) || 500, 1),
     2000
   );
+  const since = request.nextUrl.searchParams.get('since')?.trim() || undefined;
+  // When invoked by Vercel Cron, default to incremental (last 2h) to avoid timeout/rate limit
+  const isCron = request.headers.get('x-vercel-cron') === '1';
+  const effectiveSince = since ?? (isCron ? '2h' : undefined);
 
   try {
     const admin = supabaseAdmin();
-    const result = await syncLeadsToMailerLite(admin, apiToken, groupId, { limit });
+    const result = await syncLeadsToMailerLite(admin, apiToken, groupId, { limit, since: effectiveSince });
 
     return NextResponse.json({
       ok: true,

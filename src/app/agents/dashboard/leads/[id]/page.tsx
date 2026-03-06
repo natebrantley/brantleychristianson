@@ -24,12 +24,16 @@ type LeadRow = {
   email_address?: string | null;
   phone?: string | null;
   notes?: string | null;
+  notes_2?: string | null;
   source?: string | null;
   timeframe?: string | null;
+  address?: string | null;
   city?: string | null;
   state?: string | null;
+  zip?: string | null;
   clerk_id?: string | null;
   created_at?: string | null;
+  updated_at?: string | null;
   last_login?: string | null;
   property_views?: number | null;
   property_inquiries?: number | null;
@@ -60,13 +64,12 @@ export default async function LeadDetailPage({
     }
 
     const supabase = await createClerkSupabaseClient();
+    const leadSelect = 'id, first_name, last_name, email, email_address, phone, notes, notes_2, source, timeframe, address, city, state, zip, clerk_id, created_at, updated_at, last_login, property_views, property_inquiries';
     const [userRes, leadRes] = await Promise.all([
       supabase.from('users').select('role').eq('clerk_id', userId).maybeSingle(),
       supabase
         .from('leads')
-        .select(
-          'id, first_name, last_name, email, email_address, phone, notes, source, timeframe, city, state, clerk_id, created_at, last_login, property_views, property_inquiries'
-        )
+        .select(leadSelect)
         .eq('id', id)
         .maybeSingle(),
     ]);
@@ -107,7 +110,7 @@ export default async function LeadDetailPage({
           await admin.from('leads').update({ assigned_broker_id: userId }).eq('id', id);
           const { data: refetched } = await supabase
             .from('leads')
-            .select('id, first_name, last_name, email, email_address, phone, notes, source, timeframe, city, state, clerk_id, created_at, last_login, property_views, property_inquiries')
+            .select(leadSelect)
             .eq('id', id)
             .maybeSingle();
           if (refetched) lead = refetched as LeadRow;

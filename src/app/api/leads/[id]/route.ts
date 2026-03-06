@@ -20,12 +20,16 @@ const CONTACT_FIELDS = [
   'email_address',
   'phone',
   'notes',
+  'notes_2',
   'source',
   'timeframe',
+  'address',
   'city',
   'state',
+  'zip',
   'clerk_id',
   'created_at',
+  'updated_at',
   'last_login',
   'property_views',
   'property_inquiries',
@@ -63,12 +67,27 @@ export async function GET(request: NextRequest, { params }: LeadIdParams) {
   return NextResponse.json(data);
 }
 
-const PATCH_BODY_KEYS = ['first_name', 'last_name', 'email', 'phone', 'notes'] as const;
+const PATCH_BODY_KEYS = ['first_name', 'last_name', 'email', 'phone', 'notes', 'notes_2', 'address', 'city', 'state', 'zip', 'source', 'timeframe'] as const;
 
 function sanitizePatchBody(body: unknown): Record<string, string | null> {
   const out: Record<string, string | null> = {};
   if (body == null || typeof body !== 'object') return out;
   const b = body as Record<string, unknown>;
+
+  const maxLen: Record<string, number> = {
+    email: 254,
+    phone: 50,
+    notes: 5000,
+    notes_2: 5000,
+    address: 500,
+    city: 120,
+    state: 60,
+    zip: 20,
+    source: 200,
+    timeframe: 200,
+    first_name: 120,
+    last_name: 120,
+  };
 
   for (const key of PATCH_BODY_KEYS) {
     const v = b[key];
@@ -77,14 +96,8 @@ function sanitizePatchBody(body: unknown): Record<string, string | null> {
       out[key] = null;
     } else if (typeof v === 'string') {
       const trimmed = v.trim();
-      if (key === 'email' && trimmed.length > 254) continue;
-      if (key === 'phone' && trimmed.length > 50) {
-        out[key] = trimmed.slice(0, 50);
-      } else if (key === 'notes' && trimmed.length > 5000) {
-        out[key] = trimmed.slice(0, 5000);
-      } else {
-        out[key] = trimmed;
-      }
+      const max = maxLen[key] ?? 500;
+      out[key] = trimmed.length > max ? trimmed.slice(0, max) : trimmed;
     }
   }
   return out;

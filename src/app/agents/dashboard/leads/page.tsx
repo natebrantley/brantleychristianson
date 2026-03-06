@@ -7,7 +7,9 @@ import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { getAgentSlugByEmail } from '@/data/agents';
 import { Hero } from '@/components/Hero';
 import { LeadsSortForm } from './LeadsSortForm';
+import { LeadsFilterFavoriteCity } from './LeadsFilterFavoriteCity';
 import { assetPaths } from '@/config/theme';
+import { getLeadPulse, getLeadPulseLabel } from '@/lib/getLeadPulse';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -16,6 +18,7 @@ const PAGE_SIZE = 50;
 const SORT_OPTIONS = [
   { value: 'created_at-desc', label: 'Newest first', column: 'created_at', ascending: false },
   { value: 'created_at-asc', label: 'Oldest first', column: 'created_at', ascending: true },
+  { value: 'clients_first', label: 'Clients first', column: 'created_at', ascending: false },
   { value: 'last_login-desc', label: 'Last active (recent)', column: 'last_login', ascending: false },
   { value: 'last_login-asc', label: 'Last active (oldest)', column: 'last_login', ascending: true },
   { value: 'first_name-asc', label: 'Name A–Z', column: 'first_name', ascending: true },
@@ -32,6 +35,7 @@ type LeadRow = {
   id: string;
   email: string;
   created_at: string;
+  updated_at?: string | null;
   assigned_broker_id?: string | null;
   clerk_id?: string | null;
   first_name?: string | null;
@@ -45,6 +49,7 @@ type LeadRow = {
   city?: string | null;
   state?: string | null;
   notes?: string | null;
+  favorite_city?: string | null;
 };
 
 function formatLeadDate(iso: string): string {
@@ -99,10 +104,22 @@ function escapeIlike(s: string): string {
   return noComma.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
 }
 
+const LEAD_SELECT = 'id, email, created_at, updated_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries, source, timeframe, city, state, notes, favorite_city';
+
+function getLeadInitials(lead: LeadRow): string {
+  const first = (lead.first_name ?? '').trim().slice(0, 1).toUpperCase();
+  const last = (lead.last_name ?? '').trim().slice(0, 1).toUpperCase();
+  if (first && last) return `${first}${last}`;
+  if (first) return first;
+  const email = (lead.email ?? '').trim();
+  if (email) return email.slice(0, 2).toUpperCase();
+  return '?';
+}
+
 export default async function AgentLeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string; sort?: string; status?: string; source?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; sort?: string; status?: string; source?: string; favorite_city?: string }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect('/sign-in');
@@ -113,6 +130,7 @@ export default async function AgentLeadsPage({
   const sortKey = params.sort ?? 'created_at-desc';
   const statusFilter = params.status === 'clients' || params.status === 'leads' ? params.status : 'all';
   const sourceFilter = (params.source ?? '').trim().slice(0, 80);
+  const favoriteCityFilter = (params.favorite_city ?? '').trim().slice(0, 120);
   const sortConfig = SORT_OPTIONS.find((o) => o.value === sortKey) ?? SORT_OPTIONS[0];
 
   const from = (page - 1) * PAGE_SIZE;
@@ -121,6 +139,7 @@ export default async function AgentLeadsPage({
   let user: AgentUser | null = null;
   let leads: LeadRow[] = [];
   let totalCount = 0;
+  let favoriteCities: string[] = [];
 
   try {
     const clerkUser = await currentUser();
@@ -137,10 +156,7 @@ export default async function AgentLeadsPage({
     const buildLeadsQuery = (client: Awaited<ReturnType<typeof createClerkSupabaseClient>>) => {
       let query = client
         .from('leads')
-        .select(
-          'id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries, source, timeframe, city, state, notes',
-          { count: 'exact' }
-        )
+        .select(LEAD_SELECT, { count: 'exact' })
         .eq('assigned_broker_id', userId);
       if (statusFilter === 'clients') {
         query = query.not('clerk_id', 'is', null);
@@ -150,6 +166,10 @@ export default async function AgentLeadsPage({
       if (sourceFilter) {
         const sourcePattern = `%${escapeIlike(sourceFilter)}%`;
         query = query.ilike('source', sourcePattern);
+      }
+      if (favoriteCityFilter) {
+        const cityPattern = `%${escapeIlike(favoriteCityFilter)}%`;
+        query = query.ilike('favorite_city', cityPattern);
       }
       if (q) {
         const pattern = `%${escapeIlike(q)}%`;
@@ -162,16 +182,19 @@ export default async function AgentLeadsPage({
         .range(from, to);
     };
 
-    const [userRes, leadsRes] = await Promise.all([
+    const [userRes, leadsRes, citiesRes] = await Promise.all([
       supabase
         .from('users')
         .select('first_name, last_name, email, role')
         .eq('clerk_id', userId)
         .maybeSingle(),
       buildLeadsQuery(supabase),
+      supabase.from('leads').select('favorite_city').eq('assigned_broker_id', userId).limit(1000),
     ]);
 
     user = userRes.data ?? null;
+    const favoriteCitiesRaw = (citiesRes.data ?? []) as { favorite_city?: string | null }[];
+    favoriteCities = [...new Set(favoriteCitiesRaw.map((r) => r.favorite_city).filter((c): c is string => typeof c === 'string' && c.trim() !== ''))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       leads = leadsRes.data as LeadRow[];
     }
@@ -191,10 +214,7 @@ export default async function AgentLeadsPage({
       const admin = supabaseAdmin();
       let fallbackQuery = admin
         .from('leads')
-        .select(
-          'id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries, source, timeframe, city, state, notes',
-          { count: 'exact' }
-        )
+        .select(LEAD_SELECT, { count: 'exact' })
         .in('assigned_broker_id', uniqWithCase);
       if (statusFilter === 'clients') {
         fallbackQuery = fallbackQuery.not('clerk_id', 'is', null);
@@ -204,6 +224,10 @@ export default async function AgentLeadsPage({
       if (sourceFilter) {
         const sourcePattern = `%${escapeIlike(sourceFilter)}%`;
         fallbackQuery = fallbackQuery.ilike('source', sourcePattern);
+      }
+      if (favoriteCityFilter) {
+        const cityPattern = `%${escapeIlike(favoriteCityFilter)}%`;
+        fallbackQuery = fallbackQuery.ilike('favorite_city', cityPattern);
       }
       if (q) {
         const pattern = `%${escapeIlike(q)}%`;
@@ -223,10 +247,54 @@ export default async function AgentLeadsPage({
         if (idsToUpdate.length > 0) {
           await admin.from('leads').update({ assigned_broker_id: userId }).in('id', idsToUpdate);
         }
+        // Fetch distinct favorite cities for dropdown when using fallback
+        if (favoriteCities.length === 0) {
+          const { data: cityRows } = await admin.from('leads').select('favorite_city').in('assigned_broker_id', uniqWithCase).limit(1000);
+          const cityRaw = (cityRows ?? []) as { favorite_city?: string | null }[];
+          favoriteCities = [...new Set(cityRaw.map((r) => r.favorite_city).filter((c): c is string => typeof c === 'string' && c.trim() !== ''))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        }
       }
     }
   } catch (err) {
     console.error('Error loading agent leads:', formatSupabaseError(err));
+  }
+
+  let lastFavoriteByClerkId: Record<string, string> = {};
+  let lastSavedSearchByClerkId: Record<string, string> = {};
+  if (leads.length > 0) {
+    const clientClerkIds = [...new Set(leads.map((l) => l.clerk_id).filter(Boolean))] as string[];
+    if (clientClerkIds.length > 0) {
+      try {
+        const admin = supabaseAdmin();
+        const [favRes, searchRes] = await Promise.all([
+          admin.from('favorites').select('clerk_id, created_at').in('clerk_id', clientClerkIds),
+          admin.from('saved_searches').select('clerk_id, created_at').in('clerk_id', clientClerkIds),
+        ]);
+        const favRows = (favRes.data ?? []) as { clerk_id: string; created_at: string }[];
+        const searchRows = (searchRes.data ?? []) as { clerk_id: string; created_at: string }[];
+        for (const row of favRows) {
+          if (row.created_at && (!lastFavoriteByClerkId[row.clerk_id] || row.created_at > lastFavoriteByClerkId[row.clerk_id]!)) {
+            lastFavoriteByClerkId[row.clerk_id] = row.created_at;
+          }
+        }
+        for (const row of searchRows) {
+          if (row.created_at && (!lastSavedSearchByClerkId[row.clerk_id] || row.created_at > lastSavedSearchByClerkId[row.clerk_id]!)) {
+            lastSavedSearchByClerkId[row.clerk_id] = row.created_at;
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  if (sortKey === 'clients_first') {
+    leads = [...leads].sort((a, b) => {
+      const aClient = a.clerk_id ? 1 : 0;
+      const bClient = b.clerk_id ? 1 : 0;
+      if (aClient !== bClient) return bClient - aClient;
+      return 0;
+    });
   }
 
   let clerkUser: Awaited<ReturnType<typeof currentUser>> = null;
@@ -254,9 +322,9 @@ export default async function AgentLeadsPage({
   const startRow = totalCount === 0 ? 0 : from + 1;
   const endRow = Math.min(from + PAGE_SIZE, totalCount);
 
-  const filterParams = { q, sort: sortKey, status: statusFilter, source: sourceFilter };
+  const filterParams = { q, sort: sortKey, status: statusFilter, source: sourceFilter, favorite_city: favoriteCityFilter };
 
-  function buildUrl(updates: Partial<{ page: number; q: string; sort: string; status: string; source: string }>) {
+  function buildUrl(updates: Partial<{ page: number; q: string; sort: string; status: string; source: string; favorite_city: string }>) {
     const base = '/agents/dashboard/leads';
     const sp = new URLSearchParams();
     const pageVal = updates.page != null ? updates.page : page;
@@ -264,11 +332,13 @@ export default async function AgentLeadsPage({
     const sortVal = updates.sort !== undefined ? updates.sort : filterParams.sort;
     const statusVal = updates.status !== undefined ? updates.status : filterParams.status;
     const sourceVal = updates.source !== undefined ? updates.source : filterParams.source;
+    const favoriteCityVal = updates.favorite_city !== undefined ? updates.favorite_city : filterParams.favorite_city;
     if (pageVal > 1) sp.set('page', String(pageVal));
     if (qVal) sp.set('q', qVal);
     if (sortVal !== 'created_at-desc') sp.set('sort', sortVal);
     if (statusVal !== 'all') sp.set('status', statusVal);
     if (sourceVal) sp.set('source', sourceVal);
+    if (favoriteCityVal) sp.set('favorite_city', favoriteCityVal);
     const qs = sp.toString();
     return qs ? `${base}?${qs}` : base;
   }
@@ -304,8 +374,8 @@ export default async function AgentLeadsPage({
               <h1 className="leads-toolbar__title">All leads</h1>
               <span className="leads-toolbar__count">
                 {totalCount.toLocaleString()} lead{totalCount !== 1 ? 's' : ''}
-                {(q || statusFilter !== 'all' || sourceFilter) ? (
-                  <> — <Link href={buildUrl({ page: 1, q: '', status: 'all', source: '' })}>Clear filters</Link></>
+                {(q || statusFilter !== 'all' || sourceFilter || favoriteCityFilter) ? (
+                  <> — <Link href={buildUrl({ page: 1, q: '', status: 'all', source: '', favorite_city: '' })}>Clear filters</Link></>
                 ) : null}
               </span>
             </div>
@@ -314,6 +384,7 @@ export default async function AgentLeadsPage({
                 <input type="hidden" name="sort" value={sortKey} />
                 <input type="hidden" name="status" value={statusFilter} />
                 <input type="hidden" name="source" value={sourceFilter} />
+                <input type="hidden" name="favorite_city" value={favoriteCityFilter} />
                 <input
                   type="search"
                   name="q"
@@ -329,15 +400,26 @@ export default async function AgentLeadsPage({
                 currentQ={q}
                 currentStatus={statusFilter}
                 currentSource={sourceFilter}
+                currentFavoriteCity={favoriteCityFilter}
               />
               <form method="get" action="/agents/dashboard/leads" className="leads-filters-inline">
                 <input type="hidden" name="q" value={q} />
                 <input type="hidden" name="sort" value={sortKey} />
+                <input type="hidden" name="source" value={sourceFilter} />
+                <input type="hidden" name="favorite_city" value={favoriteCityFilter} />
                 <select name="status" defaultValue={statusFilter} className="leads-filters-inline__select" aria-label="Filter by status">
                   <option value="all">All</option>
-                  <option value="clients">Clients</option>
-                  <option value="leads">Leads</option>
+                  <option value="clients">Signed-in clients</option>
+                  <option value="leads">Leads only</option>
                 </select>
+                <LeadsFilterFavoriteCity
+                  favoriteCities={favoriteCities}
+                  currentFavoriteCity={favoriteCityFilter}
+                  currentQ={q}
+                  currentSort={sortKey}
+                  currentStatus={statusFilter}
+                  currentSource={sourceFilter}
+                />
               </form>
             </div>
           </div>
@@ -360,10 +442,25 @@ export default async function AgentLeadsPage({
                     <tbody>
                       {leads.map((lead) => {
                         const recency = getLeadRecency(lead);
+                        const pulseLevel = getLeadPulse(lead, {
+                          lastFavoriteAt: lead.clerk_id ? lastFavoriteByClerkId[lead.clerk_id] : undefined,
+                          lastSavedSearchAt: lead.clerk_id ? lastSavedSearchByClerkId[lead.clerk_id] : undefined,
+                        });
+                        const pulseLabel = getLeadPulseLabel(pulseLevel);
+                        const initials = getLeadInitials(lead);
                         return (
-                          <tr key={lead.id}>
+                          <tr key={lead.id} className={lead.clerk_id ? 'lead-row--client' : undefined}>
                             <td className="lead-name">
-                              <Link href={`/agents/dashboard/leads/${lead.id}`}>{leadDisplayName(lead)}</Link>
+                              <span className="lead-name__cell">
+                                <span className="lead-avatar" aria-hidden>{initials}</span>
+                                <span
+                                  className={`lead-pulse lead-pulse--${pulseLevel}`}
+                                  role="img"
+                                  aria-label={pulseLabel}
+                                  title={pulseLabel}
+                                />
+                                <Link href={`/agents/dashboard/leads/${lead.id}`}>{leadDisplayName(lead)}</Link>
+                              </span>
                             </td>
                             <td className="lead-status">
                               <span className="lead-status__pills">
@@ -414,12 +511,25 @@ export default async function AgentLeadsPage({
               <ul className="leads-mobile-cards" aria-label="Leads list">
                 {leads.map((lead) => {
                   const recency = getLeadRecency(lead);
+                  const pulseLevel = getLeadPulse(lead, {
+                    lastFavoriteAt: lead.clerk_id ? lastFavoriteByClerkId[lead.clerk_id] : undefined,
+                    lastSavedSearchAt: lead.clerk_id ? lastSavedSearchByClerkId[lead.clerk_id] : undefined,
+                  });
+                  const pulseLabel = getLeadPulseLabel(pulseLevel);
+                  const initials = getLeadInitials(lead);
                   return (
-                    <li key={lead.id} className="leads-mobile-card">
+                    <li key={lead.id} className={`leads-mobile-card${lead.clerk_id ? ' lead-card--client' : ''}`}>
                       <Link href={`/agents/dashboard/leads/${lead.id}`} className="leads-mobile-card__link" aria-label={`View ${leadDisplayName(lead)}`}>
                         <div className="leads-mobile-card__header">
+                          <span className="lead-avatar" aria-hidden>{initials}</span>
                           <span className="leads-mobile-card__name">{leadDisplayName(lead)}</span>
                           <span className="leads-mobile-card__pills">
+                            <span
+                              className={`lead-pulse lead-pulse--${pulseLevel}`}
+                              role="img"
+                              aria-label={pulseLabel}
+                              title={pulseLabel}
+                            />
                             {lead.clerk_id ? (
                               <span className="lead-badge lead-badge--client">Client</span>
                             ) : (
@@ -526,7 +636,7 @@ export default async function AgentLeadsPage({
               <p>
                 {q
                   ? `No leads match "${q}". Try a different search or clear the search.`
-                  : 'No leads assigned to you yet.'}
+                  : 'No leads assigned to you yet. When leads are assigned to you, they’ll appear here.'}
               </p>
               <Link href={q || statusFilter !== 'all' || sourceFilter ? buildUrl({ page: 1, q: '', status: 'all', source: '' }) : '/agents/dashboard'} className="button button--outline" style={{ marginTop: '0.5rem' }}>
                 {q || statusFilter !== 'all' || sourceFilter ? 'Clear filters' : 'Back to dashboard'}
