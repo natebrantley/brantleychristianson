@@ -75,7 +75,7 @@ function normalizePayload(payload: unknown): NormalizedEvent[] {
   const sub = obj.subscriber;
   const emailFromSub =
     sub && typeof sub === 'object' && typeof (sub as Record<string, unknown>).email === 'string'
-      ? (sub as Record<string, unknown>).email
+      ? (sub as Record<string, unknown>).email as string
       : '';
   const email = (emailFromRoot || emailFromSub || '').trim().toLowerCase();
   if (type && email) out.push({ type, email });
