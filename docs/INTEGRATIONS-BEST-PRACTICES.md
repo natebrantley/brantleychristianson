@@ -26,7 +26,9 @@
 | Anon + Clerk JWT for user-scoped | ✅ | `createClerkSupabaseClient()` for dashboard and favorites/saved-searches APIs. |
 | Migrations in version control | ✅ | `supabase/migrations/`; apply via CLI push or Supabase GitHub integration. |
 | GitHub integration | Optional | Project Settings → Integrations → GitHub: auto-deploy on push to production branch; optional preview branches for PRs. |
-| RLS | Optional | Off by default; enable with policies when Clerk JWT template is configured (see SUPABASE.md). |
+| RLS | Optional | `saved_searches` and `favorites` have RLS in migration 20260310000001. Optional migrations 20260313000000 (users) and 20260313000001 (leads) enable RLS site-wide when Clerk JWT template is configured. **Requirement:** Set `CLERK_JWT_TEMPLATE_SUPABASE=supabase` (and configure the template in Clerk) so every request using `createClerkSupabaseClient()` sends a token Supabase accepts for `authenticated` role. |
+
+**RLS site-wide:** All user-scoped reads use `createClerkSupabaseClient()` (dashboard pages, `/api/favorites`, `/api/saved-searches`). With RLS enabled on `users`, `leads`, `favorites`, and `saved_searches`, set `CLERK_JWT_TEMPLATE_SUPABASE=supabase` in every environment (local and Vercel) so those requests get the correct JWT. Service role (webhooks, `/api/me/agent`, cron) bypasses RLS.
 
 **Leverage:** Run migrations after schema changes (`npm run supabase:push` or GitHub integration). Use Table Editor or SQL for one-off fixes; use migrations for repeatable schema.
 
@@ -85,7 +87,7 @@
 ## 7. Checklist: “Fully leveraging” each integration
 
 - **Clerk:** Webhook enabled (user.created/updated/deleted); sign-in sync in place; optional JWT template if RLS desired; public metadata `role` for agent/broker/lender.
-- **Supabase:** All migrations applied (CLI or GitHub); `users` role constraint includes agent/broker/lender/user; optional RLS + Clerk JWT template when ready.
+- **Supabase:** All migrations applied (CLI or GitHub); `users` role constraint includes agent/broker/lender/user; **for RLS site-wide:** apply optional migrations 20260313000000 (users) and 20260313000001 (leads), set `CLERK_JWT_TEMPLATE_SUPABASE=supabase` everywhere, and configure Clerk JWT template (see SUPABASE.md).
 - **MailerLite:** Consultation uses token + optional group; optional Clerk webhook vars to add sign-ups to same group; MailerLite webhook configured so opt-outs update `users.marketing_opt_in`.
 - **Repliers:** Webhook URL configured; cron on 12h; optional Repliers env so Clerk creates client and sets `repliers_client_id`.
 - **Vercel:** Required env set for Production (and Preview if needed); cron runs; no secrets in client env.

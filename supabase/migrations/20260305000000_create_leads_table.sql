@@ -11,6 +11,22 @@ create table if not exists public.leads (
   updated_at timestamptz default now()
 );
 
+-- Repair: if leads was created with a different schema, add missing columns so indexes can be created
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'leads') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'leads' AND column_name = 'email') THEN
+      ALTER TABLE public.leads ADD COLUMN email text DEFAULT '' NOT NULL;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'leads' AND column_name = 'clerk_id') THEN
+      ALTER TABLE public.leads ADD COLUMN clerk_id text;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'leads' AND column_name = 'assigned_broker_id') THEN
+      ALTER TABLE public.leads ADD COLUMN assigned_broker_id text;
+    END IF;
+  END IF;
+END $$;
+
 create index if not exists leads_email_idx on public.leads (email);
 create index if not exists leads_clerk_id_idx on public.leads (clerk_id) where clerk_id is not null;
 create index if not exists leads_assigned_broker_id_idx on public.leads (assigned_broker_id) where assigned_broker_id is not null;

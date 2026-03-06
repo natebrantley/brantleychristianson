@@ -175,6 +175,18 @@ Same pattern applies to **saved_searches** (replace table name and use `clerk_id
 
 Webhooks and server-only admin code use `supabaseAdmin()` (service role), which bypasses RLS. Only requests that use `createClerkSupabaseClient()` and the Clerk token are subject to these policies.
 
+**6. RLS site-wide (maximize integration)**
+
+| Table | RLS | Who can access (with Clerk JWT) |
+|-------|-----|---------------------------------|
+| **users** | Optional migration 20260313000000 | Authenticated: read/update own row (`clerk_id = sub`) |
+| **leads** | Optional migration 20260313000001 | Authenticated: read rows where `clerk_id = sub` (own) or `assigned_broker_id = sub` (assigned to broker) |
+| **favorites** | In 20260310000001 | Authenticated: all operations on own rows (`clerk_id = sub`) |
+| **saved_searches** | In 20260310000001 | Authenticated: all operations on own rows (`clerk_id = sub`) |
+| **listings** | No RLS | Public read or admin; no user-scoped RLS |
+
+To leverage RLS everywhere: (1) Configure Clerk JWT template "supabase" and set `CLERK_JWT_TEMPLATE_SUPABASE=supabase` in `.env.local` and Vercel. (2) Apply migrations 20260313000000 and 20260313000001 (`npm run supabase:push` or Supabase GitHub integration). Then every dashboard page and `/api/favorites` / `/api/saved-searches` request uses the same JWT and is restricted by these policies.
+
 **Note:** Clerk now recommends Supabase’s native third-party auth (Clerk as IdP) for new setups. The JWT template approach above is still valid for this app’s “Clerk token as Bearer to Supabase” flow. See [Clerk + Supabase](https://clerk.com/docs/guides/development/integrations/databases/supabase) and [Supabase RLS](https://supabase.com/docs/guides/auth/row-level-security).
 
 ## 5. Realtime
