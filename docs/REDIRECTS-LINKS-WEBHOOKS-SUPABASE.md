@@ -125,8 +125,8 @@ No user-controlled internal `href`; all from config or static data.
 | Aspect | Detail |
 |--------|--------|
 | **Verification** | `Signature` header, HMAC-SHA256 with `MAILERLITE_WEBHOOK_SECRET`. |
-| **Events** | `subscriber.unsubscribed`, `subscriber.bounced`, `subscriber.spam_reported`, `subscriber.deleted`. |
-| **Action** | Set `users.marketing_opt_in = false` where `users.email` matches subscriber email. |
+| **Events** | Opt-out: `subscriber.unsubscribed`, `subscriber.bounced`, `subscriber.spam_reported`, `subscriber.deleted`. Opt-in: `subscriber.created`, `subscriber.updated`, `subscriber.added_to_group`, `subscriber.active`. |
+| **Action** | Opt-out → `users.marketing_opt_in = false`, `leads.opted_in_email = 'false'`. Opt-in → `true`/`'true'`. Match by email (single and batched payloads). See `docs/WEBHOOK-MAILERLITE.md`. |
 | **Env** | `MAILERLITE_WEBHOOK_SECRET` required. Uses `supabaseAdmin()`. |
 
 ### 3.3 Repliers – `POST /api/webhooks/repliers`
@@ -206,5 +206,5 @@ Clerk webhook does **not** use `@/lib/supabase`; it creates its own Supabase cli
 |----------|--------|------------|---------|
 | `/api/webhooks/clerk` | POST | `CLERK_WEBHOOK_SECRET` | User lifecycle → Supabase (and optional MailerLite/Repliers). |
 | `/api/webhooks/clerk` | GET | — | Health; no secrets. |
-| `/api/webhooks/mailerlite` | POST | `MAILERLITE_WEBHOOK_SECRET` | Unsubscribe/bounce/spam/delete → `users.marketing_opt_in = false`. |
+| `/api/webhooks/mailerlite` | POST | `MAILERLITE_WEBHOOK_SECRET` | Subscriber events → `users.marketing_opt_in` and `leads.opted_in_email` (opt-in/opt-out). See `docs/WEBHOOK-MAILERLITE.md`. |
 | `/api/webhooks/repliers` | POST | `REPLIERS_WEBHOOK_SECRET` | Listing events → upsert `listings`; idempotent via `webhook_events`. |
