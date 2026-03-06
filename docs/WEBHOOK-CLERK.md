@@ -2,7 +2,7 @@
 
 Handles Clerk user lifecycle: syncs **user.created** / **user.updated** to Supabase `users`, optionally to MailerLite (on create only), and links **leads** by email. On **user.deleted**, removes the user from Supabase.
 
-**Sign-in sync:** If a user signs in and has no row in Supabase (e.g. webhook missed or not yet run), the app syncs them on first access. When they hit `/dashboard` or any of `/clients/dashboard`, `/agents/dashboard`, or `/lenders/dashboard`, the server ensures their Clerk user is upserted into `public.users` (see `src/lib/sync-clerk-user.ts`). So Clerk sign-ins are always reflected in Supabase even when the webhook is delayed or failed.
+**Sign-in sync:** On every visit to `/dashboard` or to `/clients/dashboard`, `/agents/dashboard`, or `/lenders/dashboard`, the server runs `ensureUserInSupabase(clerkUser)` (see `src/lib/sync-clerk-user.ts`), so Clerk is the source of truth for role. If the webhook missed a **user.updated** (e.g. when an admin sets role to agent in Clerk), the next dashboard load will sync the role and the user will be redirected to the correct dashboard.
 
 ## Environment variables
 
@@ -61,6 +61,27 @@ The webhook reads **Public metadata** from the Clerk user and syncs it to Supaba
 If role is set in Clerk but stays `user` in Supabase, the webhook may be failing (check Clerk → Webhooks → Message Attempts) or the metadata key might be different (e.g. `userRole` instead of `role`). The webhook only looks for `public_metadata.role`.
 
 **Fallback:** If `public_metadata.role` is missing but the user’s primary email domain is `@brantleychristianson.com`, the webhook sets `role` to `agent` so team emails always get agent access. To fix existing rows that were synced before metadata or fallback existed, run the migration `20260307000000_backfill_agent_role_by_domain.sql` in the Supabase SQL Editor (or `supabase db push`).
+
+## Clerk + Supabase role sync troubleshooting
+
+If a user is set to **agent** (or broker/lender) in Clerk but still sees the **client dashboard**:
+
+1. **Confirm role in Clerk**  
+   In Clerk Dashboard → Users → that user → **Public metadata** → ensure key `role` (string) is set to `agent`, `broker`, or `lender`. Save if you change it.
+
+2. **Trigger a sync**  
+   The app syncs role from Clerk to Supabase on every visit to `/dashboard` and to each dashboard page. Have the user open **`/dashboard`** once (e.g. click "Dashboard" in the nav or go to `/dashboard`). That request runs `ensureUserInSupabase(clerkUser)` and updates `public.users.role` from Clerk. No sign-out is required.
+
+3. **Check Supabase**  
+   In Supabase → Table Editor → **users**, find the row with that user's `clerk_id`. The **role** column should now be `agent` (or `broker`/`lender`). If it is still `user`, go to step 4.
+
+4. **If role is still wrong**  
+   - In **Clerk** → Webhooks → your endpoint → **Message Attempts**, check for failed **user.updated** attempts when you changed the role. Fix any env or schema errors (see Runbook above).  
+   - Confirm the app is calling the sync: in `src/app/dashboard/page.tsx` and each dashboard page, the code calls `ensureUserInSupabase(clerkUser)` when the user is signed in.  
+   - Ensure the webhook uses the **service role** key (it does via `createSupabaseAdmin()`); RLS does not block the webhook.
+
+5. **Optional logging**  
+   In Vercel Logs, look for `Clerk webhook: role resolved` when the webhook runs, and for any `Could not sync Clerk user to Supabase` warnings when the user hits `/dashboard`.
 
 ## See also
 

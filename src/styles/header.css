@@ -244,6 +244,13 @@
     border-color: rgba(255, 255, 255, 0.7);
     background: rgba(255, 255, 255, 0.08);
   }
+
+  /* Center Clerk UserButton account menu on mobile (popover is in a portal) */
+  .clerk-user-button-popover {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+  }
 }
 
 @media (min-width: 1024px) {

@@ -1,26 +1,36 @@
 import { redirect } from 'next/navigation';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
+import { createClerkSupabaseClient, formatSupabaseError, supabaseAdmin } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
-import { getAgentBySlug } from '@/data/agents';
-import { getLenderBySlug } from '@/data/lenders';
-import { getBrokerDisplayNamesByClerkId, resolveLeadAssignedAgentName } from '@/lib/broker-names';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Agent dashboard',
-  description: 'Pipeline, leads, and client management for BCRE agents.',
+  description: 'Assigned leads, their activity, and saved searches. BCRE agent dashboard.',
 };
 
 type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
-type LeadRow = { id: string; email: string; created_at: string; assigned_broker_id?: string | null; agent?: string | null };
+type LeadRow = {
+  id: string;
+  email: string;
+  created_at: string;
+  assigned_broker_id?: string | null;
+  agent?: string | null;
+  clerk_id?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  last_login?: string | null;
+  property_views?: number | null;
+  property_inquiries?: number | null;
+};
+type SavedSearchRow = { id: string; clerk_id: string; name: string | null; criteria: Record<string, unknown>; created_at: string };
 
 function formatLeadDate(iso: string): string {
   try {
@@ -28,6 +38,22 @@ function formatLeadDate(iso: string): string {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   } catch {
     return iso;
+  }
+}
+
+function formatLastActive(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch {
+    return '—';
   }
 }
 
@@ -40,10 +66,18 @@ export default async function AgentsDashboardPage() {
 
   let user: AgentUser | null = null;
   let leads: LeadRow[] = [];
-  let leadsCount = 0;
-  let brokerNamesByClerkId = new Map<string, string>();
+  let savedSearches: SavedSearchRow[] = [];
 
   try {
+    const clerkUser = await currentUser();
+    if (clerkUser) {
+      try {
+        await ensureUserInSupabase(clerkUser);
+      } catch (clerkErr) {
+        console.warn('Could not sync Clerk user to Supabase:', (clerkErr as Error)?.message ?? clerkErr);
+      }
+    }
+
     const supabase = await createClerkSupabaseClient();
 
     const [userRes, leadsRes] = await Promise.all([
@@ -54,10 +88,10 @@ export default async function AgentsDashboardPage() {
         .maybeSingle(),
       supabase
         .from('leads')
-        .select('id, email, created_at, assigned_broker_id, agent')
-        .or(`assigned_broker_id.eq.${userId},assigned_broker_id.is.null`)
+        .select('id, email, created_at, assigned_broker_id, agent, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
+        .eq('assigned_broker_id', userId)
         .order('created_at', { ascending: false })
-        .limit(20),
+        .limit(50),
     ]);
 
     if (userRes.error) {
@@ -65,24 +99,23 @@ export default async function AgentsDashboardPage() {
     }
     user = userRes.data ?? null;
 
-    // If no row in Supabase, sync from Clerk so future requests see the user
-    if (!user && !userRes.error) {
-      try {
-        const clerkUser = await currentUser();
-        if (clerkUser) await ensureUserInSupabase(clerkUser);
-      } catch (clerkErr) {
-        console.warn('Could not fetch Clerk user for sync:', (clerkErr as Error)?.message ?? clerkErr);
-      }
-    }
-
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       leads = leadsRes.data as LeadRow[];
-      leadsCount = leadsRes.data.length;
     }
 
-    const brokerIds = leads.map((l) => l.assigned_broker_id).filter(Boolean) as string[];
-    if (brokerIds.length > 0) {
-      brokerNamesByClerkId = await getBrokerDisplayNamesByClerkId(supabase, brokerIds);
+    // Saved searches for assigned leads who have signed in (clerk_id set) — use admin to bypass RLS
+    const clientClerkIds = leads.map((l) => l.clerk_id).filter(Boolean) as string[];
+    if (clientClerkIds.length > 0) {
+      const admin = supabaseAdmin();
+      const { data: searches } = await admin
+        .from('saved_searches')
+        .select('id, clerk_id, name, criteria, created_at')
+        .in('clerk_id', clientClerkIds)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (Array.isArray(searches)) {
+        savedSearches = searches as SavedSearchRow[];
+      }
     }
   } catch (err) {
     console.error('Unexpected error loading agent dashboard:', { userId, ...formatSupabaseError(err) });
@@ -119,17 +152,29 @@ export default async function AgentsDashboardPage() {
     ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null
     : null;
 
-  const agentContact = user?.assigned_broker_id ? getAgentBySlug(user.assigned_broker_id) : null;
-  const preferredLender = user?.assigned_lender_id ? getLenderBySlug(user.assigned_lender_id) : null;
+  // Assigned leads only; clients = those with clerk_id (signed in)
+  const assignedLeadsCount = leads.length;
+  const activeClientsCount = leads.filter((l) => l.clerk_id).length;
+
+  function leadDisplayName(lead: LeadRow): string {
+    const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ').trim();
+    return name || lead.email || '—';
+  }
+
+  // Map clerk_id → lead display name for saved searches
+  const clerkIdToName = new Map<string, string>();
+  leads.forEach((l) => {
+    if (l.clerk_id) clerkIdToName.set(l.clerk_id, leadDisplayName(l));
+  });
 
   return (
     <main className="dashboard-page">
       <Hero
         variant="short"
         title="Agent dashboard"
-        lead="Pipeline, leads, and client management."
+        lead="Your assigned leads, their activity, and saved searches."
         imageSrc={`${assetPaths.stock}/table.jpeg`}
-        imageAlt="Agent dashboard – pipeline and leads"
+        imageAlt="Agent dashboard – assigned leads and activity"
       />
       <div className="section">
         <div className="container stack--lg">
@@ -140,196 +185,63 @@ export default async function AgentsDashboardPage() {
                 <h1 className="section-title">
                   {displayName ? `Hi, ${displayName.split(' ')[0]}` : 'Dashboard'}
                 </h1>
-              {displayName && (
-                <p className="section-lead">
-                  Signed in as <strong>{displayName}</strong>
-                  {user?.email ? ` (${user.email})` : ''}
-                </p>
-              )}
-              {!displayName && (
-                <p className="section-lead">
-                  Your profile is syncing from Clerk. Refresh in a moment.
-                </p>
-              )}
-            </div>
-            <span
-              className="text--muted"
-              style={{ fontSize: '0.8125rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}
-              title="Synced from Clerk (Public metadata role)"
-            >
-              Role: {user?.role ?? '—'}
-            </span>
-          </div>
-        </header>
-
-        {/* Your agent contact (e.g. team lead) */}
-        <section className="dashboard-section" aria-labelledby="agent-contact-heading">
-          <h2 id="agent-contact-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
-            Your agent contact
-          </h2>
-          {agentContact ? (
-            <div className="card dashboard-contact-card">
-              <div style={{ flexShrink: 0 }}>
-                <Image
-                  src={agentContact.image}
-                  alt=""
-                  width={80}
-                  height={80}
-                  style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
-                />
-              </div>
-              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{agentContact.name}</p>
-                <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{agentContact.title}</p>
-                {(agentContact.phone || agentContact.email) && (
-                  <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
-                    {agentContact.phone && (
-                      <li style={{ marginTop: '0.25rem' }}>
-                        <span className="text--muted">Phone: </span>
-                        <a href={`tel:${agentContact.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
-                          {agentContact.phone}
-                        </a>
-                      </li>
-                    )}
-                    {agentContact.email && (
-                      <li style={{ marginTop: '0.25rem' }}>
-                        <span className="text--muted">Email: </span>
-                        <a href={`mailto:${agentContact.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
-                          {agentContact.email}
-                        </a>
-                      </li>
-                    )}
-                  </ul>
+                {displayName && (
+                  <p className="section-lead">
+                    Signed in as <strong>{displayName}</strong>
+                    {user?.email ? ` (${user.email})` : ''}
+                  </p>
                 )}
-                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
-                  {agentContact.phone && (
-                    <Button href={`tel:${agentContact.phone.replace(/\D/g, '')}`} variant="primary">
-                      Call {agentContact.name}
-                    </Button>
-                  )}
-                  <Button href={`mailto:${agentContact.email}`} variant="outline">
-                    Email
-                  </Button>
-                  <Button href={agentContact.url} variant="text">
-                    View profile
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="card">
-              <p style={{ margin: 0 }}>
-                Add a primary agent contact (e.g. team lead) for quick coordination. They&apos;ll appear here.
-              </p>
-              <div className="dashboard-actions">
-                <Button href="/agents" variant="primary">
-                  Choose agent contact
-                </Button>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* Preferred lender for easy contact */}
-        <section className="dashboard-section" aria-labelledby="preferred-lender-heading">
-          <h2 id="preferred-lender-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
-            Your preferred lender
-          </h2>
-          {preferredLender ? (
-            <div className="card dashboard-contact-card">
-              <div style={{ flexShrink: 0 }}>
-                <Image
-                  src={preferredLender.image}
-                  alt=""
-                  width={80}
-                  height={80}
-                  style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
-                />
-              </div>
-              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{preferredLender.name}</p>
-                <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{preferredLender.title} · {preferredLender.company}</p>
-                {(preferredLender.phone || preferredLender.email) && (
-                  <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
-                    {preferredLender.phone && (
-                      <li style={{ marginTop: '0.25rem' }}>
-                        <span className="text--muted">Phone: </span>
-                        <a href={`tel:${preferredLender.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
-                          {preferredLender.phone}
-                        </a>
-                      </li>
-                    )}
-                    {preferredLender.email && (
-                      <li style={{ marginTop: '0.25rem' }}>
-                        <span className="text--muted">Email: </span>
-                        <a href={`mailto:${preferredLender.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
-                          {preferredLender.email}
-                        </a>
-                      </li>
-                    )}
-                  </ul>
+                {!displayName && (
+                  <p className="section-lead">
+                    Your profile is syncing from Clerk. Refresh in a moment.
+                  </p>
                 )}
-                <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
-                  {preferredLender.phone && (
-                    <Button href={`tel:${preferredLender.phone.replace(/\D/g, '')}`} variant="primary">
-                      Call {preferredLender.name}
-                    </Button>
-                  )}
-                  <Button href={`mailto:${preferredLender.email}`} variant="outline">
-                    Email
-                  </Button>
-                  {preferredLender.url ? (
-                    <Button href={preferredLender.url} variant="text" target="_blank" rel="noopener noreferrer">
-                      Visit website
-                    </Button>
-                  ) : null}
-                </div>
               </div>
+              <span
+                className="text--muted"
+                style={{ fontSize: '0.8125rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}
+                title="Synced from Clerk (Public metadata role)"
+              >
+                Role: {user?.role ?? '—'}
+              </span>
             </div>
-          ) : (
-            <div className="card">
-              <p style={{ margin: 0 }}>
-                Add a preferred lender for quick contact when referring clients. They&apos;ll appear here.
-              </p>
-              <div className="dashboard-actions">
-                <Button href="/lenders" variant="primary">
-                  Choose preferred lender
-                </Button>
-              </div>
-            </div>
-          )}
-        </section>
+            <p className="section-lead" style={{ marginTop: '0.25rem' }}>
+              <a href="/dashboard" className="text--muted" style={{ fontSize: '0.875rem' }}>Refresh role from Clerk</a>
+            </p>
+          </header>
 
-        <section className="dashboard-section" aria-labelledby="overview-heading">
+        {/* Summary: assigned leads, active clients, saved searches */}
+        <section className="dashboard-section" aria-labelledby="pipeline-heading">
           <header className="dashboard-section-header stack--xs">
             <p className="section-tag">Overview</p>
-            <h2 id="overview-heading" className="section-title">Pipeline</h2>
+            <h2 id="pipeline-heading" className="section-title">Assigned leads & activity</h2>
             <p className="section-lead">
-              Leads assigned to you or unassigned. Client and consultation counts will sync from your CRM when connected.
+              Your assigned leads, their activity on the site, and saved searches they’ve created.
             </p>
           </header>
           <div className="dashboard-stats">
             <div className="dashboard-stat">
-              <div className="dashboard-stat-value">{leadsCount > 0 ? leadsCount : '—'}</div>
-              <div className="dashboard-stat-label">Leads (visible)</div>
+              <div className="dashboard-stat-value">{assignedLeadsCount > 0 ? assignedLeadsCount : '—'}</div>
+              <div className="dashboard-stat-label">Assigned to me</div>
             </div>
             <div className="dashboard-stat">
-              <div className="dashboard-stat-value">—</div>
+              <div className="dashboard-stat-value">{activeClientsCount > 0 ? activeClientsCount : '—'}</div>
               <div className="dashboard-stat-label">Active clients</div>
             </div>
             <div className="dashboard-stat">
-              <div className="dashboard-stat-value">—</div>
-              <div className="dashboard-stat-label">Consultations this month</div>
+              <div className="dashboard-stat-value">{savedSearches.length > 0 ? savedSearches.length : '—'}</div>
+              <div className="dashboard-stat-label">Client saved searches</div>
             </div>
           </div>
         </section>
 
+        {/* Assigned leads with activity */}
         <section className="dashboard-section" aria-labelledby="leads-heading">
           <header className="dashboard-section-header stack--xs">
             <p className="section-tag">Leads</p>
-            <h2 id="leads-heading" className="section-title">Recent leads</h2>
+            <h2 id="leads-heading" className="section-title">My assigned leads</h2>
             <p className="section-lead">
-              Incoming leads assigned to you or unassigned. Follow up from here or in your CRM.
+              Leads assigned to you. Activity reflects site usage (property views, inquiries, last login).
             </p>
           </header>
           {leads.length > 0 ? (
@@ -344,21 +256,40 @@ export default async function AgentsDashboardPage() {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: 500 }}>{lead.email}</span>
+                      <span style={{ fontWeight: 500 }}>{leadDisplayName(lead)}</span>
                       <span className="text--muted" style={{ fontSize: '0.875rem' }}>
                         {formatLeadDate(lead.created_at)}
                       </span>
                     </div>
-                    <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                      Assigned to: {resolveLeadAssignedAgentName(lead.assigned_broker_id, lead.agent, brokerNamesByClerkId)}
-                    </p>
+                    {lead.email && (
+                      <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
+                        {lead.email}
+                      </p>
+                    )}
+                    <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-md)', fontSize: '0.8125rem' }}>
+                      <span className="text--muted">Last active: {formatLastActive(lead.last_login)}</span>
+                      {(lead.property_views != null && lead.property_views > 0) && (
+                        <span className="text--muted">Views: {lead.property_views}</span>
+                      )}
+                      {(lead.property_inquiries != null && lead.property_inquiries > 0) && (
+                        <span className="text--muted">Inquiries: {lead.property_inquiries}</span>
+                      )}
+                      {lead.clerk_id && (
+                        <span style={{ fontWeight: 500 }}>Client</span>
+                      )}
+                    </div>
+                    {lead.phone && (
+                      <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
+                        <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a>
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
             </div>
           ) : (
             <div className="empty-state">
-              <p>Leads will appear here when assigned to you or when RLS allows. Connect your CRM or Repliers for full pipeline sync.</p>
+              <p>No leads assigned to you yet. Assigned leads will appear here with their activity and saved searches.</p>
               <Button href="/contact" variant="outline">
                 View contact form
               </Button>
@@ -366,17 +297,49 @@ export default async function AgentsDashboardPage() {
           )}
         </section>
 
-        <section className="dashboard-section" aria-labelledby="clients-heading">
+        {/* Client saved searches */}
+        <section className="dashboard-section" aria-labelledby="saved-searches-heading">
           <header className="dashboard-section-header stack--xs">
-            <p className="section-tag">Clients</p>
-            <h2 id="clients-heading" className="section-title">Active clients</h2>
+            <p className="section-tag">Searches</p>
+            <h2 id="saved-searches-heading" className="section-title">Client saved searches</h2>
             <p className="section-lead">
-              Clients you&apos;re working with—saved homes, searches, and next steps. CRM sync coming.
+              Saved searches created by your assigned clients. Use these to stay aligned on what they’re looking for.
             </p>
           </header>
-          <div className="empty-state">
-            <p>Active client cards will show here once linked. Use your CRM for now.</p>
-          </div>
+          {savedSearches.length > 0 ? (
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+              <ul className="stack--none" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {savedSearches.map((search) => (
+                  <li
+                    key={search.id}
+                    style={{
+                      padding: 'var(--space-md) var(--space-lg)',
+                      borderBottom: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <span style={{ fontWeight: 500 }}>{search.name || 'Untitled search'}</span>
+                      <span className="text--muted" style={{ fontSize: '0.875rem' }}>
+                        {formatLeadDate(search.created_at)}
+                      </span>
+                    </div>
+                    <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
+                      Client: {clerkIdToName.get(search.clerk_id) ?? '—'}
+                    </p>
+                    {search.criteria && typeof search.criteria === 'object' && Object.keys(search.criteria).length > 0 && (
+                      <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
+                        {JSON.stringify(search.criteria)}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <p>No saved searches from your clients yet. When assigned clients save a search on the site, it will appear here.</p>
+            </div>
+          )}
         </section>
 
         <section className="dashboard-section" aria-labelledby="marketing-heading">

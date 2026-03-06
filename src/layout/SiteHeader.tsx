@@ -96,6 +96,7 @@ export function SiteHeader() {
                     appearance={{
                       elements: {
                         avatarBox: 'nav-user-avatar',
+                        userButtonPopoverCard: 'clerk-user-button-popover',
                       },
                     }}
                   />

@@ -23,31 +23,28 @@ export default async function DashboardRouterPage() {
   let roleFromSupabase: string | null | undefined;
 
   try {
-    const supabase = await createClerkSupabaseClient();
-
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('clerk_id', userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error loading user for dashboard routing:', { userId, ...formatSupabaseError(error) });
+    const clerkUser = await currentUser();
+    // Always sync from Clerk so role is source of truth (fixes agents set in Clerk but still seeing client dashboard)
+    if (clerkUser) {
+      try {
+        const synced = await ensureUserInSupabase(clerkUser);
+        if (synced) roleFromSupabase = synced.role;
+      } catch (clerkErr) {
+        console.warn('Could not sync Clerk user to Supabase:', (clerkErr as Error)?.message ?? clerkErr);
+      }
     }
 
-    roleFromSupabase = user?.role;
-
-    // If no row in Supabase (e.g. webhook missed or user signed in before webhook ran), sync from Clerk now
-    if (!user && !error) {
-      try {
-        const clerkUser = await currentUser();
-        if (clerkUser) {
-          const synced = await ensureUserInSupabase(clerkUser);
-          if (synced) roleFromSupabase = synced.role;
-        }
-      } catch (clerkErr) {
-        console.warn('Could not fetch Clerk user for sync:', (clerkErr as Error)?.message ?? clerkErr);
+    if (roleFromSupabase === undefined) {
+      const supabase = await createClerkSupabaseClient();
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('clerk_id', userId)
+        .maybeSingle();
+      if (error) {
+        console.error('Error loading user for dashboard routing:', { userId, ...formatSupabaseError(error) });
       }
+      roleFromSupabase = user?.role;
     }
 
     if (isBrokerRole(roleFromSupabase)) {
@@ -60,7 +57,7 @@ export default async function DashboardRouterPage() {
     console.error('Unexpected error during dashboard routing:', { userId, ...formatSupabaseError(err) });
   }
 
-  // Fallback: if Supabase had no row or no special role, check Clerk public_metadata (e.g. before sync ran)
+  // Fallback: if sync failed or no special role in Supabase, check Clerk public_metadata
   let roleFromClerk: string | undefined;
   try {
     const clerkUser = await currentUser();

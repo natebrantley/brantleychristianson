@@ -40,6 +40,15 @@ export default async function ClientsDashboardPage() {
   let linkedLeads: { id: string; email: string; created_at: string }[] = [];
 
   try {
+    const clerkUser = await currentUser();
+    if (clerkUser) {
+      try {
+        await ensureUserInSupabase(clerkUser);
+      } catch (clerkErr) {
+        console.warn('Could not sync Clerk user to Supabase:', (clerkErr as Error)?.message ?? clerkErr);
+      }
+    }
+
     const supabase = await createClerkSupabaseClient();
     const [userRes, leadsRes] = await Promise.all([
       supabase
@@ -59,15 +68,6 @@ export default async function ClientsDashboardPage() {
       console.error('Error loading client user from Supabase:', { userId, ...formatSupabaseError(userRes.error) });
     }
     user = userRes.data ?? null;
-
-    if (!user && !userRes.error) {
-      try {
-        const clerkUser = await currentUser();
-        if (clerkUser) await ensureUserInSupabase(clerkUser);
-      } catch (clerkErr) {
-        console.warn('Could not fetch Clerk user for sync:', (clerkErr as Error)?.message ?? clerkErr);
-      }
-    }
 
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       linkedLeads = leadsRes.data as { id: string; email: string; created_at: string }[];
