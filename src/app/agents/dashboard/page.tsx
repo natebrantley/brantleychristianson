@@ -67,6 +67,7 @@ export default async function AgentsDashboardPage() {
   let user: AgentUser | null = null;
   let leads: LeadRow[] = [];
   let savedSearches: SavedSearchRow[] = [];
+  let totalAssignedCount = 0;
 
   try {
     const clerkUser = await currentUser();
@@ -80,7 +81,7 @@ export default async function AgentsDashboardPage() {
 
     const supabase = await createClerkSupabaseClient();
 
-    const [userRes, leadsRes] = await Promise.all([
+    const [userRes, leadsRes, countRes] = await Promise.all([
       supabase
         .from('users')
         .select('first_name, last_name, email, role, assigned_broker_id, assigned_lender_id')
@@ -91,7 +92,11 @@ export default async function AgentsDashboardPage() {
         .select('id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
         .eq('assigned_broker_id', userId)
         .order('created_at', { ascending: false })
-        .limit(50),
+        .limit(10),
+      supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .eq('assigned_broker_id', userId),
     ]);
 
     if (userRes.error) {
@@ -102,6 +107,8 @@ export default async function AgentsDashboardPage() {
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       leads = leadsRes.data as LeadRow[];
     }
+
+    totalAssignedCount = typeof countRes.count === 'number' ? countRes.count : 0;
 
     // Fallback: if no leads by Clerk ID, fetch by name/slug/email (legacy imports) and backfill
     const forFallback = user ?? (clerkUser ? { first_name: clerkUser.firstName, last_name: clerkUser.lastName, email: clerkUser.emailAddresses?.[0]?.emailAddress } : null);
@@ -122,12 +129,17 @@ export default async function AgentsDashboardPage() {
         .select('id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
         .in('assigned_broker_id', uniqWithCase)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(10);
 
       if (fallbackErr) {
         console.warn('Agent dashboard fallback query failed', { possibleIdsCount: uniqWithCase.length, error: fallbackErr.message });
       } else if (Array.isArray(fallbackLeads) && fallbackLeads.length > 0) {
         leads = fallbackLeads as LeadRow[];
+        const { count: fallbackCount } = await admin
+          .from('leads')
+          .select('*', { count: 'exact', head: true })
+          .in('assigned_broker_id', uniqWithCase);
+        totalAssignedCount = typeof fallbackCount === 'number' ? fallbackCount : leads.length;
         // Backfill so next load uses Clerk ID
         const idsToUpdate = (fallbackLeads as LeadRow[]).filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
         if (idsToUpdate.length > 0) {
@@ -188,7 +200,7 @@ export default async function AgentsDashboardPage() {
     : null;
 
   // Assigned leads only; clients = those with clerk_id (signed in)
-  const assignedLeadsCount = leads.length;
+  const assignedLeadsCount = totalAssignedCount;
   const activeClientsCount = leads.filter((l) => l.clerk_id).length;
 
   function leadDisplayName(lead: LeadRow): string {
@@ -273,11 +285,25 @@ export default async function AgentsDashboardPage() {
         {/* Assigned leads with activity */}
         <section className="dashboard-section" aria-labelledby="leads-heading">
           <header className="dashboard-section-header stack--xs">
-            <p className="section-tag">Leads</p>
-            <h2 id="leads-heading" className="section-title">My assigned leads</h2>
-            <p className="section-lead">
-              Leads assigned to you. Activity reflects site usage (property views, inquiries, last login).
-            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.5rem' }}>
+              <div>
+                <p className="section-tag">Leads</p>
+                <h2 id="leads-heading" className="section-title">My assigned leads</h2>
+                <p className="section-lead">
+                  Leads assigned to you. Activity reflects site usage (property views, inquiries, last login).
+                  {assignedLeadsCount > 10 && (
+                    <span style={{ display: 'block', marginTop: '0.25rem' }}>
+                      Showing 10 most recent of {assignedLeadsCount} — <a href="/agents/dashboard/leads">See all leads</a>
+                    </span>
+                  )}
+                </p>
+              </div>
+              {assignedLeadsCount > 0 && (
+                <a href="/agents/dashboard/leads" className="button button--primary" style={{ whiteSpace: 'nowrap' }}>
+                  See all leads
+                </a>
+              )}
+            </div>
           </header>
           {leads.length > 0 ? (
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
