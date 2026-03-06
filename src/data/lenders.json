@@ -70,5 +70,23 @@
     "address": "17911 Von Karman Ave Suite 400\nIrvine, CA 92614",
     "bio": "Executive Branch Manager with West Capital Lending. Licensed in California (DRE) and NMLS. Direct: (949) 620-6623, Cell: (360) 448-3100.",
     "languages": ["English"]
+  },
+  {
+    "name": "Caty Jacobo",
+    "slug": "caty-jacobo",
+    "title": "Mortgage Loan Originator",
+    "company": "Barrett Financial Group, LLC",
+    "logo": "/media/img/logos/barrett.png",
+    "nmls": "NMLS #1501131",
+    "co_nmls": "Co. NMLS #181106",
+    "phone": "(503) 422-8883",
+    "email": "Catyj@BarrettFinancial.com",
+    "image": "/media/img/lenders/caty.jpg",
+    "url": "https://www.barrettfinancial.com",
+    "licenses": ["OR", "AZ"],
+    "specialties": ["Purchase Loans", "Refinancing", "Mortgage Loan Originator"],
+    "address": "2701 East Insight Way, Suite 150\nChandler, AZ 85280",
+    "bio": "Mortgage Loan Originator with Barrett Financial Group. Bilingual (English & Spanish). Dedicated to helping borrowers find the right home loan.",
+    "languages": ["English", "Spanish"]
   }
 ]
