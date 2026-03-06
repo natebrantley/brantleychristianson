@@ -50,3 +50,24 @@ Matching is by **email** (lowercased). If no row is found, the update is a no-op
 ## Health check
 
 **GET /api/webhooks/mailerlite** returns `{ status: "ok", webhook: "mailerlite", env: "configured" }` when `MAILERLITE_WEBHOOK_SECRET` is set, or 503 otherwise. It does not expose the secret.
+
+---
+
+## Pushing public.leads to MailerLite
+
+To sync **Supabase public.leads** into MailerLite as subscribers (e.g. after an import):
+
+- **Endpoint:** `GET /api/cron/sync-leads-to-mailerlite`
+- **Auth:** Same as other cron routes: `Authorization: Bearer <CRON_SECRET>` or Vercel Cron (`x-vercel-cron: 1`).
+- **Env:** `MAILERLITE_API_TOKEN` (required; same as consultation form), optional `MAILERLITE_GROUP_ID`, and `CRON_SECRET` for manual runs.
+
+**Behavior:** Reads leads from `public.leads` (up to 500 by default, or `?limit=200` up to 2000), then POSTs each to MailerLite `POST /subscribers`. MailerLite upserts by email (create or update). Fields sent: name, last_name, first_name, phone, city, state, zip, source, address, agent. If `opted_in_email` is false / "Opted Out", the subscriber is sent with `status: unsubscribed`.
+
+**Manual run (bash / Git Bash):**  
+`curl -H "Authorization: Bearer YOUR_CRON_SECRET" "https://your-domain.com/api/cron/sync-leads-to-mailerlite?limit=200"`
+
+**Manual run (PowerShell):**  
+`Invoke-RestMethod -Uri "https://your-domain.com/api/cron/sync-leads-to-mailerlite?limit=200" -Headers @{ Authorization = "Bearer YOUR_CRON_SECRET" }`  
+You must include the word **Bearer** and a space before the secret. Replace `YOUR_CRON_SECRET` with your actual `CRON_SECRET` value. If the route is not deployed yet, you’ll get HTML (404) instead of JSON; deploy first, then run.
+
+**Optional:** Add a Vercel Cron schedule (e.g. daily) in `vercel.json` to keep MailerLite in sync with new leads.
