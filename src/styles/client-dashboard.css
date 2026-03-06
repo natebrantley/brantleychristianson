@@ -216,6 +216,25 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
+@media (max-width: 599px) {
+  .client-dashboard__list-item {
+    min-height: 48px;
+    align-items: center;
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+
+  .client-dashboard__list-card {
+    margin-inline: 0;
+    max-width: none;
+  }
+
+  .client-dashboard__quick-actions .button {
+    min-height: 48px;
+    padding: var(--space-md) var(--space-lg);
+  }
+}
+
 .client-dashboard__list-item:last-child {
   border-bottom: none;
 }

@@ -160,7 +160,30 @@
   margin-top: var(--space-md);
 }
 
+/* Touch-friendly buttons and links on mobile */
+@media (max-width: 599px) {
+  .dashboard-page .dashboard-actions .button,
+  .dashboard-page .dashboard-section-header a.button {
+    min-height: 48px;
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .dashboard-section .card {
+    padding: var(--space-md) var(--space-lg);
+    overflow-x: hidden;
+  }
+
+  .dashboard-stat {
+    padding: var(--space-md) var(--space-lg);
+    min-height: 0;
+  }
+}
+
 /* ========== Dashboard page: mobile-first, center alignment ========== */
+.dashboard-page main {
+  overflow-x: hidden;
+}
+
 .dashboard-page .section .container {
   text-align: center;
 }
@@ -218,9 +241,17 @@
   }
 }
 
-/* Lead/list rows: keep left-aligned for readability */
+/* Lead/list rows: keep left-aligned for readability; touch-friendly on mobile */
 .dashboard-page .card ul[class*="stack--none"] {
   text-align: left;
+}
+
+@media (max-width: 599px) {
+  .dashboard-page .card ul[class*="stack--none"] li {
+    min-height: 48px;
+    padding-top: var(--space-md);
+    padding-bottom: var(--space-md);
+  }
 }
 
 /* Marketing/next-steps cards: center content on mobile */

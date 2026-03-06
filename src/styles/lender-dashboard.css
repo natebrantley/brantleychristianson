@@ -113,6 +113,24 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
+@media (max-width: 599px) {
+  .lender-dashboard__list-item {
+    padding: var(--space-md) 0;
+    min-height: 48px;
+    align-items: center;
+  }
+
+  .lender-dashboard__list-card {
+    margin-inline: 0;
+    max-width: none;
+  }
+
+  .lender-dashboard__quick-actions .button {
+    min-height: 48px;
+    padding: var(--space-md) var(--space-lg);
+  }
+}
+
 .lender-dashboard__list-item:last-child {
   border-bottom: none;
 }
