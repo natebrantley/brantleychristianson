@@ -79,10 +79,12 @@ export default async function LeadDetailPage({
       notFound();
     }
     if (!lead) {
-      // Rescue: lead may have assigned_broker_id = email/name/slug; backfill then refetch
-      if (clerkUser) {
-        const fullName = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ').trim();
-        const email = clerkUser.emailAddresses?.[0]?.emailAddress ?? '';
+      // Rescue: lead may have assigned_broker_id = email/name/slug (legacy), or null (unassigned).
+      // Use fresh currentUser for possibleIds in case of stale closure.
+      const currentClerkUser = await currentUser();
+      if (currentClerkUser) {
+        const fullName = [currentClerkUser.firstName, currentClerkUser.lastName].filter(Boolean).join(' ').trim();
+        const email = currentClerkUser.emailAddresses?.[0]?.emailAddress ?? '';
         const slug = getAgentSlugByEmail(email);
         const possibleIds: string[] = [userId];
         if (email) possibleIds.push(String(email).trim());
@@ -97,7 +99,11 @@ export default async function LeadDetailPage({
           .eq('id', id)
           .maybeSingle();
         const assignedTrimmed = rescueRow?.assigned_broker_id?.trim();
-        if (rescueRow && assignedTrimmed && (uniqWithCase.has(assignedTrimmed) || uniqWithCase.has(assignedTrimmed.toLowerCase()))) {
+        const isLegacyMatch =
+          assignedTrimmed &&
+          (uniqWithCase.has(assignedTrimmed) || uniqWithCase.has(assignedTrimmed.toLowerCase()));
+        const isUnassigned = rescueRow && !assignedTrimmed;
+        if (rescueRow && (isLegacyMatch || isUnassigned)) {
           await admin.from('leads').update({ assigned_broker_id: userId }).eq('id', id);
           const { data: refetched } = await supabase
             .from('leads')
