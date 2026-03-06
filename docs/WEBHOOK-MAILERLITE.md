@@ -8,8 +8,8 @@ The MailerLite webhook at **POST /api/webhooks/mailerlite** keeps Supabase in sy
    Set `MAILERLITE_WEBHOOK_SECRET` in Vercel (and `.env.local` for local testing). Use the **Secret** from MailerLite: Integrations → Webhooks → your webhook → Manage → Secret.
 
 2. **URL**  
-   In MailerLite: Integrations → Webhooks → Generate webhook (or edit existing).  
-   URL: `https://your-domain.com/api/webhooks/mailerlite`  
+   In MailerLite: Integrations → Webhooks → Create/Generate webhook.  
+   **Endpoint URL:** `https://brantleychristianson.com/api/webhooks/mailerlite`  
    (Local: use ngrok or similar and point MailerLite to that URL.)
 
 3. **Events to subscribe**  
@@ -24,7 +24,10 @@ The MailerLite webhook at **POST /api/webhooks/mailerlite** keeps Supabase in sy
    | **subscriber.unsubscribed** | `users.marketing_opt_in = false`, `leads.opted_in_email = 'false'` |
    | **subscriber.bounced** | Same |
    | **subscriber.spam_reported** | Same |
-   | **subscriber.deleted** | Same (use batchable: true if required by MailerLite) |
+   | **subscriber.deleted** | Same |
+   | **subscriber.form_submitted** | Same (opt-in) |
+
+   **Event batching:** Enable "Enable event batching" in the webhook so MailerLite can send batched payloads; the handler supports both single and batched events.
 
    Optional (no DB change): subscriber.removed_from_group, subscriber.automation_triggered, subscriber.automation_completed, campaign.sent, campaign.open, campaign.click.
 
@@ -64,10 +67,10 @@ To sync **Supabase public.leads** into MailerLite as subscribers (e.g. after an 
 **Behavior:** Reads leads from `public.leads` (up to 500 by default, or `?limit=200` up to 2000), then POSTs each to MailerLite `POST /subscribers`. MailerLite upserts by email (create or update). Fields sent: name, last_name, first_name, phone, city, state, zip, source, address, agent. If `opted_in_email` is false / "Opted Out", the subscriber is sent with `status: unsubscribed`.
 
 **Manual run (bash / Git Bash):**  
-`curl -H "Authorization: Bearer YOUR_CRON_SECRET" "https://your-domain.com/api/cron/sync-leads-to-mailerlite?limit=200"`
+`curl -H "Authorization: Bearer YOUR_CRON_SECRET" "https://brantleychristianson.com/api/cron/sync-leads-to-mailerlite?limit=500"`
 
 **Manual run (PowerShell):**  
-`Invoke-RestMethod -Uri "https://your-domain.com/api/cron/sync-leads-to-mailerlite?limit=200" -Headers @{ Authorization = "Bearer YOUR_CRON_SECRET" }`  
+`Invoke-RestMethod -Uri "https://brantleychristianson.com/api/cron/sync-leads-to-mailerlite?limit=500" -Headers @{ Authorization = "Bearer YOUR_CRON_SECRET" }`  
 You must include the word **Bearer** and a space before the secret. Replace `YOUR_CRON_SECRET` with your actual `CRON_SECRET` value. If the route is not deployed yet, you’ll get HTML (404) instead of JSON; deploy first, then run.
 
-**Optional:** Add a Vercel Cron schedule (e.g. daily) in `vercel.json` to keep MailerLite in sync with new leads.
+**Automated:** Vercel Cron runs this every hour (see `vercel.json`).

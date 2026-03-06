@@ -24,6 +24,7 @@ const OPT_IN_EVENTS = new Set([
   'subscriber.updated',
   'subscriber.added_to_group',
   'subscriber.active',
+  'subscriber.form_submitted',
 ]);
 
 function verifySignature(rawBody: string, signature: string, secret: string): boolean {
