@@ -10,6 +10,7 @@ import { assetPaths } from '@/config/theme';
 import { getAgentBySlug, getAgentByEmail } from '@/data/agents';
 import { getLenderBySlug, getLenderByEmail } from '@/data/lenders';
 import { getBrokerDisplayNamesByClerkId, resolveLeadAssignedAgentName } from '@/lib/broker-names';
+import { LEADS_SELECT_LENDER } from '@/lib/leads-fields';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -55,7 +56,7 @@ export default async function LendersDashboardPage() {
         .maybeSingle(),
       supabase
         .from('leads')
-        .select('id, email_address, assigned_broker_id')
+        .select(LEADS_SELECT_LENDER)
         .eq('assigned_lender_id', userId)
         .limit(20),
     ]);

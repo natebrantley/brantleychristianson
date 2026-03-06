@@ -10,6 +10,12 @@
   text-align: center;
 }
 
+@media (min-width: 1280px) {
+  .client-dashboard__container {
+    max-width: 80rem;
+  }
+}
+
 /* Welcome block */
 .client-dashboard__welcome {
   text-align: center;
@@ -81,6 +87,12 @@
     grid-template-columns: repeat(2, 1fr);
     max-width: 720px;
     margin-inline: auto;
+  }
+}
+
+@media (min-width: 1280px) {
+  .client-dashboard__team-grid {
+    max-width: none;
   }
 }
 
@@ -200,6 +212,12 @@
   margin-inline: auto;
 }
 
+@media (min-width: 1280px) {
+  .client-dashboard__list-card {
+    max-width: 48rem;
+  }
+}
+
 .client-dashboard__list {
   list-style: none;
   margin: 0;
@@ -287,6 +305,12 @@
   justify-items: center;
   max-width: 720px;
   margin-inline: auto;
+}
+
+@media (min-width: 1280px) {
+  .client-dashboard__block .dashboard-card-grid {
+    max-width: none;
+  }
 }
 
 .client-dashboard__resource-card {

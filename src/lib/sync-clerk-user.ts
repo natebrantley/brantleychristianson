@@ -8,6 +8,7 @@ import type { User } from '@clerk/nextjs/server';
 import { bridgeLeadsByEmail } from '@/lib/bridge-leads';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { TablesInsert } from '@/types/database';
+import { deriveUserSlug } from '@/lib/user-slug';
 
 const AGENT_EMAIL_DOMAIN = 'brantleychristianson.com';
 
@@ -76,12 +77,14 @@ export async function ensureUserInSupabase(clerkUser: User): Promise<UsersRow | 
     const admin = supabaseAdmin();
     const row = buildUsersRowFromClerkUser(clerkUser);
 
+    const isAgentOrLender = row.role === 'agent' || row.role === 'broker' || row.role === 'lender';
     let upsertPayload: Record<string, unknown> = {
       clerk_id: row.clerk_id,
       email: row.email ?? '',
       first_name: row.first_name,
       last_name: row.last_name,
       role: row.role,
+      slug: isAgentOrLender ? deriveUserSlug(row.first_name, row.last_name) : null,
       assigned_broker_id: null,
       assigned_lender_id: null,
       marketing_opt_in: null,

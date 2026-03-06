@@ -9,6 +9,7 @@ import { Hero } from '@/components/Hero';
 import { LeadsSortForm } from './LeadsSortForm';
 import { assetPaths } from '@/config/theme';
 import { getLeadPulse, getLeadPulseLabel } from '@/lib/getLeadPulse';
+import { LEADS_SELECT } from '@/lib/leads-fields';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -85,7 +86,7 @@ function escapeIlike(s: string): string {
   return noComma.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
 }
 
-const LEAD_SELECT = 'id, first_name, last_name, email_address, crmc_score, phone, address, city, state, zip, assigned_broker_id, assigned_lender_id';
+const LEAD_SELECT = LEADS_SELECT;
 
 function getLeadInitials(lead: LeadRow): string {
   const first = (lead.first_name ?? '').trim().slice(0, 1).toUpperCase();
@@ -157,7 +158,7 @@ export default async function AgentLeadsPage({
     ]);
     if (userRes.data != null) user = userRes.data as AgentUser;
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
-      leads = leadsRes.data as LeadRow[];
+      leads = leadsRes.data as unknown as LeadRow[];
     }
     totalCount = typeof leadsRes.count === 'number' ? leadsRes.count : leads.length;
 
@@ -188,9 +189,9 @@ export default async function AgentLeadsPage({
         .range(from, to);
 
       if (Array.isArray(fallbackLeads)) {
-        leads = fallbackLeads as LeadRow[];
+        leads = fallbackLeads as unknown as LeadRow[];
         totalCount = typeof fallbackCount === 'number' ? fallbackCount : leads.length;
-        const idsToUpdate = (fallbackLeads as LeadRow[]).filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
+        const idsToUpdate = (fallbackLeads as unknown as LeadRow[]).filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
         if (idsToUpdate.length > 0) {
           await admin.from('leads').update({ assigned_broker_id: userId }).in('id', idsToUpdate);
         }

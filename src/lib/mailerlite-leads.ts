@@ -7,6 +7,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getAgentBySlug } from '@/data/agents';
+import { LEADS_SELECT_MAILERLITE } from '@/lib/leads-fields';
 
 const MAILERLITE_API_BASE = 'https://connect.mailerlite.com/api';
 const BATCH_SIZE = 50;
@@ -133,7 +134,7 @@ export async function syncLeadsToMailerLite(
 
   let query = admin
     .from('leads')
-    .select('id, email_address, first_name, last_name, phone, city, state, zip, address, assigned_broker_id')
+    .select(LEADS_SELECT_MAILERLITE)
     .limit(limit);
 
   const { data: rows, error } = await query;

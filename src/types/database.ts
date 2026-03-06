@@ -99,6 +99,7 @@ export type Database = {
           marketing_opt_in: boolean | null;
           repliers_client_id: number | null;
           role: string | null;
+          slug: string | null;
           updated_at: string | null;
         };
         Insert: Omit<Database['public']['Tables']['users']['Row'], 'id' | 'created_at'> & { id?: string; created_at?: string };

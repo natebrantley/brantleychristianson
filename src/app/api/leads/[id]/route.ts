@@ -9,23 +9,9 @@ import { revalidatePath } from 'next/cache';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, supabaseAdmin } from '@/lib/supabase';
 import { getAgentSlugByEmail } from '@/data/agents';
+import { LEADS_SELECT } from '@/lib/leads-fields';
 
 export const dynamic = 'force-dynamic';
-
-const CONTACT_FIELDS = [
-  'id',
-  'first_name',
-  'last_name',
-  'email_address',
-  'crmc_score',
-  'phone',
-  'address',
-  'city',
-  'state',
-  'zip',
-  'assigned_broker_id',
-  'assigned_lender_id',
-] as const;
 
 type LeadIdParams = { params: Promise<{ id: string }> };
 
@@ -43,7 +29,7 @@ export async function GET(request: NextRequest, { params }: LeadIdParams) {
   const supabase = await createClerkSupabaseClient();
   const { data, error } = await supabase
     .from('leads')
-    .select(CONTACT_FIELDS.join(', '))
+    .select(LEADS_SELECT)
     .eq('id', id)
     .maybeSingle();
 

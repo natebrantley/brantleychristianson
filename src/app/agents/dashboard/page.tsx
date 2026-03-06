@@ -5,6 +5,7 @@ import { createClerkSupabaseClient, formatSupabaseError, supabaseAdmin } from '@
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { getAgentSlugByEmail } from '@/data/agents';
+import { LEADS_SELECT_PREVIEW } from '@/lib/leads-fields';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
@@ -85,7 +86,7 @@ export default async function AgentsDashboardPage() {
         .maybeSingle(),
       supabase
         .from('leads')
-        .select('id, email_address, assigned_broker_id, first_name, last_name, phone')
+        .select(LEADS_SELECT_PREVIEW)
         .eq('assigned_broker_id', userId)
         .limit(10),
       supabase
@@ -121,7 +122,7 @@ export default async function AgentsDashboardPage() {
       const admin = supabaseAdmin();
       const { data: fallbackLeads, error: fallbackErr } = await admin
         .from('leads')
-        .select('id, email_address, assigned_broker_id, first_name, last_name, phone')
+        .select(LEADS_SELECT_PREVIEW)
         .in('assigned_broker_id', uniqWithCase)
         .limit(10);
 

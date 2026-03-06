@@ -9,6 +9,7 @@ import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
 import { getAgentBySlug, getAgentByEmail } from '@/data/agents';
 import { getLenderBySlug, getLenderByEmail } from '@/data/lenders';
+import { LEADS_SELECT_CLIENT } from '@/lib/leads-fields';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -51,7 +52,7 @@ export default async function ClientsDashboardPage() {
         .eq('clerk_id', userId)
         .maybeSingle(),
       userEmail
-        ? supabase.from('leads').select('id, email_address').eq('email_address', userEmail).limit(10)
+        ? supabase.from('leads').select(LEADS_SELECT_CLIENT).eq('email_address', userEmail).limit(10)
         : Promise.resolve({ data: [], error: null }),
     ]);
 

@@ -832,6 +832,13 @@
   padding-right: env(safe-area-inset-right, 0);
 }
 
+@media (min-width: 1280px) {
+  .lead-detail-page .lead-detail,
+  .lead-detail {
+    max-width: 56rem;
+  }
+}
+
 /* Back link: generous tap target, sticky on mobile for easy exit */
 .lead-detail__back {
   margin-bottom: var(--space-md);

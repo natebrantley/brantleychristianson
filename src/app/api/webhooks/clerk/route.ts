@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { Webhook } from 'svix';
 import type { WebhookEvent } from '@clerk/nextjs/server';
 import { bridgeLeadsByEmail } from '@/lib/bridge-leads';
+import { deriveUserSlug } from '@/lib/user-slug';
 import { repliersClient, createClient as createRepliersClient, parseNameToFnameLname } from '@/lib/repliers';
 import { isBodySizeAllowed, MAX_WEBHOOK_BODY_BYTES } from '@/lib/webhook-utils';
 
@@ -232,12 +233,19 @@ async function handleUserUpsert(
 
   // Preserve app-managed columns: assigned_broker_id, assigned_lender_id, repliers_client_id, marketing_opt_in.
   // Do not overwrite when Clerk sends user.updated.
+  const isAgentOrLender = row.role === 'agent' || row.role === 'broker' || row.role === 'lender';
   let upsertPayload: Record<string, unknown> = {
     clerk_id: row.clerk_id,
     email: row.email,
     first_name: row.first_name,
     last_name: row.last_name,
     role: row.role,
+    slug: isAgentOrLender ? deriveUserSlug(row.first_name, row.last_name) : null,
+    assigned_broker_id: null,
+    assigned_lender_id: null,
+    marketing_opt_in: null,
+    repliers_client_id: null,
+    updated_at: null,
   };
   const { data: existing } = await admin
     .from('users')

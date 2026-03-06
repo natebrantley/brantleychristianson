@@ -12,12 +12,24 @@
   margin-right: auto;
 }
 
+@media (min-width: 1280px) {
+  .agent-dashboard .section .container {
+    max-width: 80rem;
+  }
+}
+
 /* ----- Agent dashboard HOME: center-aligned layout (not leads list or detail) ----- */
 .dashboard-page.agent-dashboard:not(.leads-page):not(.lead-detail-page) .section .container {
   text-align: center;
   max-width: 42rem;
   margin-left: auto;
   margin-right: auto;
+}
+
+@media (min-width: 1280px) {
+  .dashboard-page.agent-dashboard:not(.leads-page):not(.lead-detail-page) .section .container {
+    max-width: 56rem;
+  }
 }
 
 .dashboard-page.agent-dashboard:not(.leads-page):not(.lead-detail-page) .dashboard-section-header {

@@ -4,6 +4,7 @@ import { createClerkSupabaseClient, formatSupabaseError, supabaseAdmin } from '@
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { getAgentSlugByEmail } from '@/data/agents';
+import { LEADS_SELECT } from '@/lib/leads-fields';
 import { Hero } from '@/components/Hero';
 import { LeadContactForm } from './LeadContactForm';
 import { assetPaths } from '@/config/theme';
@@ -56,12 +57,11 @@ export default async function LeadDetailPage({
     }
 
     const supabase = await createClerkSupabaseClient();
-    const leadSelect = 'id, first_name, last_name, email_address, crmc_score, phone, address, city, state, zip, assigned_broker_id, assigned_lender_id';
     const [userRes, leadRes] = await Promise.all([
       supabase.from('users').select('role').eq('clerk_id', userId).maybeSingle(),
       supabase
         .from('leads')
-        .select(leadSelect)
+        .select(LEADS_SELECT)
         .eq('id', id)
         .maybeSingle(),
     ]);
@@ -102,10 +102,10 @@ export default async function LeadDetailPage({
           await admin.from('leads').update({ assigned_broker_id: userId }).eq('id', id);
           const { data: refetched } = await supabase
             .from('leads')
-            .select(leadSelect)
+            .select(LEADS_SELECT)
             .eq('id', id)
             .maybeSingle();
-          if (refetched) lead = refetched as LeadRow;
+          if (refetched) lead = refetched as unknown as LeadRow;
         }
       }
       if (!lead) notFound();

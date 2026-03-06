@@ -69,6 +69,7 @@ export async function PATCH(request: NextRequest) {
       marketing_opt_in: null,
       repliers_client_id: null,
       updated_at: null,
+      slug: null,
     });
     if (insertError) {
       console.error('PATCH /api/me/lender insert:', insertError);
