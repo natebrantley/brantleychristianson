@@ -79,6 +79,8 @@ Every column except **email** may be null or omitted on insert.
 
 **If leads were already imported with agent full name or slug in assigned_broker_id:** Run the migration `supabase/migrations/20260317000000_backfill_leads_assigned_broker_id_from_agent_name.sql` in the Supabase SQL Editor (or `supabase db push`). It maps full name (from **public.users** first_name + last_name) and known agent slugs to **users.clerk_id** and updates **leads.assigned_broker_id** so each agent’s dashboard shows their assigned leads.
 
+**Preferred: normalize both broker and lender in one step.** Run `supabase/migrations/20260318000000_normalize_leads_assigned_broker_lender.sql` (or `supabase db push`). It sets **assigned_broker_id** and **assigned_lender_id** to **users.clerk_id** by matching current values to agent/lender **email**, **full name**, or **slug** (case-insensitive). Only rows that are not already Clerk IDs (`user_%`) are updated. Run after agents and lenders have signed in so **public.users** has their **clerk_id**.
+
 ### 2.4 Validation before upload
 
 1. **Email**  

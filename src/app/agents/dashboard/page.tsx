@@ -114,24 +114,29 @@ export default async function AgentsDashboardPage() {
       if (fullName) possibleIds.push(fullName);
       if (slug) possibleIds.push(slug);
       const uniq = [...new Set(possibleIds)];
+      // Include lowercase variants so we match regardless of casing in DB (e.g. "NATE BRANTLEY", "nate")
+      const uniqWithCase = [...new Set([...uniq, ...uniq.map((s) => s.toLowerCase())])];
 
       const admin = supabaseAdmin();
       const { data: fallbackLeads, error: fallbackErr } = await admin
         .from('leads')
         .select('id, email, created_at, assigned_broker_id, agent, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries')
-        .in('assigned_broker_id', uniq)
+        .in('assigned_broker_id', uniqWithCase)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (!fallbackErr && Array.isArray(fallbackLeads) && fallbackLeads.length > 0) {
+      if (fallbackErr) {
+        console.warn('Agent dashboard fallback query failed', { possibleIdsCount: uniqWithCase.length, error: fallbackErr.message });
+      } else if (Array.isArray(fallbackLeads) && fallbackLeads.length > 0) {
         leads = fallbackLeads as LeadRow[];
         // Backfill so next load uses Clerk ID
         const idsToUpdate = (fallbackLeads as LeadRow[]).filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
         if (idsToUpdate.length > 0) {
           await admin.from('leads').update({ assigned_broker_id: userId }).in('id', idsToUpdate);
         }
+      } else {
+        console.info('Agent dashboard: no leads by Clerk ID or fallback (name/email/slug). Check leads.assigned_broker_id in Supabase.', { possibleIdsCount: uniqWithCase.length });
       }
-    }
 
     // Saved searches for assigned leads who have signed in (clerk_id set) — use admin to bypass RLS
     const clientClerkIds = leads.map((l) => l.clerk_id).filter(Boolean) as string[];
@@ -322,6 +327,9 @@ export default async function AgentsDashboardPage() {
               <p>No leads assigned to you yet. Assigned leads will appear here with their activity and saved searches.</p>
               <p className="text--muted" style={{ fontSize: '0.8125rem', marginTop: '0.5rem' }}>
                 Leads are matched by your Clerk ID. If your CRM uses your name or email for assignment, we’ll pick them up and sync on next load.
+              </p>
+              <p className="text--muted" style={{ fontSize: '0.75rem', marginTop: '0.5rem', maxWidth: '32rem' }}>
+                To verify in Supabase: run <code style={{ background: 'var(--bg-subtle)', padding: '0.1em 0.3em', borderRadius: 4 }}>SELECT DISTINCT assigned_broker_id FROM leads WHERE assigned_broker_id IS NOT NULL;</code> — leads show here when a row’s <code>assigned_broker_id</code> equals your Clerk ID, your email (e.g. nate@brantleychristianson.com), full name (e.g. Nate Brantley), or agent slug (e.g. nate). Matching is case-insensitive (we try your name and slug in lower case too).
               </p>
               <Button href="/contact" variant="outline">
                 View contact form
