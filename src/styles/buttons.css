@@ -19,7 +19,7 @@
   border-radius: var(--button-radius);
   text-decoration: none;
   cursor: pointer;
-  transition: transform 0.4s var(--ease-out-expo), box-shadow 0.4s var(--ease-out-expo), background-color 0.4s var(--ease-out-expo), border-color 0.4s var(--ease-out-expo), color 0.4s var(--ease-out-expo);
+  transition: transform 0.35s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo), background-color 0.35s var(--ease-out-expo), border-color 0.35s var(--ease-out-expo), color 0.35s var(--ease-out-expo);
   -webkit-tap-highlight-color: transparent;
   position: relative;
   overflow: hidden;
@@ -41,7 +41,7 @@
 .button--primary:hover:not(:disabled),
 .button--outline:hover:not(:disabled),
 .button--white:hover:not(:disabled) {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   box-shadow: var(--shadow-hover);
 }
 
@@ -50,9 +50,9 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.3), transparent 55%);
+  background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.25), transparent 55%);
   opacity: 0;
-  transition: opacity 0.4s var(--ease-out-expo);
+  transition: opacity 0.35s var(--ease-out-expo);
   pointer-events: none;
 }
 .button:hover::before,

@@ -10,7 +10,7 @@
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   color: var(--color-light);
-  transition: background-color 0.45s var(--ease-out-expo), height 0.45s var(--ease-out-expo), box-shadow 0.45s var(--ease-out-expo);
+  transition: background-color 0.35s var(--ease-out-expo), height 0.35s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo);
   padding-inline: max(var(--space-md), env(safe-area-inset-left)) max(var(--space-md), env(safe-area-inset-right));
   padding-top: env(safe-area-inset-top, 0);
 }
@@ -70,7 +70,7 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: var(--color-light);
-  transition: color 0.3s ease;
+  transition: color 0.35s var(--ease-out-expo);
   padding: 0.5em 0;
   display: inline-block;
   -webkit-tap-highlight-color: transparent;

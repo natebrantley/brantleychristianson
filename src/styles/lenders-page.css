@@ -307,10 +307,16 @@
 .lender-hero-image {
   position: relative;
   width: 100%;
-  min-height: 220px;
-  height: clamp(220px, 45vh, 420px);
+  min-height: 180px;
+  height: clamp(180px, 40vh, 420px);
   overflow: hidden;
   background: var(--color-primary);
+}
+@media (min-width: 480px) {
+  .lender-hero-image {
+    min-height: 220px;
+    height: clamp(220px, 45vh, 420px);
+  }
 }
 .lender-hero-image > div {
   position: absolute !important;
@@ -331,7 +337,13 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem 0.5rem;
+}
+@media (min-width: 600px) {
+  .lender-detail-breadcrumb {
+    justify-content: flex-start;
+  }
 }
 .lender-detail-breadcrumb li:not(:last-child)::after {
   content: '›';
@@ -418,6 +430,7 @@
 
 .lender-detail-photo-frame {
   display: inline-block;
+  max-width: 100%;
   border-radius: var(--radius-lg);
   border: 2px solid rgba(var(--color-accent-rgb), 0.25);
   overflow: hidden;
@@ -479,6 +492,14 @@
 .lender-detail-block {
   margin: 0;
 }
+.lender-detail-block:last-of-type {
+  margin-top: var(--space-md);
+}
+@media (min-width: 768px) {
+  .lender-detail-block:last-of-type {
+    margin-top: var(--space-lg);
+  }
+}
 .lender-detail-block-title {
   font-family: var(--font-headings);
   font-size: 1rem;
@@ -500,9 +521,26 @@
   font-style: normal;
 }
 
+/* Get in touch: center all buttons; stack on mobile for tap-friendly targets */
 .lender-detail-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-md);
   align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .lender-detail-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .lender-detail-actions .button {
+    width: 100%;
+    max-width: 280px;
+    margin-inline: auto;
+    min-height: 2.75rem;
+    display: inline-flex;
+    justify-content: center;
+  }
 }

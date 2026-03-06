@@ -43,7 +43,8 @@ body {
   padding: 0;
   font-family: var(--font-body);
   font-size: clamp(0.95rem, 0.5vw + 0.8rem, 1.05rem);
-  line-height: 1.5;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
   color: var(--theme-text);
   background: var(--theme-bg);
   -webkit-font-smoothing: antialiased;
@@ -78,7 +79,7 @@ img {
 a {
   color: var(--color-accent);
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: color 0.35s var(--ease-out-expo);
 }
 a:hover {
   color: var(--color-primary);
@@ -144,7 +145,7 @@ a:hover {
   }
 }
 .section--alt {
-  background: var(--theme-surface-muted);
+  background: linear-gradient(180deg, var(--theme-surface-muted) 0%, var(--surface-page) 100%);
   border-top: 1px solid var(--border-subtle);
 }
 .section--cta {
@@ -185,6 +186,7 @@ a:hover {
   font-size: clamp(1.75rem, 4.5vw, 3rem);
   font-weight: 600;
   line-height: 1.2;
+  letter-spacing: -0.02em;
   margin: 0 0 1rem;
   color: var(--color-primary);
 }
@@ -313,12 +315,18 @@ a:hover {
   background: var(--theme-surface-muted);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: border-color 0.35s var(--ease-out-expo), box-shadow 0.35s var(--ease-out-expo), transform 0.35s var(--ease-out-expo);
   text-align: center;
 }
 .about-pillar:hover {
-  border-color: rgba(var(--color-accent-rgb), 0.3);
+  border-color: rgba(var(--color-accent-rgb), 0.25);
   box-shadow: var(--shadow-soft);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-pillar:hover {
+    transform: none;
+  }
 }
 .about-pillar__title {
   font-family: var(--font-display);
