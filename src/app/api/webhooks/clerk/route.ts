@@ -74,7 +74,7 @@ function getPrimaryEmail(data: WebhookEvent['data']): string | null {
   const first = list[0];
   if (!first || typeof first !== 'object' || first === null) return null;
   const email = 'email_address' in first ? (first as { email_address?: string }).email_address : undefined;
-  return typeof email === 'string' && email.trim().length > 0 ? email.trim() : null;
+  return typeof email === 'string' && email.trim().length > 0 ? email.trim().toLowerCase() : null;
 }
 
 /** Extract dashboard role from public_metadata (agent | broker | lender); undefined = not set */

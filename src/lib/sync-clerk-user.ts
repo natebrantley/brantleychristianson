@@ -24,7 +24,7 @@ function getPrimaryEmail(user: User): string | null {
   const list = user.emailAddresses ?? [];
   const first = list[0];
   const email = first?.emailAddress;
-  return typeof email === 'string' && email.trim().length > 0 ? email.trim() : null;
+  return typeof email === 'string' && email.trim().length > 0 ? email.trim().toLowerCase() : null;
 }
 
 function getRoleFromMetadata(user: User): 'agent' | 'broker' | 'lender' | null | undefined {

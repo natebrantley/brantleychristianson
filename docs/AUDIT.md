@@ -57,3 +57,12 @@ Last updated: 2026-03. Focus: security, APIs, auth, config, and high-impact impr
 - **Rate limiting** – If you scale to multiple instances, consider Redis/Upstash instead of in-memory.
 - **Clerk redirect** – Prefer env vars `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL` / sign-up equivalent if you want to stop using component props.
 - **Supabase RLS** – If you add RLS and validate Clerk JWTs in Supabase, use a Clerk JWT template and `getToken({ template: 'supabase' })`.
+
+## Integrations, webhooks & database
+
+See **`docs/BEST-PRACTICES-INTEGRATIONS.md`** for a dedicated checklist of how webhooks, Supabase, Clerk, MailerLite, Repliers, and cron jobs are implemented and optimized:
+
+- **Webhooks**: Signature verification, body size limits, constant-time secret compare, idempotency (Repliers), no PII in logs, 2xx on success.
+- **Database**: RLS on users/leads/saved_searches/favorites, service role only server-side, normalized Clerk IDs and email, composite indexes for dashboard queries.
+- **Integrations**: Clerk as identity source with webhook + sign-in sync; MailerLite opt-in/opt-out; Repliers listing sync and idempotent webhook events.
+- **APIs**: Rate limiting, body caps, typed errors, cache revalidation.
