@@ -137,6 +137,7 @@ export default async function AgentsDashboardPage() {
       } else {
         console.info('Agent dashboard: no leads by Clerk ID or fallback (name/email/slug). Check leads.assigned_broker_id in Supabase.', { possibleIdsCount: uniqWithCase.length });
       }
+    }
 
     // Saved searches for assigned leads who have signed in (clerk_id set) — use admin to bypass RLS
     const clientClerkIds = leads.map((l) => l.clerk_id).filter(Boolean) as string[];
