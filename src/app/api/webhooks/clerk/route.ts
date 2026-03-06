@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { Webhook } from 'svix';
 import type { WebhookEvent } from '@clerk/nextjs/server';
+import { bridgeLeadsByEmail } from '@/lib/bridge-leads';
 import { repliersClient, createClient as createRepliersClient, parseNameToFnameLname } from '@/lib/repliers';
 import { isBodySizeAllowed, MAX_WEBHOOK_BODY_BYTES } from '@/lib/webhook-utils';
 
@@ -194,44 +195,14 @@ async function syncMailerLite(
   }
 }
 
-/**
- * Link leads by email to clerk_id when not already linked.
- * Tries column email_address first (CRM schema), then email (repo migration schema).
- * Ensure leads has: ALTER TABLE public.leads ADD COLUMN IF NOT EXISTS clerk_id TEXT;
- */
+/** Uses shared bridge so leads are claimed by email when user is created/updated. */
 async function bridgeLeads(
   admin: SupabaseClient,
   clerkId: string,
   email: string,
   logContext: Record<string, unknown>
 ): Promise<void> {
-  const normalizedEmail = email.toLowerCase();
-
-  for (const column of ['email_address', 'email'] as const) {
-    try {
-      const { error } = await admin
-        .from('leads')
-        .update({ clerk_id: clerkId })
-        .eq(column, normalizedEmail)
-        .is('clerk_id', null);
-
-      if (error) {
-        if (column === 'email_address') continue; // try email next
-        console.warn('Clerk webhook: lead bridge skipped', {
-          ...logContext,
-          clerkId,
-          supabaseError: formatSupabaseError(error),
-        });
-        return;
-      }
-
-      console.log('Clerk webhook: lead bridged', { ...logContext, clerkId, column });
-      return;
-    } catch (err) {
-      if (column === 'email_address') continue;
-      console.warn('Clerk webhook: lead bridge threw', { ...logContext, clerkId, err });
-    }
-  }
+  await bridgeLeadsByEmail(admin, clerkId, email);
 }
 
 /** Handle user.created / user.updated: upsert users, optional MailerLite, optional lead bridge.

@@ -51,6 +51,15 @@ The app expects a **public.users** table with at least:
 2. Copy the contents of **supabase/migrations/20240301000000_create_users_table.sql**.
 3. Paste and click **Run**.
 
+**Aligning migrations with remote**
+
+`supabase db pull` requires Docker (it uses a shadow database). Without Docker, schema alignment is done by:
+
+1. Running `npx supabase gen types typescript --linked` to inspect the remote schema.
+2. Adding a migration that brings local `public.leads` (or other tables) in line with the remote using `ADD COLUMN IF NOT EXISTS` (or equivalent). See `supabase/migrations/20260316000000_align_leads_with_remote.sql` for the leads alignment.
+
+After adding such a migration, run `supabase db push` (or apply the migration in the SQL Editor) so the remote database has any new columns. The migrations in this repo then match the remote.
+
 **Option B – Supabase CLI**
 
 The project includes Supabase CLI config (`supabase/config.toml`) and migrations. To link and push: (1) Run `npm run supabase:link` and when prompted enter your **project ref** (e.g. from `NEXT_PUBLIC_SUPABASE_URL`: `abcdefgh` in `https://abcdefgh.supabase.co`) and **database password**. (2) Run `npm run supabase:push` to apply migrations. If you prefer not to use the CLI, use Option A (SQL Editor) instead.

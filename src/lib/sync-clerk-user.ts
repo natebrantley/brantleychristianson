@@ -5,6 +5,7 @@
  */
 
 import type { User } from '@clerk/nextjs/server';
+import { bridgeLeadsByEmail } from '@/lib/bridge-leads';
 import { supabaseAdmin } from '@/lib/supabase';
 
 const AGENT_EMAIL_DOMAIN = 'brantleychristianson.com';
@@ -105,6 +106,11 @@ export async function ensureUserInSupabase(clerkUser: User): Promise<UsersRow | 
         code: error.code,
       });
       return null;
+    }
+
+    // Claim matching leads (same as webhook): link public.leads by email when clerk_id is null
+    if (row.email) {
+      await bridgeLeadsByEmail(admin, row.clerk_id, row.email);
     }
 
     return row;

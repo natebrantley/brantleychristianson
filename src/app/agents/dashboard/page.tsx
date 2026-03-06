@@ -8,6 +8,7 @@ import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
 import { getAgentBySlug } from '@/data/agents';
 import { getLenderBySlug } from '@/data/lenders';
+import { getBrokerDisplayNamesByClerkId, resolveLeadAssignedAgentName } from '@/lib/broker-names';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
-type LeadRow = { id: string; email: string; created_at: string };
+type LeadRow = { id: string; email: string; created_at: string; assigned_broker_id?: string | null; agent?: string | null };
 
 function formatLeadDate(iso: string): string {
   try {
@@ -40,6 +41,7 @@ export default async function AgentsDashboardPage() {
   let user: AgentUser | null = null;
   let leads: LeadRow[] = [];
   let leadsCount = 0;
+  let brokerNamesByClerkId = new Map<string, string>();
 
   try {
     const supabase = await createClerkSupabaseClient();
@@ -52,7 +54,7 @@ export default async function AgentsDashboardPage() {
         .maybeSingle(),
       supabase
         .from('leads')
-        .select('id, email, created_at')
+        .select('id, email, created_at, assigned_broker_id, agent')
         .or(`assigned_broker_id.eq.${userId},assigned_broker_id.is.null`)
         .order('created_at', { ascending: false })
         .limit(20),
@@ -76,6 +78,11 @@ export default async function AgentsDashboardPage() {
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       leads = leadsRes.data as LeadRow[];
       leadsCount = leadsRes.data.length;
+    }
+
+    const brokerIds = leads.map((l) => l.assigned_broker_id).filter(Boolean) as string[];
+    if (brokerIds.length > 0) {
+      brokerNamesByClerkId = await getBrokerDisplayNamesByClerkId(supabase, brokerIds);
     }
   } catch (err) {
     console.error('Unexpected error loading agent dashboard:', { userId, ...formatSupabaseError(err) });
@@ -342,6 +349,9 @@ export default async function AgentsDashboardPage() {
                         {formatLeadDate(lead.created_at)}
                       </span>
                     </div>
+                    <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
+                      Assigned to: {resolveLeadAssignedAgentName(lead.assigned_broker_id, lead.agent, brokerNamesByClerkId)}
+                    </p>
                   </li>
                 ))}
               </ul>

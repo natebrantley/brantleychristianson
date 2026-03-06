@@ -9,6 +9,7 @@ import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
 import { getAgentBySlug } from '@/data/agents';
 import { getLenderBySlug } from '@/data/lenders';
+import { getBrokerDisplayNamesByClerkId, resolveLeadAssignedAgentName } from '@/lib/broker-names';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 type LenderUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
-type LeadRow = { id: string; email: string; created_at: string };
+type LeadRow = { id: string; email: string; created_at: string; assigned_broker_id?: string | null; agent?: string | null };
 
 function formatLeadDate(iso: string): string {
   try {
@@ -52,6 +53,7 @@ export default async function LendersDashboardPage() {
 
   let user: LenderUser | null = null;
   let assignedLeads: LeadRow[] = [];
+  let brokerNamesByClerkId = new Map<string, string>();
 
   try {
     const supabase = await createClerkSupabaseClient();
@@ -63,7 +65,7 @@ export default async function LendersDashboardPage() {
         .maybeSingle(),
       supabase
         .from('leads')
-        .select('id, email, created_at')
+        .select('id, email, created_at, assigned_broker_id, agent')
         .eq('assigned_lender_id', userId)
         .order('created_at', { ascending: false })
         .limit(20),
@@ -85,6 +87,11 @@ export default async function LendersDashboardPage() {
 
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       assignedLeads = leadsRes.data as LeadRow[];
+    }
+
+    const brokerIds = assignedLeads.map((l) => l.assigned_broker_id).filter(Boolean) as string[];
+    if (brokerIds.length > 0) {
+      brokerNamesByClerkId = await getBrokerDisplayNamesByClerkId(supabase, brokerIds);
     }
   } catch (err) {
     console.error('Unexpected error loading lender dashboard:', { userId, ...formatSupabaseError(err) });
@@ -189,6 +196,9 @@ export default async function LendersDashboardPage() {
                           <time className="text--muted lender-dashboard__list-date" dateTime={lead.created_at}>
                             {formatLeadDate(lead.created_at)}
                           </time>
+                          <p className="text--muted lender-dashboard__list-meta" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
+                            Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, lead.agent, brokerNamesByClerkId)}
+                          </p>
                         </li>
                       ))}
                     </ul>
@@ -206,6 +216,9 @@ export default async function LendersDashboardPage() {
                           <time className="text--muted lender-dashboard__list-date" dateTime={lead.created_at}>
                             {formatLeadDate(lead.created_at)}
                           </time>
+                          <p className="text--muted lender-dashboard__list-meta" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
+                            Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, lead.agent, brokerNamesByClerkId)}
+                          </p>
                         </li>
                       ))}
                     </ul>
