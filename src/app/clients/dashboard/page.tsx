@@ -14,8 +14,8 @@ import type { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Client dashboard',
-  description: 'Saved homes, searches, and next steps with your BCRE agent.',
+  title: 'Your dashboard',
+  description: 'Your agent, lender, saved homes, and next steps. BCRE client dashboard.',
 };
 
 type UserFields = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
@@ -60,10 +60,13 @@ export default async function ClientsDashboardPage() {
     }
     user = userRes.data ?? null;
 
-    // If no row in Supabase, sync from Clerk so future requests and APIs see the user
     if (!user && !userRes.error) {
-      const clerkUser = await currentUser();
-      if (clerkUser) await ensureUserInSupabase(clerkUser);
+      try {
+        const clerkUser = await currentUser();
+        if (clerkUser) await ensureUserInSupabase(clerkUser);
+      } catch (clerkErr) {
+        console.warn('Could not fetch Clerk user for sync:', (clerkErr as Error)?.message ?? clerkErr);
+      }
     }
 
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
@@ -73,8 +76,13 @@ export default async function ClientsDashboardPage() {
     console.error('Unexpected error loading client dashboard:', { userId, ...formatSupabaseError(err) });
   }
 
-  const clerkUser = await currentUser();
-  const roleFromClerk = typeof clerkUser?.publicMetadata?.role === 'string' ? clerkUser.publicMetadata.role : null;
+  let roleFromClerk: string | null = null;
+  try {
+    const clerkUser = await currentUser();
+    roleFromClerk = typeof clerkUser?.publicMetadata?.role === 'string' ? clerkUser.publicMetadata.role : null;
+  } catch (clerkErr) {
+    console.warn('Could not fetch Clerk user for role:', (clerkErr as Error)?.message ?? clerkErr);
+  }
   if (isBrokerRole(user?.role) || isBrokerRole(roleFromClerk)) {
     redirect('/agents/dashboard');
   }
@@ -85,209 +93,201 @@ export default async function ClientsDashboardPage() {
   const displayName = user
     ? ([user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null)
     : null;
+  const firstName = displayName?.split(' ')[0] ?? 'there';
 
   const assignedAgent = user?.assigned_broker_id ? getAgentBySlug(user.assigned_broker_id) : null;
   const assignedLender = user?.assigned_lender_id ? getLenderBySlug(user.assigned_lender_id) : null;
+  const hasTeam = !!(assignedAgent || assignedLender);
 
   return (
-    <main className="dashboard-page">
+    <main className="dashboard-page client-dashboard">
       <Hero
         variant="short"
         title="Your dashboard"
-        lead="Saved homes, searches, and next steps with your BCRE agent."
+        lead="Your agent, saved homes, and next steps—all in one place."
         imageSrc={`${assetPaths.stock}/couch.jpeg`}
         imageAlt="Client dashboard – your home search at a glance"
       />
-      <div className="section">
-        <div className="container stack--lg">
-          {/* Your agent or choose agent */}
-          <section className="dashboard-section" aria-labelledby="your-agent-heading">
-            <h2 id="your-agent-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
-              Your agent
-            </h2>
-            {assignedAgent ? (
-              <div className="card dashboard-contact-card">
-                <div style={{ flexShrink: 0 }}>
-                  <Image
-                    src={assignedAgent.image}
-                    alt=""
-                    width={80}
-                    height={80}
-                    style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
-                  />
-                </div>
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{assignedAgent.name}</p>
-                  <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{assignedAgent.title}</p>
-                  {(assignedAgent.phone || assignedAgent.email) && (
-                    <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
-                      {assignedAgent.phone && (
-                        <li style={{ marginTop: '0.25rem' }}>
-                          <span className="text--muted">Phone: </span>
-                          <a href={`tel:${assignedAgent.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
-                            {assignedAgent.phone}
-                          </a>
-                        </li>
-                      )}
-                      {assignedAgent.email && (
-                        <li style={{ marginTop: '0.25rem' }}>
-                          <span className="text--muted">Email: </span>
-                          <a href={`mailto:${assignedAgent.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
-                            {assignedAgent.email}
-                          </a>
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                  <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
-                    {assignedAgent.phone && (
-                      <Button href={`tel:${assignedAgent.phone.replace(/\D/g, '')}`} variant="primary">
-                        Call {assignedAgent.name}
-                      </Button>
-                    )}
-                    <Button href={`mailto:${assignedAgent.email}`} variant="outline">
-                      Email
-                    </Button>
-                    <Button href={assignedAgent.url} variant="text">
-                      View profile
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="card">
-                <p style={{ margin: 0 }}>
-                  You don&apos;t have an agent assigned yet. Choose one from our team and they&apos;ll be listed here for quick call and email.
-                </p>
-                <div className="dashboard-actions">
-                  <Button href="/agents" variant="primary">
-                    Choose your agent
-                  </Button>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Your lender */}
-          <section className="dashboard-section" aria-labelledby="your-lender-heading">
-            <h2 id="your-lender-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
-              Your lender
-            </h2>
-            {assignedLender ? (
-              <div className="card dashboard-contact-card">
-                <div style={{ flexShrink: 0 }}>
-                  <Image
-                    src={assignedLender.image}
-                    alt=""
-                    width={80}
-                    height={80}
-                    style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
-                  />
-                </div>
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{assignedLender.name}</p>
-                  <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{assignedLender.title} · {assignedLender.company}</p>
-                  {(assignedLender.phone || assignedLender.email) && (
-                    <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
-                      {assignedLender.phone && (
-                        <li style={{ marginTop: '0.25rem' }}>
-                          <span className="text--muted">Phone: </span>
-                          <a href={`tel:${assignedLender.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
-                            {assignedLender.phone}
-                          </a>
-                        </li>
-                      )}
-                      {assignedLender.email && (
-                        <li style={{ marginTop: '0.25rem' }}>
-                          <span className="text--muted">Email: </span>
-                          <a href={`mailto:${assignedLender.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
-                            {assignedLender.email}
-                          </a>
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                  <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
-                    {assignedLender.phone && (
-                      <Button href={`tel:${assignedLender.phone.replace(/\D/g, '')}`} variant="primary">
-                        Call {assignedLender.name}
-                      </Button>
-                    )}
-                    <Button href={`mailto:${assignedLender.email}`} variant="outline">
-                      Email
-                    </Button>
-                    {assignedLender.url ? (
-                      <Button href={assignedLender.url} variant="text" target="_blank" rel="noopener noreferrer">
-                        Visit website
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="card">
-                <p style={{ margin: 0 }}>
-                  You don&apos;t have a preferred lender assigned yet. Choose one from our network for financing and they&apos;ll be listed here.
-                </p>
-                <div className="dashboard-actions">
-                  <Button href="/lenders" variant="primary">
-                    Choose your lender
-                  </Button>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Welcome + quick actions */}
-          <header className="stack--sm">
-            <p className="section-tag">Client dashboard</p>
-            <h1 className="section-title">Welcome back</h1>
-            {displayName && (
-              <p className="section-lead">
-                Signed in as <strong>{displayName}</strong>
-                {user?.email ? ` (${user.email})` : ''}
+      <div className="section client-dashboard__section">
+        <div className="container stack--lg client-dashboard__container">
+          {/* Welcome + primary CTA */}
+          <header className="client-dashboard__welcome" aria-labelledby="welcome-heading">
+            <p className="section-tag client-dashboard__welcome-tag">Your home base</p>
+            <h1 id="welcome-heading" className="section-title client-dashboard__welcome-title">
+              Welcome back{displayName ? `, ${firstName}` : ''}
+            </h1>
+            {displayName && user?.email && (
+              <p className="section-lead client-dashboard__welcome-lead">
+                Signed in as <strong>{displayName}</strong> · {user.email}
               </p>
             )}
             {!displayName && (
-              <p className="section-lead">
-                Your profile is syncing from Clerk. Refresh in a moment.
+              <p className="section-lead client-dashboard__welcome-lead">
+                Your profile is syncing. Refresh in a moment if needed.
               </p>
             )}
-            <div className="dashboard-actions">
+            <div className="client-dashboard__quick-actions">
+              <Button href="/contact" variant="primary">
+                Request a consultation
+              </Button>
               <Button href="/markets" variant="outline">
                 Explore markets
               </Button>
-              <Button href="/contact" variant="primary">
-                Request a consultation
+              <Button href="/listings" variant="outline">
+                Browse listings
               </Button>
             </div>
           </header>
 
+          {/* Your team: Agent + Lender (grid on desktop) */}
+          <section className="client-dashboard__team" aria-labelledby="team-heading">
+            <h2 id="team-heading" className="client-dashboard__team-heading">
+              Your team
+            </h2>
+            <p className="client-dashboard__team-lead">
+              {hasTeam
+                ? 'Your BCRE agent and preferred lender. Reach out anytime.'
+                : 'Choose an agent and lender to get started. They’ll appear here for quick contact.'}
+            </p>
+            <div className="client-dashboard__team-grid">
+              {/* Agent card */}
+              <div className="client-dashboard__team-card">
+                <h3 className="client-dashboard__team-card-title">Your agent</h3>
+                {assignedAgent ? (
+                  <div className="card dashboard-contact-card client-dashboard__contact-card">
+                    <div className="client-dashboard__contact-avatar">
+                      <Image
+                        src={assignedAgent.image}
+                        alt=""
+                        width={72}
+                        height={72}
+                        style={{ borderRadius: 'var(--radius-full)', objectFit: 'cover' }}
+                      />
+                    </div>
+                    <div className="client-dashboard__contact-body">
+                      <p className="client-dashboard__contact-name">{assignedAgent.name}</p>
+                      <p className="client-dashboard__contact-meta">{assignedAgent.title}</p>
+                      {(assignedAgent.phone || assignedAgent.email) && (
+                        <ul className="client-dashboard__contact-list">
+                          {assignedAgent.phone && (
+                            <li>
+                              <span className="text--muted">Phone </span>
+                              <a href={`tel:${assignedAgent.phone.replace(/\D/g, '')}`}>{assignedAgent.phone}</a>
+                            </li>
+                          )}
+                          {assignedAgent.email && (
+                            <li>
+                              <span className="text--muted">Email </span>
+                              <a href={`mailto:${assignedAgent.email}`} style={{ wordBreak: 'break-all' }}>{assignedAgent.email}</a>
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                      <div className="dashboard-actions client-dashboard__contact-actions">
+                        {assignedAgent.phone && (
+                          <Button href={`tel:${assignedAgent.phone.replace(/\D/g, '')}`} variant="primary">
+                            Call
+                          </Button>
+                        )}
+                        <Button href={`mailto:${assignedAgent.email}`} variant="outline">
+                          Email
+                        </Button>
+                        <Button href={assignedAgent.url} variant="text">
+                          Profile
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="card client-dashboard__empty-card">
+                    <p>No agent assigned yet. Choose one from our team for buying, selling, or market advice.</p>
+                    <Button href="/agents" variant="primary">
+                      Choose your agent
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Lender card */}
+              <div className="client-dashboard__team-card">
+                <h3 className="client-dashboard__team-card-title">Your lender</h3>
+                {assignedLender ? (
+                  <div className="card dashboard-contact-card client-dashboard__contact-card">
+                    <div className="client-dashboard__contact-avatar">
+                      <Image
+                        src={assignedLender.image}
+                        alt=""
+                        width={72}
+                        height={72}
+                        style={{ borderRadius: 'var(--radius-full)', objectFit: 'cover' }}
+                      />
+                    </div>
+                    <div className="client-dashboard__contact-body">
+                      <p className="client-dashboard__contact-name">{assignedLender.name}</p>
+                      <p className="client-dashboard__contact-meta">{assignedLender.title} · {assignedLender.company}</p>
+                      {(assignedLender.phone || assignedLender.email) && (
+                        <ul className="client-dashboard__contact-list">
+                          {assignedLender.phone && (
+                            <li>
+                              <span className="text--muted">Phone </span>
+                              <a href={`tel:${assignedLender.phone.replace(/\D/g, '')}`}>{assignedLender.phone}</a>
+                            </li>
+                          )}
+                          {assignedLender.email && (
+                            <li>
+                              <span className="text--muted">Email </span>
+                              <a href={`mailto:${assignedLender.email}`} style={{ wordBreak: 'break-all' }}>{assignedLender.email}</a>
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                      <div className="dashboard-actions client-dashboard__contact-actions">
+                        {assignedLender.phone && (
+                          <Button href={`tel:${assignedLender.phone.replace(/\D/g, '')}`} variant="primary">
+                            Call
+                          </Button>
+                        )}
+                        <Button href={`mailto:${assignedLender.email}`} variant="outline">
+                          Email
+                        </Button>
+                        {assignedLender.url ? (
+                          <Button href={assignedLender.url} variant="text" target="_blank" rel="noopener noreferrer">
+                            Website
+                          </Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="card client-dashboard__empty-card">
+                    <p>Add a preferred lender for financing. They’ll show here for quick contact.</p>
+                    <Button href="/lenders" variant="primary">
+                      Choose your lender
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Consultation requests */}
           {linkedLeads.length > 0 && (
-            <section className="dashboard-section" aria-labelledby="requests-heading">
+            <section className="dashboard-section client-dashboard__activity" aria-labelledby="requests-heading">
               <header className="dashboard-section-header stack--xs">
                 <p className="section-tag">Activity</p>
-                <h2 id="requests-heading" className="section-title">Your consultation requests</h2>
+                <h2 id="requests-heading" className="section-title">Consultation requests</h2>
                 <p className="section-lead">
-                  Requests linked to your account. Your agent will follow up.
+                  Your agent will follow up on these. {linkedLeads.length} request{linkedLeads.length !== 1 ? 's' : ''} linked to your account.
                 </p>
               </header>
-              <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <ul className="stack--none" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              <div className="card client-dashboard__list-card">
+                <ul className="client-dashboard__list">
                   {linkedLeads.map((lead) => (
-                    <li
-                      key={lead.id}
-                      style={{
-                        padding: 'var(--space-md) var(--space-lg)',
-                        borderBottom: '1px solid var(--border-subtle)',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        <span style={{ fontWeight: 500 }}>{lead.email}</span>
-                        <span className="text--muted" style={{ fontSize: '0.875rem' }}>
-                          {formatLeadDate(lead.created_at)}
-                        </span>
-                      </div>
+                    <li key={lead.id} className="client-dashboard__list-item">
+                      <span className="client-dashboard__list-email">{lead.email}</span>
+                      <time className="text--muted client-dashboard__list-date" dateTime={lead.created_at}>
+                        {formatLeadDate(lead.created_at)}
+                      </time>
                     </li>
                   ))}
                 </ul>
@@ -295,24 +295,30 @@ export default async function ClientsDashboardPage() {
             </section>
           )}
 
-          <section className="dashboard-section" aria-labelledby="saved-homes-heading">
+          {/* Saved homes */}
+          <section className="dashboard-section client-dashboard__block" aria-labelledby="saved-homes-heading">
             <header className="dashboard-section-header stack--xs">
-              <p className="section-tag">Your portfolio</p>
+              <p className="section-tag">Portfolio</p>
               <h2 id="saved-homes-heading" className="section-title">Saved homes</h2>
               <p className="section-lead">
-                Properties you&apos;ve saved. Your agent can help narrow down and schedule showings.
+                Properties you’ve saved. Your agent can help narrow down and schedule showings.
               </p>
             </header>
-            <div className="empty-state">
-              <p>You haven&apos;t saved any homes yet. Browse markets and listings, then save the ones you love.</p>
-              <Button href="/markets" variant="outline">
-                Explore markets
-              </Button>
+            <div className="empty-state client-dashboard__empty">
+              <p>You haven’t saved any homes yet. Browse markets and listings, then save the ones you love.</p>
+              <div className="dashboard-actions">
+                <Button href="/markets" variant="outline">
+                  Explore markets
+                </Button>
+                <Button href="/listings" variant="primary">
+                  Browse listings
+                </Button>
+              </div>
             </div>
           </section>
 
           {/* Saved searches */}
-          <section className="dashboard-section" aria-labelledby="saved-searches-heading">
+          <section className="dashboard-section client-dashboard__block" aria-labelledby="saved-searches-heading">
             <header className="dashboard-section-header stack--xs">
               <p className="section-tag">Alerts</p>
               <h2 id="saved-searches-heading" className="section-title">Saved searches</h2>
@@ -320,45 +326,49 @@ export default async function ClientsDashboardPage() {
                 Get notified when new listings match your criteria.
               </p>
             </header>
-            <div className="empty-state">
-              <p>No saved searches yet. Set up a search and we&apos;ll email you when something matches.</p>
-              <Button href="/contact" variant="outline">
+            <div className="empty-state client-dashboard__empty">
+              <p>No saved searches yet. Set up a search and we’ll email you when something matches.</p>
+              <Button href="/contact" variant="primary">
                 Request a consultation
               </Button>
             </div>
           </section>
 
-          {/* Next steps – two cards in a grid on larger screens */}
-          <section className="dashboard-section" aria-labelledby="next-steps-heading">
+          {/* Next steps */}
+          <section className="dashboard-section client-dashboard__block" aria-labelledby="next-steps-heading">
             <header className="dashboard-section-header stack--xs">
-              <p className="section-tag">Next steps</p>
+              <p className="section-tag">Resources</p>
               <h2 id="next-steps-heading" className="section-title">Getting started</h2>
               <p className="section-lead">
-                Resources and ways to connect with your agent.
+                Tools and ways to connect with your agent.
               </p>
             </header>
             <div className="dashboard-card-grid">
-              <div className="card">
-                <h3>Connect with your agent</h3>
+              <div className="card client-dashboard__resource-card">
+                <h3>Schedule a consultation</h3>
                 <p>
-                  Schedule a consultation to discuss your goals—buying, selling, or learning the market. We&apos;ll match you with a broker and keep your saved homes and searches in sync here.
+                  Talk through your goals—buying, selling, or learning the market. We’ll match you with a broker and keep everything in sync here.
                 </p>
-                <div className="dashboard-actions">
-                  <Button href="/contact" variant="primary">
-                    Request a consultation
-                  </Button>
-                  <Button href="/resources" variant="outline">
-                    View resources
-                  </Button>
-                </div>
+                <Button href="/contact" variant="primary">
+                  Request a consultation
+                </Button>
               </div>
-              <div className="card">
+              <div className="card client-dashboard__resource-card">
                 <h3>Portland condo guide</h3>
                 <p>
-                  Compare buildings, HOAs, rent caps, and amenities across Portland condos. Refine your searches and talk through options with your agent.
+                  Compare buildings, HOAs, rent caps, and amenities. Refine your search and discuss options with your agent.
                 </p>
-                <Button href="/resources/portland-condo-guide" variant="text">
-                  Open Portland Condo Guide
+                <Button href="/resources/portland-condo-guide" variant="outline">
+                  Open condo guide
+                </Button>
+              </div>
+              <div className="card client-dashboard__resource-card">
+                <h3>Market resources</h3>
+                <p>
+                  Neighborhood guides and market insights to help you decide.
+                </p>
+                <Button href="/resources" variant="text">
+                  View resources
                 </Button>
               </div>
             </div>

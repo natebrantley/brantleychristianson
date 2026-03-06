@@ -39,10 +39,14 @@ export default async function DashboardRouterPage() {
 
     // If no row in Supabase (e.g. webhook missed or user signed in before webhook ran), sync from Clerk now
     if (!user && !error) {
-      const clerkUser = await currentUser();
-      if (clerkUser) {
-        const synced = await ensureUserInSupabase(clerkUser);
-        if (synced) roleFromSupabase = synced.role;
+      try {
+        const clerkUser = await currentUser();
+        if (clerkUser) {
+          const synced = await ensureUserInSupabase(clerkUser);
+          if (synced) roleFromSupabase = synced.role;
+        }
+      } catch (clerkErr) {
+        console.warn('Could not fetch Clerk user for sync:', (clerkErr as Error)?.message ?? clerkErr);
       }
     }
 
@@ -57,8 +61,13 @@ export default async function DashboardRouterPage() {
   }
 
   // Fallback: if Supabase had no row or no special role, check Clerk public_metadata (e.g. before sync ran)
-  const clerkUser = await currentUser();
-  const roleFromClerk = clerkUser?.publicMetadata?.role;
+  let roleFromClerk: string | undefined;
+  try {
+    const clerkUser = await currentUser();
+    roleFromClerk = typeof clerkUser?.publicMetadata?.role === 'string' ? clerkUser.publicMetadata.role : undefined;
+  } catch (clerkErr) {
+    console.warn('Could not fetch Clerk user for role fallback:', (clerkErr as Error)?.message ?? clerkErr);
+  }
   if (typeof roleFromClerk === 'string' && isBrokerRole(roleFromClerk)) {
     redirect('/agents/dashboard');
   }

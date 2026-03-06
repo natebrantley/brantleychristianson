@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
@@ -9,17 +10,38 @@ import { assetPaths } from '@/config/theme';
 import { getAgentBySlug } from '@/data/agents';
 import { getLenderBySlug } from '@/data/lenders';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Lender dashboard',
-  description: 'Dashboard for BCRE preferred lenders. Resources, partner links, and referrals.',
+  description: 'Your referrals, agent contact, and resources. BCRE preferred lender dashboard.',
   robots: { index: false, follow: true },
 };
 
 type LenderUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
+type LeadRow = { id: string; email: string; created_at: string };
+
+function formatLeadDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return iso;
+  }
+}
+
+/** Lead is "priority" if created in the last 7 days */
+function isPriorityLead(createdAt: string): boolean {
+  try {
+    const d = new Date(createdAt);
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return d >= sevenDaysAgo;
+  } catch {
+    return false;
+  }
+}
 
 export default async function LendersDashboardPage() {
   const { userId } = await auth();
@@ -29,31 +51,51 @@ export default async function LendersDashboardPage() {
   }
 
   let user: LenderUser | null = null;
+  let assignedLeads: LeadRow[] = [];
 
   try {
     const supabase = await createClerkSupabaseClient();
-    const { data, error } = await supabase
-      .from('users')
-      .select('first_name, last_name, email, role, assigned_broker_id, assigned_lender_id')
-      .eq('clerk_id', userId)
-      .maybeSingle();
+    const [userRes, leadsRes] = await Promise.all([
+      supabase
+        .from('users')
+        .select('first_name, last_name, email, role, assigned_broker_id, assigned_lender_id')
+        .eq('clerk_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('leads')
+        .select('id, email, created_at')
+        .eq('assigned_lender_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20),
+    ]);
 
-    if (error) {
-      console.error('Error loading lender user from Supabase:', { userId, ...formatSupabaseError(error) });
+    if (userRes.error) {
+      console.error('Error loading lender user from Supabase:', { userId, ...formatSupabaseError(userRes.error) });
     }
-    user = data ?? null;
+    user = userRes.data ?? null;
 
-    // If no row in Supabase, sync from Clerk so future requests see the user
-    if (!user && !error) {
-      const clerkUser = await currentUser();
-      if (clerkUser) await ensureUserInSupabase(clerkUser);
+    if (!user && !userRes.error) {
+      try {
+        const clerkUser = await currentUser();
+        if (clerkUser) await ensureUserInSupabase(clerkUser);
+      } catch (clerkErr) {
+        console.warn('Could not fetch Clerk user for sync:', (clerkErr as Error)?.message ?? clerkErr);
+      }
+    }
+
+    if (!leadsRes.error && Array.isArray(leadsRes.data)) {
+      assignedLeads = leadsRes.data as LeadRow[];
     }
   } catch (err) {
     console.error('Unexpected error loading lender dashboard:', { userId, ...formatSupabaseError(err) });
   }
 
-  // Allow access if Supabase has lender role, or if Clerk public_metadata has it (e.g. before webhook sync)
-  const clerkUser = await currentUser();
+  let clerkUser: Awaited<ReturnType<typeof currentUser>> = null;
+  try {
+    clerkUser = await currentUser();
+  } catch (clerkErr) {
+    console.warn('Could not fetch Clerk user for role:', (clerkErr as Error)?.message ?? clerkErr);
+  }
   const roleFromClerk = typeof clerkUser?.publicMetadata?.role === 'string' ? clerkUser.publicMetadata.role : null;
   const isLender = isLenderRole(user?.role) || isLenderRole(roleFromClerk);
 
@@ -67,9 +109,14 @@ export default async function LendersDashboardPage() {
   const displayName = user
     ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null
     : null;
+  const firstName = displayName?.split(' ')[0] ?? 'there';
 
   const agentContact = user?.assigned_broker_id ? getAgentBySlug(user.assigned_broker_id) : null;
   const preferredLender = user?.assigned_lender_id ? getLenderBySlug(user.assigned_lender_id) : null;
+  const hasTeam = !!(agentContact || preferredLender);
+
+  const priorityLeads = assignedLeads.filter((l) => isPriorityLead(l.created_at));
+  const otherLeads = assignedLeads.filter((l) => !isPriorityLead(l.created_at));
 
   if (!user && clerkUser) {
     user = {
@@ -81,234 +128,259 @@ export default async function LendersDashboardPage() {
   }
 
   return (
-    <main className="dashboard-page">
+    <main className="dashboard-page lender-dashboard">
       <Hero
         variant="short"
         title="Lender dashboard"
-        lead="Resources and tools for BCRE preferred lending partners."
+        lead="Your referrals, contacts, and partner resources."
         imageSrc={`${assetPaths.stock}/office.jpeg`}
         imageAlt="Lender dashboard – preferred lending partners"
       />
-      <div className="section">
-        <div className="container stack--lg">
-          <header className="stack--sm">
-            <p className="section-tag">Welcome back</p>
-            <h1 className="section-title">
-              {displayName ? `Hi, ${displayName.split(' ')[0]}` : 'Lender dashboard'}
+      <div className="section lender-dashboard__section">
+        <div className="container stack--lg lender-dashboard__container">
+          {/* Welcome + quick actions */}
+          <header className="lender-dashboard__welcome" aria-labelledby="welcome-heading">
+            <p className="section-tag lender-dashboard__welcome-tag">Your home base</p>
+            <h1 id="welcome-heading" className="section-title lender-dashboard__welcome-title">
+              Welcome back{displayName ? `, ${firstName}` : ''}
             </h1>
-            {displayName && (
-              <p className="section-lead">
-                Signed in as <strong>{displayName}</strong>
-                {user?.email ? ` (${user.email})` : ''}
+            {displayName && user?.email && (
+              <p className="section-lead lender-dashboard__welcome-lead">
+                Signed in as <strong>{displayName}</strong> · {user.email}
               </p>
             )}
             {!displayName && (
-              <p className="section-lead">
-                Your profile is syncing from Clerk. Refresh in a moment.
+              <p className="section-lead lender-dashboard__welcome-lead">
+                Your profile is syncing. Refresh in a moment if needed.
               </p>
             )}
-            <span
-              className="text--muted"
-              style={{ fontSize: '0.8125rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}
-              title="Synced from Clerk (Public metadata role)"
-            >
-              Role: {user?.role ?? 'lender'}
-            </span>
+            <div className="lender-dashboard__quick-actions">
+              <Button href="/contact" variant="primary">
+                Contact BCRE
+              </Button>
+              <Button href="/lenders" variant="outline">
+                View preferred lenders
+              </Button>
+              <Button href="/resources" variant="outline">
+                Browse resources
+              </Button>
+            </div>
           </header>
 
-          {/* Agent contact for easy referral follow-up */}
-          <section className="dashboard-section" aria-labelledby="agent-contact-heading">
-            <h2 id="agent-contact-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
-              Your agent contact
+          {/* Leads needing attention – top priority */}
+          <section className="lender-dashboard__leads" aria-labelledby="leads-heading">
+            <h2 id="leads-heading" className="lender-dashboard__leads-heading">
+              Leads needing attention
             </h2>
-            {agentContact ? (
-              <div className="card dashboard-contact-card">
-                <div style={{ flexShrink: 0 }}>
-                  <Image
-                    src={agentContact.image}
-                    alt=""
-                    width={80}
-                    height={80}
-                    style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
-                  />
-                </div>
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{agentContact.name}</p>
-                  <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{agentContact.title}</p>
-                  {(agentContact.phone || agentContact.email) && (
-                    <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
-                      {agentContact.phone && (
-                        <li style={{ marginTop: '0.25rem' }}>
-                          <span className="text--muted">Phone: </span>
-                          <a href={`tel:${agentContact.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
-                            {agentContact.phone}
-                          </a>
+            <p className="lender-dashboard__leads-lead">
+              {assignedLeads.length > 0
+                ? `Referrals assigned to you. Follow up with the agent or client. ${priorityLeads.length > 0 ? `${priorityLeads.length} new in the last 7 days.` : ''}`
+                : 'Referrals assigned to you by agents will appear here. Connect with your agent contact to receive leads.'}
+            </p>
+            {assignedLeads.length > 0 ? (
+              <div className="card lender-dashboard__list-card">
+                {priorityLeads.length > 0 && (
+                  <div className="lender-dashboard__priority-block">
+                    <h3 className="lender-dashboard__priority-title">New (last 7 days)</h3>
+                    <ul className="lender-dashboard__list">
+                      {priorityLeads.map((lead) => (
+                        <li key={lead.id} className="lender-dashboard__list-item lender-dashboard__list-item--priority">
+                          <span className="lender-dashboard__list-email">{lead.email}</span>
+                          <time className="text--muted lender-dashboard__list-date" dateTime={lead.created_at}>
+                            {formatLeadDate(lead.created_at)}
+                          </time>
                         </li>
-                      )}
-                      {agentContact.email && (
-                        <li style={{ marginTop: '0.25rem' }}>
-                          <span className="text--muted">Email: </span>
-                          <a href={`mailto:${agentContact.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
-                            {agentContact.email}
-                          </a>
-                        </li>
-                      )}
+                      ))}
                     </ul>
-                  )}
-                  <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
-                    {agentContact.phone && (
-                      <Button href={`tel:${agentContact.phone.replace(/\D/g, '')}`} variant="primary">
-                        Call {agentContact.name}
-                      </Button>
-                    )}
-                    <Button href={`mailto:${agentContact.email}`} variant="outline">
-                      Email
-                    </Button>
-                    <Button href={agentContact.url} variant="text">
-                      View profile
-                    </Button>
                   </div>
-                </div>
+                )}
+                {otherLeads.length > 0 && (
+                  <div className="lender-dashboard__priority-block">
+                    <h3 className="lender-dashboard__priority-title">
+                      {priorityLeads.length > 0 ? 'Older' : 'Assigned to you'}
+                    </h3>
+                    <ul className="lender-dashboard__list">
+                      {otherLeads.map((lead) => (
+                        <li key={lead.id} className="lender-dashboard__list-item">
+                          <span className="lender-dashboard__list-email">{lead.email}</span>
+                          <time className="text--muted lender-dashboard__list-date" dateTime={lead.created_at}>
+                            {formatLeadDate(lead.created_at)}
+                          </time>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="card">
-                <p style={{ margin: 0 }}>
-                  Add a primary BCRE agent contact for referrals and follow-up. They&apos;ll appear here for quick call and email.
-                </p>
-                <div className="dashboard-actions">
-                  <Button href="/agents" variant="primary">
-                    Choose your agent contact
-                  </Button>
-                </div>
+              <div className="empty-state lender-dashboard__empty">
+                <p>No referrals assigned yet. Your agent contact can assign leads to you for follow-up.</p>
+                <Button href="/agents" variant="primary">
+                  Choose your agent contact
+                </Button>
               </div>
             )}
           </section>
 
-          {/* Your preferred lender (partner in network) */}
-          <section className="dashboard-section" aria-labelledby="preferred-lender-heading">
-            <h2 id="preferred-lender-heading" className="section-title" style={{ marginBottom: '0.5rem' }}>
-              Your preferred lender
+          {/* Your team: Agent + Lender */}
+          <section className="lender-dashboard__team" aria-labelledby="team-heading">
+            <h2 id="team-heading" className="lender-dashboard__team-heading">
+              Your team
             </h2>
-            {preferredLender ? (
-              <div className="card dashboard-contact-card">
-                <div style={{ flexShrink: 0 }}>
-                  <Image
-                    src={preferredLender.image}
-                    alt=""
-                    width={80}
-                    height={80}
-                    style={{ borderRadius: 'var(--radius-md)', objectFit: 'cover' }}
-                  />
-                </div>
-                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <p style={{ fontWeight: 600, margin: 0, fontSize: '1.125rem' }}>{preferredLender.name}</p>
-                  <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.9375rem' }}>{preferredLender.title} · {preferredLender.company}</p>
-                  {(preferredLender.phone || preferredLender.email) && (
-                    <ul style={{ margin: 'var(--space-sm) 0 0 0', padding: 0, listStyle: 'none', fontSize: '0.9375rem' }}>
-                      {preferredLender.phone && (
-                        <li style={{ marginTop: '0.25rem' }}>
-                          <span className="text--muted">Phone: </span>
-                          <a href={`tel:${preferredLender.phone.replace(/\D/g, '')}`} style={{ fontWeight: 500 }}>
-                            {preferredLender.phone}
-                          </a>
-                        </li>
+            <p className="lender-dashboard__team-lead">
+              {hasTeam
+                ? 'Your BCRE agent contact and preferred lender partner. Reach out anytime.'
+                : 'Add an agent contact and optional lender partner. They’ll appear here for quick contact.'}
+            </p>
+            <div className="lender-dashboard__team-grid">
+              <div className="lender-dashboard__team-card">
+                <h3 className="lender-dashboard__team-card-title">Your agent contact</h3>
+                {agentContact ? (
+                  <div className="card dashboard-contact-card lender-dashboard__contact-card">
+                    <div className="lender-dashboard__contact-avatar">
+                      <Image
+                        src={agentContact.image}
+                        alt=""
+                        width={72}
+                        height={72}
+                        style={{ borderRadius: 'var(--radius-full)', objectFit: 'cover' }}
+                      />
+                    </div>
+                    <div className="lender-dashboard__contact-body">
+                      <p className="lender-dashboard__contact-name">{agentContact.name}</p>
+                      <p className="lender-dashboard__contact-meta">{agentContact.title}</p>
+                      {(agentContact.phone || agentContact.email) && (
+                        <ul className="lender-dashboard__contact-list">
+                          {agentContact.phone && (
+                            <li>
+                              <span className="text--muted">Phone </span>
+                              <a href={`tel:${agentContact.phone.replace(/\D/g, '')}`}>{agentContact.phone}</a>
+                            </li>
+                          )}
+                          {agentContact.email && (
+                            <li>
+                              <span className="text--muted">Email </span>
+                              <a href={`mailto:${agentContact.email}`} style={{ wordBreak: 'break-all' }}>{agentContact.email}</a>
+                            </li>
+                          )}
+                        </ul>
                       )}
-                      {preferredLender.email && (
-                        <li style={{ marginTop: '0.25rem' }}>
-                          <span className="text--muted">Email: </span>
-                          <a href={`mailto:${preferredLender.email}`} style={{ fontWeight: 500, wordBreak: 'break-all' }}>
-                            {preferredLender.email}
-                          </a>
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                  <div className="dashboard-actions" style={{ marginTop: 'var(--space-md)', gap: '0.5rem' }}>
-                    {preferredLender.phone && (
-                      <Button href={`tel:${preferredLender.phone.replace(/\D/g, '')}`} variant="primary">
-                        Call {preferredLender.name}
-                      </Button>
-                    )}
-                    <Button href={`mailto:${preferredLender.email}`} variant="outline">
-                      Email
-                    </Button>
-                    {preferredLender.url ? (
-                      <Button href={preferredLender.url} variant="text" target="_blank" rel="noopener noreferrer">
-                        Visit website
-                      </Button>
-                    ) : null}
+                      <div className="dashboard-actions lender-dashboard__contact-actions">
+                        {agentContact.phone && <Button href={`tel:${agentContact.phone.replace(/\D/g, '')}`} variant="primary">Call</Button>}
+                        <Button href={`mailto:${agentContact.email}`} variant="outline">Email</Button>
+                        <Button href={agentContact.url} variant="text">Profile</Button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="card lender-dashboard__empty-card">
+                    <p>Add a primary BCRE agent for referrals and follow-up.</p>
+                    <Button href="/agents" variant="primary">
+                      Choose agent contact
+                    </Button>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="card">
-                <p style={{ margin: 0 }}>
-                  Add a preferred lender partner for co-loans or referrals. They&apos;ll appear here for quick contact.
-                </p>
-                <div className="dashboard-actions">
-                  <Button href="/lenders" variant="primary">
-                    Choose preferred lender
-                  </Button>
-                </div>
+              <div className="lender-dashboard__team-card">
+                <h3 className="lender-dashboard__team-card-title">Your preferred lender</h3>
+                {preferredLender ? (
+                  <div className="card dashboard-contact-card lender-dashboard__contact-card">
+                    <div className="lender-dashboard__contact-avatar">
+                      <Image
+                        src={preferredLender.image}
+                        alt=""
+                        width={72}
+                        height={72}
+                        style={{ borderRadius: 'var(--radius-full)', objectFit: 'cover' }}
+                      />
+                    </div>
+                    <div className="lender-dashboard__contact-body">
+                      <p className="lender-dashboard__contact-name">{preferredLender.name}</p>
+                      <p className="lender-dashboard__contact-meta">{preferredLender.title} · {preferredLender.company}</p>
+                      {(preferredLender.phone || preferredLender.email) && (
+                        <ul className="lender-dashboard__contact-list">
+                          {preferredLender.phone && (
+                            <li>
+                              <span className="text--muted">Phone </span>
+                              <a href={`tel:${preferredLender.phone.replace(/\D/g, '')}`}>{preferredLender.phone}</a>
+                            </li>
+                          )}
+                          {preferredLender.email && (
+                            <li>
+                              <span className="text--muted">Email </span>
+                              <a href={`mailto:${preferredLender.email}`} style={{ wordBreak: 'break-all' }}>{preferredLender.email}</a>
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                      <div className="dashboard-actions lender-dashboard__contact-actions">
+                        {preferredLender.phone && <Button href={`tel:${preferredLender.phone.replace(/\D/g, '')}`} variant="primary">Call</Button>}
+                        <Button href={`mailto:${preferredLender.email}`} variant="outline">Email</Button>
+                        {preferredLender.url ? (
+                          <Button href={preferredLender.url} variant="text" target="_blank" rel="noopener noreferrer">Website</Button>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="card lender-dashboard__empty-card">
+                    <p>Add a lender partner for co-loans or referrals.</p>
+                    <Button href="/lenders" variant="primary">
+                      Choose preferred lender
+                    </Button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </section>
 
-          <section className="dashboard-section" aria-labelledby="lenders-partners-heading">
+          {/* Your profile & resources */}
+          <section className="dashboard-section lender-dashboard__block" aria-labelledby="profile-heading">
             <header className="dashboard-section-header stack--xs">
-              <p className="section-tag">Preferred lenders</p>
-              <h2 id="lenders-partners-heading" className="section-title">
-                Your profile & partners
-              </h2>
+              <p className="section-tag">Profile</p>
+              <h2 id="profile-heading" className="section-title">Your profile & partners</h2>
               <p className="section-lead">
-                View the preferred lenders page as clients see it. Your profile appears there when your account is linked to a lender entry.
+                View the preferred lenders page as clients see it. Your profile appears when your account is linked to a lender entry.
               </p>
             </header>
-            <div className="dashboard-actions">
+            <div className="lender-dashboard__block-actions">
               <Button href="/lenders" variant="primary">
                 View preferred lenders
               </Button>
             </div>
           </section>
 
-          <section className="dashboard-section" aria-labelledby="resources-heading">
+          <section className="dashboard-section lender-dashboard__block" aria-labelledby="resources-heading">
             <header className="dashboard-section-header stack--xs">
               <p className="section-tag">Resources</p>
-              <h2 id="resources-heading" className="section-title">
-                Partner resources
-              </h2>
+              <h2 id="resources-heading" className="section-title">Partner resources</h2>
               <p className="section-lead">
                 Guides and market information to share with clients and use in your workflow.
               </p>
             </header>
-            <div className="card">
-              <div className="dashboard-actions" style={{ flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+            <div className="dashboard-card-grid lender-dashboard__resource-grid">
+              <div className="card lender-dashboard__resource-card">
+                <h3>Resources</h3>
+                <p>Market guides and content to share with clients.</p>
                 <Button href="/resources" variant="outline">
                   Browse resources
                 </Button>
+              </div>
+              <div className="card lender-dashboard__resource-card">
+                <h3>Portland condo guide</h3>
+                <p>Compare buildings, HOAs, and amenities for client conversations.</p>
                 <Button href="/resources/portland-condo-guide" variant="outline">
-                  Portland condo guide
+                  Open condo guide
                 </Button>
-                <Button href="/markets" variant="text">
-                  Explore markets
+              </div>
+              <div className="card lender-dashboard__resource-card">
+                <h3>Contact BCRE</h3>
+                <p>Questions about referrals, program updates, or your lender profile?</p>
+                <Button href="/contact" variant="primary">
+                  Contact BCRE
                 </Button>
               </div>
             </div>
-          </section>
-
-          <section className="dashboard-section" aria-labelledby="contact-heading">
-            <header className="dashboard-section-header stack--xs">
-              <p className="section-tag">Get in touch</p>
-              <h2 id="contact-heading" className="section-title">
-                BCRE team
-              </h2>
-              <p className="section-lead">
-                Questions about referrals, program updates, or your lender profile? Reach out to the team.
-              </p>
-            </header>
-            <Button href="/contact" variant="primary">
-              Contact BCRE
-            </Button>
           </section>
         </div>
       </div>

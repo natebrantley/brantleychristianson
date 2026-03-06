@@ -33,7 +33,19 @@ export async function createClerkSupabaseClient(): Promise<SupabaseClient> {
 
   const { getToken } = await auth();
   const template = process.env.CLERK_JWT_TEMPLATE_SUPABASE?.trim();
-  const token = await getToken(template ? { template } : undefined);
+  let token: string | null = null;
+
+  if (template) {
+    try {
+      token = await getToken({ template });
+    } catch (err) {
+      // Template may not exist in Clerk (404) or other API error; fall back to default JWT
+      console.warn('Clerk JWT template not available, using default token:', (err as Error)?.message ?? err);
+    }
+  }
+  if (!token) {
+    token = await getToken();
+  }
 
   if (!token) {
     throw new Error('No Clerk session token available for Supabase client.');

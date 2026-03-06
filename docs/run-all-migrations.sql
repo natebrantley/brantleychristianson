@@ -54,6 +54,8 @@ create table if not exists public.leads (
 create index if not exists leads_email_idx on public.leads (email);
 create index if not exists leads_clerk_id_idx on public.leads (clerk_id) where clerk_id is not null;
 create index if not exists leads_assigned_broker_id_idx on public.leads (assigned_broker_id) where assigned_broker_id is not null;
+alter table public.leads add column if not exists assigned_lender_id text;
+create index if not exists leads_assigned_lender_id_idx on public.leads (assigned_lender_id) where assigned_lender_id is not null;
 
 drop trigger if exists leads_updated_at on public.leads;
 create trigger leads_updated_at

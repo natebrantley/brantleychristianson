@@ -1,0 +1,293 @@
+/* Client dashboard – welcome, team grid, activity, empty states (center-aligned) */
+
+.client-dashboard__section {
+  padding-top: var(--space-lg);
+}
+
+.client-dashboard__container {
+  max-width: 960px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+/* Welcome block */
+.client-dashboard__welcome {
+  text-align: center;
+  padding: var(--space-xl) var(--space-lg);
+  background: linear-gradient(180deg, var(--theme-surface) 0%, var(--theme-bg) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-xxl);
+  box-shadow: var(--shadow-soft);
+}
+
+@media (min-width: 768px) {
+  .client-dashboard__welcome {
+    padding: var(--space-xxl) var(--space-xl);
+  }
+}
+
+.client-dashboard__welcome-tag {
+  margin-bottom: 0.5rem;
+}
+
+.client-dashboard__welcome-title {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  margin-bottom: 0.5rem;
+}
+
+.client-dashboard__welcome-lead {
+  margin-bottom: var(--space-lg);
+  font-size: 0.9375rem;
+}
+
+.client-dashboard__quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+/* Your team section */
+.client-dashboard__team {
+  margin-top: 0;
+  text-align: center;
+}
+
+.client-dashboard__team-heading {
+  font-family: var(--font-headings);
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 0.25rem;
+}
+
+.client-dashboard__team-lead {
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+  margin: 0 auto var(--space-lg);
+  max-width: 48ch;
+}
+
+.client-dashboard__team-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+  justify-items: center;
+}
+
+@media (min-width: 640px) {
+  .client-dashboard__team-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 720px;
+    margin-inline: auto;
+  }
+}
+
+.client-dashboard__team-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  max-width: 360px;
+}
+
+@media (min-width: 640px) {
+  .client-dashboard__team-card {
+    max-width: none;
+  }
+}
+
+.client-dashboard__team-card-title {
+  font-family: var(--font-headings);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-accent);
+  margin: 0 0 var(--space-sm);
+}
+
+/* Contact cards inside team – center-aligned */
+.client-dashboard__contact-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.client-dashboard__contact-avatar {
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.client-dashboard__contact-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.client-dashboard__contact-name {
+  font-weight: 600;
+  font-size: 1.125rem;
+  margin: 0 0 0.25rem;
+  color: var(--color-primary);
+}
+
+.client-dashboard__contact-meta {
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+  margin: 0 0 var(--space-sm);
+}
+
+.client-dashboard__contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--space-md);
+  font-size: 0.9375rem;
+}
+
+.client-dashboard__contact-list li {
+  margin-top: 0.25rem;
+}
+
+.client-dashboard__contact-list a {
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.client-dashboard__contact-list a:hover {
+  color: var(--color-primary);
+}
+
+.client-dashboard__contact-actions {
+  margin-top: auto;
+  justify-content: center;
+}
+
+/* Empty team card */
+.client-dashboard__empty-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 140px;
+  text-align: center;
+}
+
+.client-dashboard__empty-card p {
+  margin: 0 0 var(--space-md);
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+}
+
+/* Activity list – center section header */
+.client-dashboard__activity .dashboard-section-header {
+  text-align: center;
+  align-items: center;
+}
+
+.client-dashboard__activity .dashboard-section-header .section-lead {
+  margin-bottom: 0;
+  margin-inline: auto;
+}
+
+.client-dashboard__list-card {
+  padding: 0;
+  overflow: hidden;
+  max-width: 560px;
+  margin-inline: auto;
+}
+
+.client-dashboard__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.client-dashboard__list-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.client-dashboard__list-item:last-child {
+  border-bottom: none;
+}
+
+.client-dashboard__list-email {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.client-dashboard__list-date {
+  font-size: 0.875rem;
+}
+
+/* Block sections (saved homes, alerts, resources) – center */
+.client-dashboard__block {
+  margin-top: var(--space-xxl);
+}
+
+.client-dashboard__block .dashboard-section-header {
+  text-align: center;
+  align-items: center;
+}
+
+.client-dashboard__block .dashboard-section-header .section-lead {
+  margin-inline: auto;
+}
+
+.client-dashboard__empty {
+  padding: var(--space-xl) var(--space-lg);
+}
+
+.client-dashboard__empty .dashboard-actions {
+  justify-content: center;
+  margin-top: var(--space-md);
+}
+
+/* Resource cards – center content and grid */
+.client-dashboard__block .dashboard-card-grid {
+  justify-items: center;
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.client-dashboard__resource-card {
+  transition: box-shadow 0.3s var(--ease-out-expo), transform 0.3s var(--ease-out-expo);
+  text-align: center;
+}
+
+.client-dashboard__resource-card .dashboard-actions,
+.client-dashboard__resource-card .button {
+  justify-content: center;
+}
+
+.client-dashboard__resource-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.client-dashboard__resource-card h3 {
+  font-family: var(--font-headings);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem;
+}
+
+.client-dashboard__resource-card p {
+  margin: 0 0 var(--space-md);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+
+.client-dashboard__resource-card .button {
+  margin-top: 0.25rem;
+}
