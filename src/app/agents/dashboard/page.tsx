@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Agent dashboard',
-  description: 'Assigned leads, their activity, and saved searches. BCRE agent dashboard.',
+  description: 'Your leads database and client activity. BCRE agent dashboard.',
 };
 
 type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
@@ -200,10 +200,6 @@ export default async function AgentsDashboardPage() {
     ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null
     : null;
 
-  // Assigned leads only; clients = those with clerk_id (signed in)
-  const assignedLeadsCount = totalAssignedCount;
-  const activeClientsCount = leads.filter((l) => l.clerk_id).length;
-
   function leadDisplayName(lead: LeadRow): string {
     const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ').trim();
     return name || lead.email || '—';
@@ -220,7 +216,7 @@ export default async function AgentsDashboardPage() {
       <Hero
         variant="short"
         title="Agent dashboard"
-        lead="Your pipeline, client activity, and saved searches—all in one place."
+        lead="Your leads database and quick links."
         imageSrc={`${assetPaths.stock}/table.jpeg`}
         imageAlt="Agent dashboard – assigned leads and activity"
       />
@@ -253,103 +249,21 @@ export default async function AgentsDashboardPage() {
             </div>
           </div>
 
-          {/* KPIs */}
-          <section className="dashboard-section" aria-labelledby="pipeline-heading">
+          {/* Leads database — primary action */}
+          <section className="dashboard-section" aria-labelledby="leads-db-heading">
             <header className="dashboard-section-header stack--xs">
-              <p className="section-tag">Overview</p>
-              <h2 id="pipeline-heading" className="section-title">Pipeline at a glance</h2>
+              <p className="section-tag">Leads</p>
+              <h2 id="leads-db-heading" className="section-title">Leads database</h2>
               <p className="section-lead">
-                Assigned leads, clients who’ve signed in, and saved searches they’ve created.
+                Search, sort, and manage your assigned leads. View contact info and follow up in one place.
               </p>
             </header>
-            <div className="agent-stats">
-              <div className="agent-stat">
-                <div className="agent-stat__value">{assignedLeadsCount > 0 ? assignedLeadsCount : '—'}</div>
-                <div className="agent-stat__label">Assigned to me</div>
-              </div>
-              <div className="agent-stat">
-                <div className="agent-stat__value">{activeClientsCount > 0 ? activeClientsCount : '—'}</div>
-                <div className="agent-stat__label">Active clients</div>
-              </div>
-              <div className="agent-stat">
-                <div className="agent-stat__value">{savedSearches.length > 0 ? savedSearches.length : '—'}</div>
-                <div className="agent-stat__label">Saved searches</div>
-              </div>
+            <div className="dashboard-actions">
+              <Link href="/agents/dashboard/leads" className="button button--primary">
+                Open leads database
+              </Link>
             </div>
           </section>
-
-          {/* Assigned leads: tappable cards → detail */}
-          <section className="dashboard-section" aria-labelledby="leads-heading">
-            <header className="dashboard-section-header stack--xs">
-              <div className="agent-section-cta">
-                <div>
-                  <p className="section-tag">Leads</p>
-                  <h2 id="leads-heading" className="section-title">Recent leads</h2>
-                  <p className="section-lead">
-                    Tap a lead to view their profile, update contact info, and follow up.
-                    {assignedLeadsCount > 10 && (
-                      <span style={{ display: 'block', marginTop: '0.25rem' }}>
-                        Showing 10 most recent of {assignedLeadsCount}.
-                      </span>
-                    )}
-                  </p>
-                </div>
-                {assignedLeadsCount > 0 && (
-                  <Link href="/agents/dashboard/leads" className="button button--primary">
-                    See all leads
-                  </Link>
-                )}
-              </div>
-            </header>
-            {leads.length > 0 ? (
-              <ul className="agent-leads-list">
-                {leads.map((lead) => (
-                  <li key={lead.id}>
-                    <div className="agent-lead-card">
-                      <Link href={`/agents/dashboard/leads/${lead.id}`} className="agent-lead-card__link" aria-label={`View ${leadDisplayName(lead)}`}>
-                        <div className="agent-lead-card__row">
-                          <span className="agent-lead-card__name">{leadDisplayName(lead)}</span>
-                          <span className="agent-lead-card__date">{formatLeadDate(lead.created_at)}</span>
-                          <span className="agent-lead-card__chevron" aria-hidden>→</span>
-                        </div>
-                        {lead.email && (
-                          <p className="agent-lead-card__email">{lead.email}</p>
-                        )}
-                        <div className="agent-lead-card__meta">
-                          <span>Last active: {formatLastActive(lead.last_login)}</span>
-                          {(lead.property_views != null && lead.property_views > 0) && (
-                            <span>Views: {lead.property_views}</span>
-                          )}
-                          {(lead.property_inquiries != null && lead.property_inquiries > 0) && (
-                            <span>Inquiries: {lead.property_inquiries}</span>
-                          )}
-                          {lead.clerk_id && <span className="agent-lead-card__badge">Client</span>}
-                        </div>
-                      </Link>
-                      {lead.phone && (
-                        <p className="agent-lead-card__phone">
-                          <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a>
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-            <div className="empty-state">
-              <p>No leads assigned to you yet. Assigned leads will appear here with their activity and saved searches.</p>
-              <p className="text--muted" style={{ fontSize: '0.8125rem', marginTop: '0.5rem' }}>
-                Leads are matched by your Clerk ID. If your CRM uses your name or email for assignment, we’ll pick them up and sync on next load.
-              </p>
-              <p className="text--muted" style={{ fontSize: '0.75rem', marginTop: '0.5rem', maxWidth: '32rem' }}>
-                To verify in Supabase: run <code style={{ background: 'var(--bg-subtle)', padding: '0.1em 0.3em', borderRadius: 4 }}>SELECT DISTINCT assigned_broker_id FROM leads WHERE assigned_broker_id IS NOT NULL;</code> — leads show here when a row’s <code>assigned_broker_id</code> equals your Clerk ID, your email (e.g. nate@brantleychristianson.com), full name (e.g. Nate Brantley), or agent slug (e.g. nate). Matching is case-insensitive (we try your name and slug in lower case too).
-              </p>
-              <Button href="/contact" variant="outline">
-                View contact form
-              </Button>
-            </div>
-          )}
-        </section>
 
         {/* Client saved searches */}
         <section className="dashboard-section" aria-labelledby="saved-searches-heading">
