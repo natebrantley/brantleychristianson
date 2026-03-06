@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError, supabaseAdmin } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
