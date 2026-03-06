@@ -40,6 +40,11 @@ type LeadRow = {
   last_login?: string | null;
   property_views?: number | null;
   property_inquiries?: number | null;
+  source?: string | null;
+  timeframe?: string | null;
+  city?: string | null;
+  state?: string | null;
+  notes?: string | null;
 };
 
 function formatLeadDate(iso: string): string {
@@ -67,6 +72,27 @@ function formatLastActive(iso: string | null | undefined): string {
   }
 }
 
+function truncate(str: string | null | undefined, maxLen: number): string {
+  if (!str || !str.trim()) return '—';
+  const t = str.trim();
+  return t.length <= maxLen ? t : t.slice(0, maxLen) + '…';
+}
+
+const RECENT_DAYS = 7;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/** Visual feedback: "new" = created in last N days, "active" = last_login in last N days. */
+function getLeadRecency(lead: LeadRow): 'new' | 'active' | null {
+  const now = Date.now();
+  const createdMs = lead.created_at ? new Date(lead.created_at).getTime() : 0;
+  const loginMs = lead.last_login ? new Date(lead.last_login).getTime() : 0;
+  const createdDaysAgo = (now - createdMs) / MS_PER_DAY;
+  const loginDaysAgo = loginMs ? (now - loginMs) / MS_PER_DAY : Infinity;
+  if (createdDaysAgo <= RECENT_DAYS && createdDaysAgo >= 0) return 'new';
+  if (loginDaysAgo <= RECENT_DAYS && loginDaysAgo >= 0) return 'active';
+  return null;
+}
+
 /** Escape for Postgres ilike: % and _ are wildcards. Comma would break .or() so strip it. */
 function escapeIlike(s: string): string {
   const noComma = s.replace(/,/g, ' ').trim();
@@ -76,7 +102,7 @@ function escapeIlike(s: string): string {
 export default async function AgentLeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string; sort?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; sort?: string; status?: string; source?: string }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect('/sign-in');
@@ -85,6 +111,8 @@ export default async function AgentLeadsPage({
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
   const q = (params.q ?? '').trim().slice(0, 100);
   const sortKey = params.sort ?? 'created_at-desc';
+  const statusFilter = params.status === 'clients' || params.status === 'leads' ? params.status : 'all';
+  const sourceFilter = (params.source ?? '').trim().slice(0, 80);
   const sortConfig = SORT_OPTIONS.find((o) => o.value === sortKey) ?? SORT_OPTIONS[0];
 
   const from = (page - 1) * PAGE_SIZE;
@@ -110,10 +138,19 @@ export default async function AgentLeadsPage({
       let query = client
         .from('leads')
         .select(
-          'id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries',
+          'id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries, source, timeframe, city, state, notes',
           { count: 'exact' }
         )
         .eq('assigned_broker_id', userId);
+      if (statusFilter === 'clients') {
+        query = query.not('clerk_id', 'is', null);
+      } else if (statusFilter === 'leads') {
+        query = query.is('clerk_id', null);
+      }
+      if (sourceFilter) {
+        const sourcePattern = `%${escapeIlike(sourceFilter)}%`;
+        query = query.ilike('source', sourcePattern);
+      }
       if (q) {
         const pattern = `%${escapeIlike(q)}%`;
         query = query.or(
@@ -155,10 +192,19 @@ export default async function AgentLeadsPage({
       let fallbackQuery = admin
         .from('leads')
         .select(
-          'id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries',
+          'id, email, created_at, assigned_broker_id, clerk_id, first_name, last_name, phone, last_login, property_views, property_inquiries, source, timeframe, city, state, notes',
           { count: 'exact' }
         )
         .in('assigned_broker_id', uniqWithCase);
+      if (statusFilter === 'clients') {
+        fallbackQuery = fallbackQuery.not('clerk_id', 'is', null);
+      } else if (statusFilter === 'leads') {
+        fallbackQuery = fallbackQuery.is('clerk_id', null);
+      }
+      if (sourceFilter) {
+        const sourcePattern = `%${escapeIlike(sourceFilter)}%`;
+        fallbackQuery = fallbackQuery.ilike('source', sourcePattern);
+      }
       if (q) {
         const pattern = `%${escapeIlike(q)}%`;
         fallbackQuery = fallbackQuery.or(
@@ -203,16 +249,21 @@ export default async function AgentLeadsPage({
   const startRow = totalCount === 0 ? 0 : from + 1;
   const endRow = Math.min(from + PAGE_SIZE, totalCount);
 
-  function buildUrl(updates: { page?: number; q?: string; sort?: string }) {
-    const u = new URL('/agents/dashboard/leads', 'https://x');
-    if (updates.page != null) u.searchParams.set('page', String(updates.page));
-    if (updates.q !== undefined) u.searchParams.set('q', updates.q);
-    if (updates.sort !== undefined) u.searchParams.set('sort', updates.sort);
+  const filterParams = { q, sort: sortKey, status: statusFilter, source: sourceFilter };
+
+  function buildUrl(updates: Partial<{ page: number; q: string; sort: string; status: string; source: string }>) {
     const base = '/agents/dashboard/leads';
     const sp = new URLSearchParams();
-    if (updates.page != null) sp.set('page', String(updates.page));
-    if (updates.q !== undefined) sp.set('q', updates.q);
-    if (updates.sort !== undefined) sp.set('sort', updates.sort);
+    const pageVal = updates.page != null ? updates.page : page;
+    const qVal = updates.q !== undefined ? updates.q : filterParams.q;
+    const sortVal = updates.sort !== undefined ? updates.sort : filterParams.sort;
+    const statusVal = updates.status !== undefined ? updates.status : filterParams.status;
+    const sourceVal = updates.source !== undefined ? updates.source : filterParams.source;
+    if (pageVal > 1) sp.set('page', String(pageVal));
+    if (qVal) sp.set('q', qVal);
+    if (sortVal !== 'created_at-desc') sp.set('sort', sortVal);
+    if (statusVal !== 'all') sp.set('status', statusVal);
+    if (sourceVal) sp.set('source', sourceVal);
     const qs = sp.toString();
     return qs ? `${base}?${qs}` : base;
   }
@@ -230,7 +281,7 @@ export default async function AgentLeadsPage({
   }
 
   return (
-    <main className="dashboard-page leads-page">
+    <main className="dashboard-page leads-page agent-dashboard">
       <Hero
         variant="short"
         title="Leads"
@@ -240,7 +291,7 @@ export default async function AgentLeadsPage({
       />
       <div className="section">
         <div className="container stack--lg">
-          <div className="leads-toolbar">
+          <div className="leads-toolbar" id="leads-toolbar">
             <Link href="/agents/dashboard" className="leads-toolbar__back">
               ← Back to dashboard
             </Link>
@@ -248,14 +299,16 @@ export default async function AgentLeadsPage({
               <h1 className="leads-toolbar__title">All leads</h1>
               <span className="leads-toolbar__count">
                 {totalCount.toLocaleString()} lead{totalCount !== 1 ? 's' : ''}
-                {q ? (
-                  <> matching &quot;{q}&quot; — <Link href={buildUrl({ q: '', sort: sortKey })}>Clear search</Link></>
+                {(q || statusFilter !== 'all' || sourceFilter) ? (
+                  <> — <Link href={buildUrl({ page: 1, q: '', status: 'all', source: '' })}>Clear filters</Link></>
                 ) : null}
               </span>
             </div>
             <div className="leads-filters">
               <form method="get" action="/agents/dashboard/leads" className="leads-search-form">
                 <input type="hidden" name="sort" value={sortKey} />
+                <input type="hidden" name="status" value={statusFilter} />
+                <input type="hidden" name="source" value={sourceFilter} />
                 <input
                   type="search"
                   name="q"
@@ -269,99 +322,165 @@ export default async function AgentLeadsPage({
                 options={SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                 currentSort={sortKey}
                 currentQ={q}
+                currentStatus={statusFilter}
+                currentSource={sourceFilter}
               />
+              <form method="get" action="/agents/dashboard/leads" className="leads-filters-inline">
+                <input type="hidden" name="q" value={q} />
+                <input type="hidden" name="sort" value={sortKey} />
+                <select name="status" defaultValue={statusFilter} className="leads-filters-inline__select" aria-label="Filter by status">
+                  <option value="all">All</option>
+                  <option value="clients">Clients</option>
+                  <option value="leads">Leads</option>
+                </select>
+              </form>
             </div>
           </div>
 
           {leads.length > 0 ? (
             <>
-              {/* Desktop: table */}
+              {/* Desktop: simple table with status feedback and clear View action */}
               <div className="leads-table-card leads-table-card--desktop">
                 <div className="leads-table-scroll">
                   <table className="leads-table">
                     <thead>
                       <tr>
                         <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Contact</th>
                         <th>Last active</th>
-                        <th>Views</th>
-                        <th>Inquiries</th>
-                        <th>Created</th>
-                        <th>Client</th>
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {leads.map((lead) => (
-                        <tr key={lead.id}>
-                          <td className="lead-name">{leadDisplayName(lead)}</td>
-                          <td className="lead-email">
-                            {lead.email ? (
-                              <a href={`mailto:${lead.email}`}>{lead.email}</a>
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                          <td>
-                            {lead.phone ? (
-                              <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a>
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                          <td>{formatLastActive(lead.last_login)}</td>
-                          <td>{lead.property_views ?? '—'}</td>
-                          <td>{lead.property_inquiries ?? '—'}</td>
-                          <td>{formatLeadDate(lead.created_at)}</td>
-                          <td>
-                            {lead.clerk_id ? (
-                              <span className="lead-badge">Client</span>
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                      {leads.map((lead) => {
+                        const recency = getLeadRecency(lead);
+                        return (
+                          <tr key={lead.id}>
+                            <td className="lead-name">
+                              <Link href={`/agents/dashboard/leads/${lead.id}`}>{leadDisplayName(lead)}</Link>
+                            </td>
+                            <td className="lead-status">
+                              <span className="lead-status__pills">
+                                {lead.clerk_id ? (
+                                  <span className="lead-badge lead-badge--client">Client</span>
+                                ) : (
+                                  <span className="lead-badge lead-badge--lead">Lead</span>
+                                )}
+                                {recency === 'new' && <span className="lead-pill lead-pill--new">New</span>}
+                                {recency === 'active' && <span className="lead-pill lead-pill--active">Active</span>}
+                              </span>
+                            </td>
+                            <td className="lead-contact">
+                              {lead.email ? (
+                                <a href={`mailto:${lead.email}`}>{truncate(lead.email, 28)}</a>
+                              ) : (
+                                '—'
+                              )}
+                              {lead.phone && (
+                                <span className="lead-contact__sep"> · </span>
+                              )}
+                              {lead.phone ? (
+                                <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a>
+                              ) : (
+                                lead.email ? null : '—'
+                              )}
+                            </td>
+                            <td className="lead-activity">
+                              <span className="lead-activity__text">{formatLastActive(lead.last_login)}</span>
+                              {recency && (
+                                <span className={`lead-activity__dot lead-activity__dot--${recency}`} aria-hidden title={recency === 'new' ? 'Created recently' : 'Active recently'} />
+                              )}
+                            </td>
+                            <td className="lead-view">
+                              <Link href={`/agents/dashboard/leads/${lead.id}`} className="lead-view__btn">
+                                View
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               </div>
 
-              {/* Mobile: card list (no horizontal scroll) */}
+              {/* Mobile: simple tappable cards with status feedback */}
               <ul className="leads-mobile-cards" aria-label="Leads list">
-                {leads.map((lead) => (
-                  <li key={lead.id} className="leads-mobile-card">
-                    <div className="leads-mobile-card__header">
-                      <span className="leads-mobile-card__name">{leadDisplayName(lead)}</span>
-                      {lead.clerk_id ? <span className="lead-badge">Client</span> : null}
-                    </div>
-                    {lead.email && (
-                      <p className="leads-mobile-card__row">
-                        <span className="leads-mobile-card__label">Email</span>
-                        <a href={`mailto:${lead.email}`}>{lead.email}</a>
-                      </p>
+                {leads.map((lead) => {
+                  const recency = getLeadRecency(lead);
+                  return (
+                    <li key={lead.id} className="leads-mobile-card">
+                      <Link href={`/agents/dashboard/leads/${lead.id}`} className="leads-mobile-card__link" aria-label={`View ${leadDisplayName(lead)}`}>
+                        <div className="leads-mobile-card__header">
+                          <span className="leads-mobile-card__name">{leadDisplayName(lead)}</span>
+                          <span className="leads-mobile-card__pills">
+                            {lead.clerk_id ? (
+                              <span className="lead-badge lead-badge--client">Client</span>
+                            ) : (
+                              <span className="lead-badge lead-badge--lead">Lead</span>
+                            )}
+                            {recency === 'new' && <span className="lead-pill lead-pill--new">New</span>}
+                            {recency === 'active' && <span className="lead-pill lead-pill--active">Active</span>}
+                          </span>
+                          <span className="leads-mobile-card__chevron" aria-hidden>→</span>
+                        </div>
+                      <div className="leads-mobile-card__body">
+                        {lead.email && (
+                          <p className="leads-mobile-card__row">
+                            <span className="leads-mobile-card__label">Email</span>
+                            <span className="leads-mobile-card__value leads-mobile-card__value--email">{lead.email}</span>
+                          </p>
+                        )}
+                        {lead.phone && (
+                          <p className="leads-mobile-card__row">
+                            <span className="leads-mobile-card__label">Phone</span>
+                            <span className="leads-mobile-card__value">{lead.phone}</span>
+                          </p>
+                        )}
+                        <p className="leads-mobile-card__row">
+                          <span className="leads-mobile-card__label">Last active</span>
+                          <span className="leads-mobile-card__value">{formatLastActive(lead.last_login)}</span>
+                        </p>
+                        <p className="leads-mobile-card__row leads-mobile-card__row--meta">
+                          <span className="leads-mobile-card__label">Views</span>
+                          <span className="leads-mobile-card__value">{lead.property_views ?? '—'}</span>
+                          <span className="leads-mobile-card__dot" aria-hidden>·</span>
+                          <span className="leads-mobile-card__label">Created</span>
+                          <span className="leads-mobile-card__value">{formatLeadDate(lead.created_at)}</span>
+                        </p>
+                      </div>
+                    </Link>
+                    {(lead.email || lead.phone) && (
+                      <div className="leads-mobile-card__actions">
+                        {lead.phone && (
+                          <a href={`tel:${lead.phone.replace(/\D/g, '')}`} className="leads-mobile-card__btn leads-mobile-card__btn--call" aria-label={`Call ${lead.phone}`}>
+                            Call
+                          </a>
+                        )}
+                        {lead.email && (
+                          <a href={`mailto:${lead.email}`} className="leads-mobile-card__btn leads-mobile-card__btn--email" aria-label={`Email ${lead.email}`}>
+                            Email
+                          </a>
+                        )}
+                        <Link href={`/agents/dashboard/leads/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view">
+                          View profile
+                        </Link>
+                      </div>
                     )}
-                    {lead.phone && (
-                      <p className="leads-mobile-card__row">
-                        <span className="leads-mobile-card__label">Phone</span>
-                        <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a>
-                      </p>
+                    {!lead.email && !lead.phone && (
+                      <div className="leads-mobile-card__actions">
+                        <Link href={`/agents/dashboard/leads/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view leads-mobile-card__btn--view-solo">
+                          View profile
+                        </Link>
+                      </div>
                     )}
-                    <p className="leads-mobile-card__row">
-                      <span className="leads-mobile-card__label">Last active</span>
-                      <span>{formatLastActive(lead.last_login)}</span>
-                    </p>
-                    <p className="leads-mobile-card__row">
-                      <span className="leads-mobile-card__label">Views</span>
-                      <span>{lead.property_views ?? '—'}</span>
-                    </p>
-                    <p className="leads-mobile-card__row">
-                      <span className="leads-mobile-card__label">Created</span>
-                      <span>{formatLeadDate(lead.created_at)}</span>
-                    </p>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
+
+              <a href="#leads-toolbar" className="leads-back-to-top">Back to top</a>
 
               <div className="leads-pagination">
                 <p className="leads-pagination__info">
@@ -369,7 +488,7 @@ export default async function AgentLeadsPage({
                 </p>
                 <nav className="leads-pagination__nav" aria-label="Leads pagination">
                   {hasPrev && (
-                    <Link href={buildUrl({ page: page - 1, q, sort: sortKey })} aria-label="Previous page">
+                    <Link href={buildUrl({ page: page - 1 })} className="leads-pagination__prev" aria-label="Previous page">
                       Previous
                     </Link>
                   )}
@@ -381,7 +500,7 @@ export default async function AgentLeadsPage({
                     ) : (
                       <Link
                         key={p}
-                        href={buildUrl({ page: p, q, sort: sortKey })}
+                        href={buildUrl({ page: p })}
                         aria-label={`Page ${p}`}
                         aria-current={p === page ? 'page' : undefined}
                       >
@@ -390,7 +509,7 @@ export default async function AgentLeadsPage({
                     )
                   )}
                   {hasNext && (
-                    <Link href={buildUrl({ page: page + 1, q, sort: sortKey })} aria-label="Next page">
+                    <Link href={buildUrl({ page: page + 1 })} className="leads-pagination__next" aria-label="Next page">
                       Next
                     </Link>
                   )}
@@ -404,8 +523,8 @@ export default async function AgentLeadsPage({
                   ? `No leads match "${q}". Try a different search or clear the search.`
                   : 'No leads assigned to you yet.'}
               </p>
-              <Link href={q ? buildUrl({ q: '', sort: sortKey }) : '/agents/dashboard'} className="button button--outline" style={{ marginTop: '0.5rem' }}>
-                {q ? 'Clear search' : 'Back to dashboard'}
+              <Link href={q || statusFilter !== 'all' || sourceFilter ? buildUrl({ page: 1, q: '', status: 'all', source: '' }) : '/agents/dashboard'} className="button button--outline" style={{ marginTop: '0.5rem' }}>
+                {q || statusFilter !== 'all' || sourceFilter ? 'Clear filters' : 'Back to dashboard'}
               </Link>
             </div>
           )}

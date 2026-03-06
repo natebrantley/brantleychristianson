@@ -215,140 +215,126 @@ export default async function AgentsDashboardPage() {
   });
 
   return (
-    <main className="dashboard-page">
+    <main className="dashboard-page agent-dashboard">
       <Hero
         variant="short"
         title="Agent dashboard"
-        lead="Your assigned leads, their activity, and saved searches."
+        lead="Your pipeline, client activity, and saved searches—all in one place."
         imageSrc={`${assetPaths.stock}/table.jpeg`}
         imageAlt="Agent dashboard – assigned leads and activity"
       />
       <div className="section">
         <div className="container stack--lg">
-          <header className="stack--sm">
-            <div className="dashboard-actions">
-              <div>
-                <p className="section-tag">Welcome back</p>
-                <h1 className="section-title">
-                  {displayName ? `Hi, ${displayName.split(' ')[0]}` : 'Dashboard'}
+          <div className="agent-welcome">
+            <div className="agent-welcome__bg" aria-hidden />
+            <div className="agent-welcome__inner">
+              <div className="agent-welcome__content">
+                <p className="agent-welcome__tag">Welcome back</p>
+                <h1 className="agent-welcome__title">
+                  {displayName ? `${displayName.split(' ')[0]}` : 'Dashboard'}
                 </h1>
                 {displayName && (
-                  <p className="section-lead">
+                  <p className="agent-welcome__sub">
                     Signed in as <strong>{displayName}</strong>
-                    {user?.email ? ` (${user.email})` : ''}
+                    {user?.email ? ` · ${user.email}` : ''}
                   </p>
                 )}
                 {!displayName && (
-                  <p className="section-lead">
+                  <p className="agent-welcome__sub">
                     Your profile is syncing from Clerk. Refresh in a moment.
                   </p>
                 )}
-              </div>
-              <span
-                className="text--muted"
-                style={{ fontSize: '0.8125rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}
-                title="Synced from Clerk (Public metadata role)"
-              >
-                Role: {user?.role ?? '—'}
-              </span>
-            </div>
-            <p className="section-lead" style={{ marginTop: '0.25rem' }}>
-              <a href="/dashboard" className="text--muted" style={{ fontSize: '0.875rem' }}>Refresh role from Clerk</a>
-            </p>
-          </header>
-
-        {/* Summary: assigned leads, active clients, saved searches */}
-        <section className="dashboard-section" aria-labelledby="pipeline-heading">
-          <header className="dashboard-section-header stack--xs">
-            <p className="section-tag">Overview</p>
-            <h2 id="pipeline-heading" className="section-title">Assigned leads & activity</h2>
-            <p className="section-lead">
-              Your assigned leads, their activity on the site, and saved searches they’ve created.
-            </p>
-          </header>
-          <div className="dashboard-stats">
-            <div className="dashboard-stat">
-              <div className="dashboard-stat-value">{assignedLeadsCount > 0 ? assignedLeadsCount : '—'}</div>
-              <div className="dashboard-stat-label">Assigned to me</div>
-            </div>
-            <div className="dashboard-stat">
-              <div className="dashboard-stat-value">{activeClientsCount > 0 ? activeClientsCount : '—'}</div>
-              <div className="dashboard-stat-label">Active clients</div>
-            </div>
-            <div className="dashboard-stat">
-              <div className="dashboard-stat-value">{savedSearches.length > 0 ? savedSearches.length : '—'}</div>
-              <div className="dashboard-stat-label">Client saved searches</div>
-            </div>
-          </div>
-        </section>
-
-        {/* Assigned leads with activity */}
-        <section className="dashboard-section" aria-labelledby="leads-heading">
-          <header className="dashboard-section-header stack--xs">
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: '0.5rem' }}>
-              <div>
-                <p className="section-tag">Leads</p>
-                <h2 id="leads-heading" className="section-title">My assigned leads</h2>
-                <p className="section-lead">
-                  Leads assigned to you. Activity reflects site usage (property views, inquiries, last login).
-                  {assignedLeadsCount > 10 && (
-                    <span style={{ display: 'block', marginTop: '0.25rem' }}>
-                      Showing 10 most recent of {assignedLeadsCount} — <a href="/agents/dashboard/leads">See all leads</a>
-                    </span>
-                  )}
+                <p style={{ marginTop: '0.5rem' }}>
+                  <a href="/dashboard" className="text--muted" style={{ fontSize: '0.8125rem' }}>Refresh role from Clerk</a>
                 </p>
               </div>
-              {assignedLeadsCount > 0 && (
-                <a href="/agents/dashboard/leads" className="button button--primary" style={{ whiteSpace: 'nowrap' }}>
-                  See all leads
-                </a>
-              )}
+              <span className="agent-welcome__role" title="Synced from Clerk">Role: {user?.role ?? '—'}</span>
             </div>
-          </header>
-          {leads.length > 0 ? (
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <ul className="stack--none" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                {leads.map((lead) => (
-                  <li
-                    key={lead.id}
-                    style={{
-                      padding: 'var(--space-md) var(--space-lg)',
-                      borderBottom: '1px solid var(--border-subtle)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: 500 }}>{leadDisplayName(lead)}</span>
-                      <span className="text--muted" style={{ fontSize: '0.875rem' }}>
-                        {formatLeadDate(lead.created_at)}
+          </div>
+
+          {/* KPIs */}
+          <section className="dashboard-section" aria-labelledby="pipeline-heading">
+            <header className="dashboard-section-header stack--xs">
+              <p className="section-tag">Overview</p>
+              <h2 id="pipeline-heading" className="section-title">Pipeline at a glance</h2>
+              <p className="section-lead">
+                Assigned leads, clients who’ve signed in, and saved searches they’ve created.
+              </p>
+            </header>
+            <div className="agent-stats">
+              <div className="agent-stat">
+                <div className="agent-stat__value">{assignedLeadsCount > 0 ? assignedLeadsCount : '—'}</div>
+                <div className="agent-stat__label">Assigned to me</div>
+              </div>
+              <div className="agent-stat">
+                <div className="agent-stat__value">{activeClientsCount > 0 ? activeClientsCount : '—'}</div>
+                <div className="agent-stat__label">Active clients</div>
+              </div>
+              <div className="agent-stat">
+                <div className="agent-stat__value">{savedSearches.length > 0 ? savedSearches.length : '—'}</div>
+                <div className="agent-stat__label">Saved searches</div>
+              </div>
+            </div>
+          </section>
+
+          {/* Assigned leads: tappable cards → detail */}
+          <section className="dashboard-section" aria-labelledby="leads-heading">
+            <header className="dashboard-section-header stack--xs">
+              <div className="agent-section-cta">
+                <div>
+                  <p className="section-tag">Leads</p>
+                  <h2 id="leads-heading" className="section-title">Recent leads</h2>
+                  <p className="section-lead">
+                    Tap a lead to view their profile, update contact info, and follow up.
+                    {assignedLeadsCount > 10 && (
+                      <span style={{ display: 'block', marginTop: '0.25rem' }}>
+                        Showing 10 most recent of {assignedLeadsCount}.
                       </span>
-                    </div>
-                    {lead.email && (
-                      <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                        {lead.email}
-                      </p>
                     )}
-                    <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: 'var(--space-md)', fontSize: '0.8125rem' }}>
-                      <span className="text--muted">Last active: {formatLastActive(lead.last_login)}</span>
-                      {(lead.property_views != null && lead.property_views > 0) && (
-                        <span className="text--muted">Views: {lead.property_views}</span>
-                      )}
-                      {(lead.property_inquiries != null && lead.property_inquiries > 0) && (
-                        <span className="text--muted">Inquiries: {lead.property_inquiries}</span>
-                      )}
-                      {lead.clerk_id && (
-                        <span style={{ fontWeight: 500 }}>Client</span>
+                  </p>
+                </div>
+                {assignedLeadsCount > 0 && (
+                  <Link href="/agents/dashboard/leads" className="button button--primary">
+                    See all leads
+                  </Link>
+                )}
+              </div>
+            </header>
+            {leads.length > 0 ? (
+              <ul className="agent-leads-list">
+                {leads.map((lead) => (
+                  <li key={lead.id}>
+                    <div className="agent-lead-card">
+                      <Link href={`/agents/dashboard/leads/${lead.id}`} className="agent-lead-card__link" aria-label={`View ${leadDisplayName(lead)}`}>
+                        <div className="agent-lead-card__row">
+                          <span className="agent-lead-card__name">{leadDisplayName(lead)}</span>
+                          <span className="agent-lead-card__date">{formatLeadDate(lead.created_at)}</span>
+                          <span className="agent-lead-card__chevron" aria-hidden>→</span>
+                        </div>
+                        {lead.email && (
+                          <p className="agent-lead-card__email">{lead.email}</p>
+                        )}
+                        <div className="agent-lead-card__meta">
+                          <span>Last active: {formatLastActive(lead.last_login)}</span>
+                          {(lead.property_views != null && lead.property_views > 0) && (
+                            <span>Views: {lead.property_views}</span>
+                          )}
+                          {(lead.property_inquiries != null && lead.property_inquiries > 0) && (
+                            <span>Inquiries: {lead.property_inquiries}</span>
+                          )}
+                          {lead.clerk_id && <span className="agent-lead-card__badge">Client</span>}
+                        </div>
+                      </Link>
+                      {lead.phone && (
+                        <p className="agent-lead-card__phone">
+                          <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a>
+                        </p>
                       )}
                     </div>
-                    {lead.phone && (
-                      <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                        <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a>
-                      </p>
-                    )}
                   </li>
                 ))}
               </ul>
-            </div>
-          ) : (
+            ) : (
             <div className="empty-state">
               <p>No leads assigned to you yet. Assigned leads will appear here with their activity and saved searches.</p>
               <p className="text--muted" style={{ fontSize: '0.8125rem', marginTop: '0.5rem' }}>
@@ -370,38 +356,28 @@ export default async function AgentsDashboardPage() {
             <p className="section-tag">Searches</p>
             <h2 id="saved-searches-heading" className="section-title">Client saved searches</h2>
             <p className="section-lead">
-              Saved searches created by your assigned clients. Use these to stay aligned on what they’re looking for.
+              Saved searches created by your assigned clients. Stay aligned on what they’re looking for.
             </p>
           </header>
           {savedSearches.length > 0 ? (
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <ul className="stack--none" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                {savedSearches.map((search) => (
-                  <li
-                    key={search.id}
-                    style={{
-                      padding: 'var(--space-md) var(--space-lg)',
-                      borderBottom: '1px solid var(--border-subtle)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: 500 }}>{search.name || 'Untitled search'}</span>
-                      <span className="text--muted" style={{ fontSize: '0.875rem' }}>
-                        {formatLeadDate(search.created_at)}
-                      </span>
-                    </div>
-                    <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                      Client: {clerkIdToName.get(search.clerk_id) ?? '—'}
+            <ul className="agent-searches-list">
+              {savedSearches.map((search) => (
+                <li key={search.id} className="agent-search-card">
+                  <div className="agent-search-card__row">
+                    <span className="agent-search-card__title">{search.name || 'Untitled search'}</span>
+                    <span className="agent-search-card__date">{formatLeadDate(search.created_at)}</span>
+                  </div>
+                  <p className="agent-search-card__client">
+                    Client: {clerkIdToName.get(search.clerk_id) ?? '—'}
+                  </p>
+                  {search.criteria && typeof search.criteria === 'object' && Object.keys(search.criteria).length > 0 && (
+                    <p className="agent-search-card__criteria" title={JSON.stringify(search.criteria)}>
+                      {JSON.stringify(search.criteria)}
                     </p>
-                    {search.criteria && typeof search.criteria === 'object' && Object.keys(search.criteria).length > 0 && (
-                      <p className="text--muted" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                        {JSON.stringify(search.criteria)}
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  )}
+                </li>
+              ))}
+            </ul>
           ) : (
             <div className="empty-state">
               <p>No saved searches from your clients yet. When assigned clients save a search on the site, it will appear here.</p>
@@ -417,7 +393,7 @@ export default async function AgentsDashboardPage() {
               Listings and content performance—views, inquiries, top markets.
             </p>
           </header>
-          <div className="card">
+          <div className="agent-upsell">
             <h3>Coming soon</h3>
             <p>
               Views and engagement metrics for your listings and market pages. We&apos;ll show which content drives consultations.
