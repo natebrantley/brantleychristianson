@@ -77,6 +77,8 @@ Every column except **email** may be null or omitted on insert.
   1. Populate **agent** with that name so it displays.  
   2. Optionally backfill **assigned_broker_id**: match agent name (or email) to **public.users** where **role** is `agent` or `broker`, then set **leads.assigned_broker_id** = **users.clerk_id** for that agent. That way the lead appears on the correct agent’s dashboard and the resolved name stays in sync.
 
+**If leads were already imported with agent full name or slug in assigned_broker_id:** Run the migration `supabase/migrations/20260317000000_backfill_leads_assigned_broker_id_from_agent_name.sql` in the Supabase SQL Editor (or `supabase db push`). It maps full name (from **public.users** first_name + last_name) and known agent slugs to **users.clerk_id** and updates **leads.assigned_broker_id** so each agent’s dashboard shows their assigned leads.
+
 ### 2.4 Validation before upload
 
 1. **Email**  

@@ -62,5 +62,6 @@ export async function PATCH(request: NextRequest) {
   }
 
   revalidatePath('/clients/dashboard');
+  revalidatePath('/dashboard');
   return NextResponse.json({ ok: true, slug });
 }
