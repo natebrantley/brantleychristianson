@@ -106,7 +106,7 @@ export default async function OwnerLeadsPage({
   let leads: LeadRow[] = [];
   let totalCount = 0;
   let brokerIdToName: Record<string, string> = {};
-  let debugInfo: { brokerIdsSample: string[]; totalLeads: number; leadsWithNullAssigned: number; distinctInDb: string[] } | null = null;
+  let debugInfo: { brokerIdsSample: string[]; totalLeads: number; activeLeads: number; leadsWithNullAssigned: number; distinctInDb: string[] } | null = null;
 
   try {
     const clerkUser = await currentUser();
@@ -160,11 +160,13 @@ export default async function OwnerLeadsPage({
         .limit(100);
       const distinctInDb = [...new Set((distinctRes.data ?? []).map((r) => r.assigned_broker_id).filter(Boolean))] as string[];
       const totalLeadsRes = await admin.from('leads').select('*', { count: 'exact', head: true });
+      const activeLeadsRes = await admin.from('leads').select('*', { count: 'exact', head: true }).is('marketing_opted_out_at', null);
       const nullCountRes = await admin.from('leads').select('id', { count: 'exact', head: true }).is('assigned_broker_id', null);
       const totalLeads = typeof totalLeadsRes.count === 'number' ? totalLeadsRes.count : 0;
+      const activeLeads = typeof activeLeadsRes.count === 'number' ? activeLeadsRes.count : 0;
       const leadsWithNullAssigned = typeof nullCountRes.count === 'number' ? nullCountRes.count : 0;
-      console.warn('[Owner Leads Debug]', { brokerIdsCount: brokerIds.length, brokerIdsSample: brokerIds.slice(0, 10), totalLeads, leadsWithNullAssigned, distinctAssignedBrokerIdsInDb: distinctInDb.slice(0, 20) });
-      debugInfo = { brokerIdsSample: brokerIds.slice(0, 15), totalLeads, leadsWithNullAssigned, distinctInDb: distinctInDb.slice(0, 20) };
+      console.warn('[Owner Leads Debug]', { brokerIdsCount: brokerIds.length, brokerIdsSample: brokerIds.slice(0, 10), totalLeads, activeLeads, leadsWithNullAssigned, distinctAssignedBrokerIdsInDb: distinctInDb.slice(0, 20) });
+      debugInfo = { brokerIdsSample: brokerIds.slice(0, 15), totalLeads, activeLeads, leadsWithNullAssigned, distinctInDb: distinctInDb.slice(0, 20) };
     }
 
     // Resolve assigned_broker_id to display names for owner CRM (this page only)
@@ -398,7 +400,8 @@ export default async function OwnerLeadsPage({
             <details className="owner-leads-debug" style={{ marginTop: '2rem', padding: '1rem', background: '#f5f5f5', borderRadius: '8px', fontSize: '0.875rem' }}>
               <summary>Debug: Why might “My leads” be empty?</summary>
               <ul style={{ marginTop: '0.5rem', paddingLeft: '1.25rem' }}>
-                <li><strong>Total leads in DB:</strong> {debugInfo.totalLeads}</li>
+                <li><strong>Total leads in DB</strong> (includes opted-out): {debugInfo.totalLeads}</li>
+                <li><strong>Active leads</strong> (excluding opted-out): {debugInfo.activeLeads}</li>
                 <li><strong>Leads with no assigned broker (NULL):</strong> {debugInfo.leadsWithNullAssigned}</li>
                 <li><strong>“My” broker IDs we match (sample):</strong> {debugInfo.brokerIdsSample.join(', ')}</li>
                 <li><strong>Distinct assigned_broker_id in DB (sample):</strong> {debugInfo.distinctInDb.length ? debugInfo.distinctInDb.join(', ') : '—'}</li>

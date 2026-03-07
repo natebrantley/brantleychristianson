@@ -173,8 +173,9 @@ export default async function AgentLeadsPage({
     const agentSlug = getAgentSlugByEmail(user?.email ?? clerkUser?.emailAddresses?.[0]?.emailAddress ?? undefined);
     if (agentSlug) brokerIds.push(agentSlug);
     const uniqBrokerIds = [...new Set(brokerIds)];
+    const uniqWithCase = [...new Set([...uniqBrokerIds, ...uniqBrokerIds.map((s) => s.toLowerCase())])];
 
-    const leadsRes = await buildLeadsQuery(supabase, uniqBrokerIds);
+    const leadsRes = await buildLeadsQuery(supabase, uniqWithCase);
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       leads = leadsRes.data as unknown as LeadRow[];
     }
