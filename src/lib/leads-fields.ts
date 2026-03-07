@@ -8,7 +8,7 @@ export const LEADS_TABLE_COLUMNS = [
   'first_name',
   'last_name',
   'email_address',
-  'crmc_score',
+  'cinc_score',
   'phone',
   'address',
   'city',

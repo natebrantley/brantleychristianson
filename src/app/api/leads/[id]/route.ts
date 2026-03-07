@@ -121,7 +121,12 @@ export async function PATCH(request: NextRequest, { params }: LeadIdParams) {
   const updates = sanitizePatchBody(body);
   const admin = supabaseAdmin();
   const { data: userRow } = await admin.from('users').select('role').eq('clerk_id', userId).maybeSingle();
-  const isOwner = isOwnerRole(userRow?.role ?? null);
+  let isOwner = isOwnerRole(userRow?.role ?? null);
+  if (!isOwner) {
+    const clerkUser = await currentUser();
+    const roleFromClerk = typeof clerkUser?.publicMetadata?.role === 'string' ? clerkUser.publicMetadata.role : null;
+    isOwner = isOwnerRole(roleFromClerk);
+  }
   if (isOwner) {
     const ownerUpdates = sanitizeOwnerPatchBody(body);
     Object.assign(updates, ownerUpdates);

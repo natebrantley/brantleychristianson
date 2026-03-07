@@ -10,7 +10,7 @@ export type LeadContactData = {
   first_name?: string | null;
   last_name?: string | null;
   email_address?: string | null;
-  crmc_score?: number | null;
+  cinc_score?: number | null;
   phone?: string | null;
   address?: string | null;
   city?: string | null;

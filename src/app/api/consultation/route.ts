@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
           first_name: leadFirst?.slice(0, 200) || null,
           last_name: leadLastName,
           phone: phone || null,
-          crmc_score: null,
+          cinc_score: null,
           address: null,
           city: null,
           state: null,
