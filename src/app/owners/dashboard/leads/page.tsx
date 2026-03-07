@@ -12,14 +12,17 @@ import { getLeadPulse, getLeadPulseLabel } from '@/lib/getLeadPulse';
 import { LEADS_SELECT } from '@/lib/leads-fields';
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/config/site';
+import { LeadContactButtons } from '@/components/LeadContactButtons';
 
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
 const OWNER_LEADS_BASE = '/owners/dashboard/leads';
 const SORT_OPTIONS = [
-  { value: 'first_name-asc', label: 'Name A–Z', column: 'first_name', ascending: true },
-  { value: 'first_name-desc', label: 'Name Z–A', column: 'first_name', ascending: false },
+  { value: 'first_name-asc', label: 'Name A–Z', column: 'first_name', ascending: true, nullsFirst: false },
+  { value: 'first_name-desc', label: 'Name Z–A', column: 'first_name', ascending: false, nullsFirst: false },
+  { value: 'cinc_score-desc', label: 'Score (high–low)', column: 'cinc_score', ascending: false, nullsFirst: false },
+  { value: 'cinc_score-asc', label: 'Score (low–high)', column: 'cinc_score', ascending: true, nullsFirst: true },
 ] as const;
 
 export const metadata: Metadata = buildPageMetadata({
@@ -43,6 +46,7 @@ type LeadRow = {
   zip?: string | null;
   assigned_broker_id?: string | null;
   assigned_lender_id?: string | null;
+  marketing_opted_out_at?: string | null;
 };
 
 function truncate(str: string | null | undefined, maxLen: number): string {
@@ -142,13 +146,40 @@ export default async function OwnerLeadsPage({
       );
     }
     const leadsRes = await query
-      .order(sortConfig.column, { ascending: sortConfig.ascending, nullsFirst: false })
+      .order(sortConfig.column, {
+        ascending: sortConfig.ascending,
+        nullsFirst: sortConfig.nullsFirst ?? false,
+      })
       .range(from, to);
 
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       leads = leadsRes.data as unknown as LeadRow[];
     }
     totalCount = typeof leadsRes.count === 'number' ? leadsRes.count : leads.length;
+
+    // Leads that are also public.users (match by normalized email) — for badge and prioritization
+    const usersRes = await admin.from('users').select('email').not('email', 'is', null);
+    const userEmails = new Set(
+      (usersRes.data ?? []).map((u) => (u.email ?? '').toString().trim().toLowerCase()).filter(Boolean)
+    );
+    type LeadWithUser = LeadRow & { is_user?: boolean };
+    (leads as LeadWithUser[]).forEach((lead) => {
+      const email = lead.email_address?.toString().trim().toLowerCase();
+      (lead as LeadWithUser).is_user = !!email && userEmails.has(email);
+    });
+    // When sorting by score, prioritize leads that are also users (same score → registered first)
+    if (sortConfig.column === 'cinc_score' && leads.length > 1) {
+      (leads as LeadWithUser[]).sort((a, b) => {
+        const scoreA = a.cinc_score ?? -Infinity;
+        const scoreB = b.cinc_score ?? -Infinity;
+        if (sortConfig.ascending) {
+          if (scoreA !== scoreB) return scoreA - scoreB;
+          return (a.is_user ? 0 : 1) - (b.is_user ? 0 : 1);
+        }
+        if (scoreB !== scoreA) return scoreB - scoreA;
+        return (a.is_user ? 0 : 1) - (b.is_user ? 0 : 1);
+      });
+    }
 
     // Debug: when scope=mine and 0 leads, log what we're matching vs what's in DB (dev/diagnostic)
     if (isDebug && scope === 'mine') {
@@ -213,6 +244,9 @@ export default async function OwnerLeadsPage({
     if (!id) return '—';
     return brokerIdToName[id] ?? truncate(id, 24);
   }
+
+  type LeadWithUserFlag = LeadRow & { is_user?: boolean };
+  const showScore = sortKey === 'cinc_score-desc' || sortKey === 'cinc_score-asc';
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const hasPrev = page > 1;
@@ -292,12 +326,21 @@ export default async function OwnerLeadsPage({
               <div className="leads-table-card leads-table-card--desktop">
                 <div className="leads-table-scroll">
                   <table className="leads-table">
-                    <thead><tr><th>Name</th><th>Contact</th><th>Assigned to</th><th></th></tr></thead>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Contact</th>
+                        {showScore && <th>Score</th>}
+                        <th>Assigned to</th>
+                        <th></th>
+                      </tr>
+                    </thead>
                     <tbody>
                       {leads.map((lead) => {
                         const pulseLevel = getLeadPulse(lead);
                         const pulseLabel = getLeadPulseLabel(pulseLevel);
                         const initials = getLeadInitials(lead);
+                        const isUser = (lead as LeadWithUserFlag).is_user;
                         return (
                           <tr key={lead.id}>
                             <td className="lead-name">
@@ -305,13 +348,24 @@ export default async function OwnerLeadsPage({
                                 <span className="lead-avatar" aria-hidden>{initials}</span>
                                 <span className={`lead-pulse lead-pulse--${pulseLevel}`} role="img" aria-label={pulseLabel} title={pulseLabel} />
                                 <Link href={`${OWNER_LEADS_BASE}/${lead.id}`}>{leadDisplayName(lead)}</Link>
+                                {isUser && (
+                                  <span className="lead-badge lead-badge--user" title="Lead is also a registered user">Registered</span>
+                                )}
                               </span>
                             </td>
                             <td className="lead-contact">
-                              {lead.email_address ? <a href={`mailto:${lead.email_address}`}>{truncate(lead.email_address, 28)}</a> : '—'}
-                              {lead.phone && <span className="lead-contact__sep"> · </span>}
-                              {lead.phone ? <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a> : (lead.email_address ? null : '—')}
+                              <LeadContactButtons
+                                phone={lead.phone}
+                                email={lead.email_address}
+                                marketingOptedOutAt={lead.marketing_opted_out_at}
+                                variant="table"
+                              />
                             </td>
+                            {showScore && (
+                              <td className="lead-score">
+                                {lead.cinc_score != null ? lead.cinc_score.toLocaleString() : '—'}
+                              </td>
+                            )}
                             <td className="lead-assigned">{assignedToLabel(lead)}</td>
                             <td className="lead-view"><Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="lead-view__btn">View</Link></td>
                           </tr>
@@ -328,6 +382,7 @@ export default async function OwnerLeadsPage({
                   const pulseLabel = getLeadPulseLabel(pulseLevel);
                   const initials = getLeadInitials(lead);
                   const recency = getLeadRecency(lead);
+                  const isUser = (lead as LeadWithUserFlag).is_user;
                   return (
                     <li key={lead.id} className="leads-mobile-card">
                       <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__link" aria-label={`View ${leadDisplayName(lead)}`}>
@@ -337,6 +392,7 @@ export default async function OwnerLeadsPage({
                           <span className="leads-mobile-card__pills">
                             <span className={`lead-pulse lead-pulse--${pulseLevel}`} role="img" aria-label={pulseLabel} title={pulseLabel} />
                             <span className="lead-badge lead-badge--lead">Lead</span>
+                            {isUser && <span className="lead-badge lead-badge--user">Registered</span>}
                             {recency === 'new' && <span className="lead-pill lead-pill--new">New</span>}
                             {recency === 'active' && <span className="lead-pill lead-pill--active">Active</span>}
                           </span>
@@ -345,21 +401,17 @@ export default async function OwnerLeadsPage({
                         <div className="leads-mobile-card__body">
                           {lead.email_address && <p className="leads-mobile-card__row"><span className="leads-mobile-card__label">Email</span><span className="leads-mobile-card__value leads-mobile-card__value--email">{lead.email_address}</span></p>}
                           {lead.phone && <p className="leads-mobile-card__row"><span className="leads-mobile-card__label">Phone</span><span className="leads-mobile-card__value">{lead.phone}</span></p>}
+                          {showScore && <p className="leads-mobile-card__row"><span className="leads-mobile-card__label">Score</span><span className="leads-mobile-card__value">{lead.cinc_score != null ? lead.cinc_score.toLocaleString() : '—'}</span></p>}
                           <p className="leads-mobile-card__row"><span className="leads-mobile-card__label">Assigned to</span><span className="leads-mobile-card__value">{assignedToLabel(lead)}</span></p>
                         </div>
                       </Link>
-                      {(lead.email_address || lead.phone) && (
-                        <div className="leads-mobile-card__actions">
-                          {lead.phone && <a href={`tel:${lead.phone.replace(/\D/g, '')}`} className="leads-mobile-card__btn leads-mobile-card__btn--call" aria-label={`Call ${lead.phone}`}>Call</a>}
-                          {lead.email_address && <a href={`mailto:${lead.email_address}`} className="leads-mobile-card__btn leads-mobile-card__btn--email" aria-label={`Email ${lead.email_address}`}>Email</a>}
-                          <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view">View profile</Link>
-                        </div>
-                      )}
-                      {!lead.email_address && !lead.phone && (
-                        <div className="leads-mobile-card__actions">
-                          <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view leads-mobile-card__btn--view-solo">View profile</Link>
-                        </div>
-                      )}
+                      <LeadContactButtons
+                        phone={lead.phone}
+                        email={lead.email_address}
+                        marketingOptedOutAt={lead.marketing_opted_out_at}
+                        variant="mobile"
+                        viewProfileHref={`${OWNER_LEADS_BASE}/${lead.id}`}
+                      />
                     </li>
                   );
                 })}

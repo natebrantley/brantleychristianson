@@ -25,6 +25,8 @@
 @import './owner-dashboard.css';
 @import './rmls.css';
 @import './listings.css';
+@import './insights.css';
+@import './premium.css';
 
 *,
 *::before,
@@ -124,6 +126,10 @@ a:hover {
   max-width: 720px;
 }
 
+.container-tight {
+  max-width: 42rem;
+}
+
 .container-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -202,6 +208,19 @@ a:hover {
   .section-lead {
     margin-bottom: 1.5rem;
   }
+}
+
+/* Home: markets section CTA spacing */
+.markets-cta-wrap {
+  margin-top: var(--space-lg);
+}
+
+/* Home: final CTA section spacing */
+.cta-section-title {
+  margin-bottom: var(--space-xs);
+}
+.cta-section-lead {
+  margin-bottom: var(--space-lg);
 }
 
 [class*="stack--"] > * + * {
@@ -348,7 +367,7 @@ a:hover {
 .site-announcement {
   background: var(--color-accent);
   color: var(--color-primary);
-  padding: var(--space-md) var(--space-md);
+  padding: var(--space-lg) var(--space-md);
   border-bottom: 1px solid rgba(10, 36, 56, 0.15);
 }
 .site-announcement__inner {

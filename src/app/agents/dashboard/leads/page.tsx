@@ -13,6 +13,7 @@ import { getLeadPulse, getLeadPulseLabel } from '@/lib/getLeadPulse';
 import { LEADS_SELECT } from '@/lib/leads-fields';
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/config/site';
+import { LeadContactButtons } from '@/components/LeadContactButtons';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,7 @@ type LeadRow = {
   zip?: string | null;
   assigned_broker_id?: string | null;
   assigned_lender_id?: string | null;
+  marketing_opted_out_at?: string | null;
 };
 
 function formatLeadDate(iso: string): string {
@@ -371,19 +373,12 @@ export default async function AgentLeadsPage({
                               </span>
                             </td>
                             <td className="lead-contact">
-                              {lead.email_address ? (
-                                <a href={`mailto:${lead.email_address}`}>{truncate(lead.email_address, 28)}</a>
-                              ) : (
-                                '—'
-                              )}
-                              {lead.phone && (
-                                <span className="lead-contact__sep"> · </span>
-                              )}
-                              {lead.phone ? (
-                                <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a>
-                              ) : (
-                                lead.email_address ? null : '—'
-                              )}
+                              <LeadContactButtons
+                                phone={lead.phone}
+                                email={lead.email_address}
+                                marketingOptedOutAt={lead.marketing_opted_out_at}
+                                variant="table"
+                              />
                             </td>
                             <td className="lead-view">
                               <Link href={`/agents/dashboard/leads/${lead.id}`} className="lead-view__btn">
@@ -439,30 +434,13 @@ export default async function AgentLeadsPage({
                         )}
                       </div>
                     </Link>
-                    {(lead.email_address || lead.phone) && (
-                      <div className="leads-mobile-card__actions">
-                        {lead.phone && (
-                          <a href={`tel:${lead.phone.replace(/\D/g, '')}`} className="leads-mobile-card__btn leads-mobile-card__btn--call" aria-label={`Call ${lead.phone}`}>
-                            Call
-                          </a>
-                        )}
-                        {lead.email_address && (
-                          <a href={`mailto:${lead.email_address}`} className="leads-mobile-card__btn leads-mobile-card__btn--email" aria-label={`Email ${lead.email_address}`}>
-                            Email
-                          </a>
-                        )}
-                        <Link href={`/agents/dashboard/leads/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view">
-                          View profile
-                        </Link>
-                      </div>
-                    )}
-                    {!lead.email_address && !lead.phone && (
-                      <div className="leads-mobile-card__actions">
-                        <Link href={`/agents/dashboard/leads/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view leads-mobile-card__btn--view-solo">
-                          View profile
-                        </Link>
-                      </div>
-                    )}
+                    <LeadContactButtons
+                      phone={lead.phone}
+                      email={lead.email_address}
+                      marketingOptedOutAt={lead.marketing_opted_out_at}
+                      variant="mobile"
+                      viewProfileHref={`/agents/dashboard/leads/${lead.id}`}
+                    />
                   </li>
                   );
                 })}

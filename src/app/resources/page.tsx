@@ -28,7 +28,7 @@ export default function ResourcesPage() {
         imageAlt="Resources for condo and market research"
         priority
       >
-        <Button href="/resources/portland-condo-guide" variant="white">
+        <Button href="/premium/portland-condo-guide" variant="white">
           2026 Portland Condo Guide
         </Button>
         <Button href="/contact" variant="outline">
@@ -52,7 +52,7 @@ export default function ResourcesPage() {
             <div className="resource-grid" aria-label="Featured resources">
               <article className="resource-card">
                 <h3 className="resource-card-title">
-                  <Link href="/resources/portland-condo-guide">
+                  <Link href="/premium/portland-condo-guide">
                     2026 Portland Condo Guide
                   </Link>
                 </h3>
@@ -61,9 +61,9 @@ export default function ResourcesPage() {
                   prices, HOA levels, rent caps, amenities, and more.
                 </p>
                 <p className="resource-card-meta">
-                  Focus: <strong>Portland condos</strong>
+                  Focus: <strong>Portland condos</strong> · Free — sign in to view
                 </p>
-                <Button href="/resources/portland-condo-guide" variant="outline">
+                <Button href="/premium/portland-condo-guide" variant="outline">
                   View guide
                 </Button>
               </article>
@@ -136,7 +136,7 @@ export default function ResourcesPage() {
               </p>
               <p className="resource-card-meta">
                 See also:{' '}
-                <Link href="/resources/portland-condo-guide">2026 Portland Condo Guide</Link>
+                <Link href="/premium/portland-condo-guide">2026 Portland Condo Guide</Link>
               </p>
             </article>
             <article className="resource-card">

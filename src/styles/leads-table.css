@@ -386,6 +386,10 @@
   background: var(--surface-muted);
   color: var(--color-muted);
 }
+.lead-badge--user {
+  background: rgba(34, 139, 34, 0.15);
+  color: #1a6b1a;
+}
 .lead-pill {
   display: inline-block;
   padding: 0.15em 0.45em;
@@ -412,6 +416,11 @@
   font-size: 0.875rem;
   color: var(--color-muted);
 }
+.leads-page .leads-table .lead-score {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--theme-text);
+}
 .leads-page .leads-table .lead-contact a {
   color: var(--color-accent);
   text-decoration: none;
@@ -423,6 +432,80 @@
 .lead-contact__sep {
   color: var(--color-muted);
   margin: 0 0.15rem;
+}
+
+/* Contact action buttons (table: Call, Text, Email) */
+.lead-contact-btns {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+.lead-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.lead-contact-btn--call {
+  background: var(--color-primary);
+  color: var(--color-light);
+  border-color: var(--color-primary);
+}
+.lead-contact-btn--call:hover:not(.lead-contact-btn--bad),
+.lead-contact-btn--call:focus-visible:not(.lead-contact-btn--bad) {
+  background: var(--color-accent);
+  color: var(--color-primary);
+  border-color: var(--color-accent);
+}
+.lead-contact-btn--text {
+  background: var(--theme-surface);
+  color: var(--color-primary);
+}
+.lead-contact-btn--text:hover:not(.lead-contact-btn--bad),
+.lead-contact-btn--text:focus-visible:not(.lead-contact-btn--bad) {
+  background: rgba(var(--color-accent-rgb), 0.1);
+  border-color: var(--color-accent);
+  color: var(--color-primary);
+}
+.lead-contact-btn--email {
+  background: var(--theme-surface);
+  color: var(--color-primary);
+}
+.lead-contact-btn--email:hover:not(.lead-contact-btn--bad),
+.lead-contact-btn--email:focus-visible:not(.lead-contact-btn--bad) {
+  background: rgba(var(--color-accent-rgb), 0.1);
+  border-color: var(--color-accent);
+  color: var(--color-primary);
+}
+.lead-contact-btn--email-opted-in {
+  background: rgba(34, 139, 34, 0.15);
+  color: #1a6b1a;
+  border-color: rgba(34, 139, 34, 0.4);
+}
+.lead-contact-btn--email-opted-in:hover:not(.lead-contact-btn--bad),
+.lead-contact-btn--email-opted-in:focus-visible:not(.lead-contact-btn--bad) {
+  background: rgba(34, 139, 34, 0.25);
+  border-color: #1a6b1a;
+  color: #0d4d0d;
+}
+.lead-contact-btn--bad,
+.lead-contact-btn--email-opted-out,
+.lead-contact-btn--email-missing {
+  background: rgba(180, 50, 50, 0.12);
+  color: #a82a2a;
+  border-color: rgba(180, 50, 50, 0.4);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.lead-contact-btn--bad[href="#"] {
+  cursor: not-allowed;
 }
 
 .leads-page .leads-table .lead-activity {
@@ -764,6 +847,38 @@
 .leads-mobile-card__btn--view:focus-visible {
   background: rgba(var(--color-accent-rgb), 0.12);
   color: var(--color-primary);
+}
+
+.leads-mobile-card__btn--text {
+  background: var(--theme-surface);
+  color: var(--color-primary);
+  border: 2px solid var(--border-strong);
+}
+.leads-mobile-card__btn--text:hover:not(.leads-mobile-card__btn--bad),
+.leads-mobile-card__btn--text:focus-visible:not(.leads-mobile-card__btn--bad) {
+  background: rgba(var(--color-accent-rgb), 0.1);
+  border-color: var(--color-accent);
+  color: var(--color-primary);
+}
+.leads-mobile-card__btn--email-opted-in {
+  background: rgba(34, 139, 34, 0.2);
+  color: #1a6b1a;
+  border: 2px solid rgba(34, 139, 34, 0.5);
+}
+.leads-mobile-card__btn--email-opted-in:hover:not(.leads-mobile-card__btn--bad),
+.leads-mobile-card__btn--email-opted-in:focus-visible:not(.leads-mobile-card__btn--bad) {
+  background: rgba(34, 139, 34, 0.3);
+  border-color: #1a6b1a;
+  color: #0d4d0d;
+}
+.leads-mobile-card__btn--bad,
+.leads-mobile-card__btn--email-opted-out,
+.leads-mobile-card__btn--email-missing {
+  background: rgba(180, 50, 50, 0.15);
+  color: #a82a2a;
+  border: 2px solid rgba(180, 50, 50, 0.45);
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Back to top (mobile: after long list) */

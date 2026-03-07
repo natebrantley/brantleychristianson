@@ -13,8 +13,10 @@ import { assetPaths } from '@/config/theme';
 
 const LOGO_SRC = `${assetPaths.logos}/BCRE-White-Trans.png`;
 
-const NAV_LINKS = [
+const NAV_LINKS: { href: string; label: string; highlight?: boolean }[] = [
+  { href: '/premium', label: 'Premium', highlight: true },
   { href: '/markets', label: 'Markets' },
+  { href: '/insights', label: 'Insights' },
   { href: '/agents', label: 'Agents' },
   { href: '/lenders', label: 'Lenders' },
   { href: '/about', label: 'About' },
@@ -61,8 +63,8 @@ export function SiteHeader() {
           aria-label="Main"
         >
           <ul className="nav-list">
-            {NAV_LINKS.map(({ href, label }) => (
-              <li key={href}>
+            {NAV_LINKS.map(({ href, label, highlight }) => (
+              <li key={href} className={highlight ? 'nav-list__item--premium' : undefined}>
                 <Link href={href} onClick={close}>
                   {label}
                 </Link>

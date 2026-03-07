@@ -5,11 +5,13 @@
   align-items: center;
 }
 
-.featured-listing__article {
-  max-width: 900px;
+.featured-listing__content-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
+  max-width: 900px;
   margin-inline: auto;
-  text-align: center;
 }
 
 .featured-listing__video-wrap {
@@ -20,6 +22,9 @@
   overflow: hidden;
   background: var(--color-primary);
   margin-bottom: var(--space-xl);
+}
+.featured-listing__content-wrap .featured-listing__video-wrap {
+  margin-bottom: 0;
 }
 
 .featured-listing__video-wrap > div {

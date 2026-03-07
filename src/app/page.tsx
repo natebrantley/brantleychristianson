@@ -85,8 +85,8 @@ export default function HomePage() {
               </p>
             </header>
             <RevealSection>
-              <div className="stack--md" style={{ alignItems: 'center' }}>
-                <div className="featured-listing__video-wrap" style={{ maxWidth: '900px', marginInline: 'auto' }}>
+              <div className="stack--lg featured-listing__content-wrap">
+                <div className="featured-listing__video-wrap">
                 <LazyYouTube
                   videoId="fNqcEYtUDBg"
                   title="Ridgefield, Washington – fastest-growing county in Washington"
@@ -103,7 +103,7 @@ export default function HomePage() {
         </section>
 
         <section className="section section--alt" aria-labelledby="who-we-are-heading">
-          <div className="container stack--md text-center mx-auto" style={{ maxWidth: '42rem' }}>
+          <div className="container container-tight stack--md text-center mx-auto">
             <p className="section-tag">Who we are</p>
             <h2 id="who-we-are-heading" className="section-title">
               Local, family & independently owned
@@ -135,7 +135,7 @@ export default function HomePage() {
               </p>
             </header>
             <RevealSection className="text-center">
-              <Button href="/resources/portland-condo-guide" variant="outline">
+              <Button href="/premium/portland-condo-guide" variant="outline">
                 View the 2026 Portland Condo Guide
               </Button>
             </RevealSection>
@@ -156,7 +156,7 @@ export default function HomePage() {
             <RevealSection>
               <IntelligenceHubs hubs={MARKETS} />
             </RevealSection>
-            <p className="text-center" style={{ marginTop: 'var(--space-lg)' }}>
+            <p className="text-center markets-cta-wrap">
               <Button href="/markets" variant="outline">
                 All markets
               </Button>
@@ -165,11 +165,11 @@ export default function HomePage() {
         </section>
 
         <section className="section section--cta" aria-label="Get in touch">
-          <div className="container text-center stack--md">
-            <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
+          <div className="container text-center stack--md cta-section-inner">
+            <h2 className="section-title cta-section-title">
               Ready to find your place?
             </h2>
-            <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
+            <p className="section-lead mx-auto cta-section-lead">
               Connect with a BCRE broker in your market.
             </p>
             <Button href="/contact" variant="white">

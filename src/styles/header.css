@@ -69,6 +69,16 @@
   color: var(--color-accent);
 }
 
+/* Premium nav item – first in list, gold (accent) color, same font/style as others */
+.main-nav .nav-list .nav-list__item--premium a,
+.site-nav .nav-list .nav-list__item--premium a {
+  color: var(--color-accent) !important;
+}
+.main-nav .nav-list .nav-list__item--premium a:hover,
+.site-nav .nav-list .nav-list__item--premium a:hover {
+  color: var(--color-light) !important;
+}
+
 .nav-toggle {
   display: none;
   align-items: center;
