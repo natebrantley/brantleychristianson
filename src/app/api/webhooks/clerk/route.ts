@@ -208,8 +208,9 @@ async function bridgeLeads(
 }
 
 /** Handle user.created / user.updated: upsert users, optional MailerLite, optional lead bridge.
- * Preserves app-managed columns (assigned_broker_id, assigned_lender_id, repliers_client_id, marketing_opt_in) so
- * client agent/lender selection and other app flows are never overwritten by Clerk sync. */
+ * One row per email (Option C): if a row exists for this email with a different clerk_id, we update that row
+ * so the latest Clerk account "owns" it (clerk_id, name, role, slug); preserved columns are kept.
+ * Preserves app-managed columns (assigned_broker_id, assigned_lender_id, repliers_client_id, marketing_opt_in). */
 async function handleUserUpsert(
   admin: SupabaseClient,
   data: WebhookEvent['data'],
@@ -225,22 +226,87 @@ async function handleUserUpsert(
   const mailerliteToken =
     process.env.MAILERLITE_API_TOKEN?.trim() || process.env.MAILERLITE_API_KEY?.trim();
   const groupId = process.env.MAILERLITE_GROUP_ID?.trim();
-  // Only sync to MailerLite on user.created to avoid duplicate API calls and "already subscribed" noise
   const mailerlitePromise =
     eventType === 'user.created' && row.email && mailerliteToken && groupId
       ? syncMailerLite(row.email, row.first_name, row.last_name, eventType, logContext)
       : Promise.resolve();
 
-  // Preserve app-managed columns: assigned_broker_id, assigned_lender_id, repliers_client_id, marketing_opt_in.
-  // Do not overwrite when Clerk sends user.updated.
   const isAgentOrLender = row.role === 'agent' || row.role === 'broker' || row.role === 'lender' || row.role === 'owner';
+  const slug = isAgentOrLender ? deriveUserSlug(row.first_name, row.last_name) : null;
+
+  // One row per email: if a user with this email already exists but different clerk_id, update that row (claim it)
+  if (row.email?.trim()) {
+    let existingByEmail: unknown = null;
+    try {
+      const res = await (admin as unknown as { rpc: (a: string, b: { norm_email: string }) => Promise<{ data: unknown }> }).rpc(
+        'get_user_by_normalized_email',
+        { norm_email: row.email }
+      );
+      existingByEmail = res.data;
+    } catch {
+      // RPC may not exist before migration 20260330000000; fall back to normal upsert
+    }
+    const existingRow = Array.isArray(existingByEmail) ? existingByEmail[0] : existingByEmail;
+    if (existingRow && typeof existingRow === 'object' && (existingRow as { clerk_id?: string }).clerk_id !== clerkId) {
+      const ex = existingRow as {
+        id: string;
+        clerk_id: string;
+        assigned_broker_id?: string | null;
+        assigned_lender_id?: string | null;
+        repliers_client_id?: number | null;
+        marketing_opt_in?: boolean | null;
+      };
+      const oldClerkId = ex.clerk_id;
+      const updatePayload = {
+        clerk_id: row.clerk_id,
+        email: row.email,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        role: row.role,
+        slug,
+        assigned_broker_id: ex.assigned_broker_id ?? null,
+        assigned_lender_id: ex.assigned_lender_id ?? null,
+        repliers_client_id: ex.repliers_client_id ?? null,
+        marketing_opt_in: ex.marketing_opt_in ?? null,
+        updated_at: null,
+      };
+      const { error: updateError } = await admin.from('users').update(updatePayload).eq('id', ex.id);
+      if (updateError) {
+        const detail = formatSupabaseError(updateError);
+        console.error('Clerk webhook: claim-by-email update failed', {
+          ...logContext,
+          eventType,
+          clerkId,
+          supabaseError: detail,
+        });
+        return errResponse(detail.message ?? 'Database sync failed', 500, {
+          code: detail.code ?? 'SUPABASE_ERROR',
+          details: detail.details,
+        });
+      }
+      await Promise.all([
+        admin.from('saved_searches').update({ clerk_id: row.clerk_id }).eq('clerk_id', oldClerkId),
+        admin.from('favorites').update({ clerk_id: row.clerk_id }).eq('clerk_id', oldClerkId),
+      ]);
+      if (row.email) await bridgeLeads(admin, row.clerk_id, row.email, logContext);
+      if (eventType === 'user.created') {
+        syncRepliersClientIfNeeded(admin, clerkId, row, logContext).catch((err) => {
+          console.warn('Clerk webhook: Repliers client sync failed (non-fatal)', { ...logContext, clerkId, err });
+        });
+      }
+      await mailerlitePromise;
+      return okResponse();
+    }
+  }
+
+  // No existing row by email (or same clerk_id): upsert by clerk_id
   let upsertPayload: Record<string, unknown> = {
     clerk_id: row.clerk_id,
     email: row.email,
     first_name: row.first_name,
     last_name: row.last_name,
     role: row.role,
-    slug: isAgentOrLender ? deriveUserSlug(row.first_name, row.last_name) : null,
+    slug,
     assigned_broker_id: null,
     assigned_lender_id: null,
     marketing_opt_in: null,

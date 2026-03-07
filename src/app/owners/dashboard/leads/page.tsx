@@ -4,6 +4,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isOwnerRole, isBrokerRole, isLenderRole } from '@/lib/roles';
+import { buildMyLeadsBrokerIds } from '@/lib/owner-my-leads-ids';
 import { Hero } from '@/components/Hero';
 import { LeadsSortForm } from '@/app/agents/dashboard/leads/LeadsSortForm';
 import { assetPaths } from '@/config/theme';
@@ -83,7 +84,7 @@ export default async function OwnerLeadsPage({
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  let user: { role?: string | null; slug?: string | null } | null = null;
+  let user: { role?: string | null; slug?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null } | null = null;
   let leads: LeadRow[] = [];
   let totalCount = 0;
 
@@ -101,16 +102,19 @@ export default async function OwnerLeadsPage({
 
     const userRes = await supabase
       .from('users')
-      .select('role, slug')
+      .select('role, slug, first_name, last_name, email')
       .eq('clerk_id', userId)
       .maybeSingle();
     user = userRes.data ?? null;
 
     let query = supabase.from('leads').select(LEADS_SELECT, { count: 'exact' });
     if (scope === 'mine') {
-      const brokerIds = [userId];
-      if (user?.slug) brokerIds.push(user.slug);
-      query = query.in('assigned_broker_id', brokerIds);
+      const brokerIds = buildMyLeadsBrokerIds(user, userId, clerkUser);
+      if (brokerIds.length > 0) {
+        query = query.in('assigned_broker_id', brokerIds);
+      } else {
+        query = query.eq('id', '00000000-0000-0000-0000-000000000000');
+      }
     }
     if (q) {
       const pattern = `%${escapeIlike(q)}%`;
@@ -199,6 +203,21 @@ export default async function OwnerLeadsPage({
             <Link href="/owners/dashboard" className="leads-toolbar__back">
               ← Back to dashboard
             </Link>
+            <div className="owner-leads-quick-links">
+              <span className="owner-leads-quick-links__label">Quick links:</span>
+              <Link
+                href={buildUrl({ page: 1, scope: 'mine' })}
+                className={`owner-leads-quick-links__btn ${scope === 'mine' ? 'owner-leads-quick-links__btn--active' : ''}`}
+              >
+                My leads
+              </Link>
+              <Link
+                href={buildUrl({ page: 1, scope: 'all' })}
+                className={`owner-leads-quick-links__btn ${scope === 'all' ? 'owner-leads-quick-links__btn--active' : ''}`}
+              >
+                All leads
+              </Link>
+            </div>
             <div className="owner-leads-scope">
               <span className="owner-leads-scope__label">View:</span>
               <div className="owner-leads-scope__toggle" role="group" aria-label="Lead scope">

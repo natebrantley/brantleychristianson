@@ -19,7 +19,7 @@ export type UsersRow = {
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  role: 'agent' | 'broker' | 'lender' | 'user';
+  role: 'agent' | 'broker' | 'lender' | 'user' | 'owner';
 };
 
 function getPrimaryEmail(user: User): string | null {
@@ -29,13 +29,13 @@ function getPrimaryEmail(user: User): string | null {
   return typeof email === 'string' && email.trim().length > 0 ? email.trim().toLowerCase() : null;
 }
 
-function getRoleFromMetadata(user: User): 'agent' | 'broker' | 'lender' | null | undefined {
+function getRoleFromMetadata(user: User): 'agent' | 'broker' | 'lender' | 'owner' | null | undefined {
   const meta = user.publicMetadata;
   if (meta == null || typeof meta !== 'object' || !('role' in meta)) return undefined;
   const r = (meta as { role?: unknown }).role;
   if (typeof r !== 'string') return undefined;
   const lower = r.trim().toLowerCase();
-  if (lower === 'agent' || lower === 'broker' || lower === 'lender') return lower;
+  if (lower === 'agent' || lower === 'broker' || lower === 'lender' || lower === 'owner') return lower;
   return null;
 }
 
@@ -50,7 +50,7 @@ function buildUsersRowFromClerkUser(user: User): UsersRow {
   const isAgentDomain =
     typeof email === 'string' && email.trim().toLowerCase().endsWith('@' + AGENT_EMAIL_DOMAIN);
   const role: UsersRow['role'] =
-    roleFromMeta === 'agent' || roleFromMeta === 'broker' || roleFromMeta === 'lender'
+    roleFromMeta === 'agent' || roleFromMeta === 'broker' || roleFromMeta === 'lender' || roleFromMeta === 'owner'
       ? roleFromMeta
       : isAgentDomain
         ? 'agent'
@@ -77,7 +77,7 @@ export async function ensureUserInSupabase(clerkUser: User): Promise<UsersRow | 
     const admin = supabaseAdmin();
     const row = buildUsersRowFromClerkUser(clerkUser);
 
-    const isAgentOrLender = row.role === 'agent' || row.role === 'broker' || row.role === 'lender';
+    const isAgentOrLender = row.role === 'agent' || row.role === 'broker' || row.role === 'lender' || row.role === 'owner';
     let upsertPayload: Record<string, unknown> = {
       clerk_id: row.clerk_id,
       email: row.email ?? '',
@@ -103,6 +103,56 @@ export async function ensureUserInSupabase(clerkUser: User): Promise<UsersRow | 
         if (key in existing && (existing as Record<string, unknown>)[key] !== undefined) {
           upsertPayload[key] = (existing as Record<string, unknown>)[key];
         }
+      }
+    }
+
+    // One row per email: if this email already exists with a different clerk_id, update that row (claim it)
+    if (row.email?.trim()) {
+      let existingByEmail: unknown = null;
+      try {
+        const res = await (admin as unknown as { rpc: (a: string, b: { norm_email: string }) => Promise<{ data: unknown }> }).rpc(
+          'get_user_by_normalized_email',
+          { norm_email: row.email }
+        );
+        existingByEmail = res.data;
+      } catch {
+        // RPC may not exist before migration 20260330000000
+      }
+      const existingRow = Array.isArray(existingByEmail) ? existingByEmail[0] : existingByEmail;
+      if (existingRow && typeof existingRow === 'object' && (existingRow as { clerk_id?: string }).clerk_id !== row.clerk_id) {
+        const ex = existingRow as {
+          id: string;
+          clerk_id: string;
+          assigned_broker_id?: string | null;
+          assigned_lender_id?: string | null;
+          repliers_client_id?: number | null;
+          marketing_opt_in?: boolean | null;
+        };
+        const oldClerkId = ex.clerk_id;
+        const updatePayload = {
+          clerk_id: row.clerk_id,
+          email: row.email,
+          first_name: row.first_name,
+          last_name: row.last_name,
+          role: row.role,
+          slug: isAgentOrLender ? deriveUserSlug(row.first_name, row.last_name) : null,
+          assigned_broker_id: ex.assigned_broker_id ?? null,
+          assigned_lender_id: ex.assigned_lender_id ?? null,
+          repliers_client_id: ex.repliers_client_id ?? null,
+          marketing_opt_in: ex.marketing_opt_in ?? null,
+          updated_at: null,
+        };
+        const { error: updateError } = await admin.from('users').update(updatePayload).eq('id', ex.id);
+        if (updateError) {
+          console.error('sync-clerk-user: claim-by-email update failed', { clerkId: row.clerk_id, message: updateError.message });
+          return null;
+        }
+        await Promise.all([
+          admin.from('saved_searches').update({ clerk_id: row.clerk_id }).eq('clerk_id', oldClerkId),
+          admin.from('favorites').update({ clerk_id: row.clerk_id }).eq('clerk_id', oldClerkId),
+        ]);
+        if (row.email) await bridgeLeadsByEmail(admin, row.clerk_id, row.email);
+        return row;
       }
     }
 

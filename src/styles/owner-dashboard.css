@@ -69,6 +69,71 @@
   margin-right: auto;
 }
 
+/* Quick links: My leads | All leads (owner CRM) */
+.owner-leads-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.owner-leads-quick-links__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.owner-leads-quick-links__btn {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  min-height: 44px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-accent);
+  background: var(--theme-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.owner-leads-quick-links__btn:hover {
+  color: var(--color-primary);
+  background: rgba(var(--color-accent-rgb), 0.08);
+  border-color: var(--color-accent);
+}
+
+.owner-leads-quick-links__btn--active {
+  color: var(--theme-bg);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  font-weight: 600;
+}
+
+.owner-leads-quick-links__btn--active:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--theme-bg);
+}
+
+@media (max-width: 599px) {
+  .owner-leads-quick-links {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .owner-leads-quick-links__label {
+    margin-bottom: 0.25rem;
+  }
+
+  .owner-leads-quick-links__btn {
+    justify-content: center;
+  }
+}
+
 /* My leads / All leads toggle (owner CRM) */
 .owner-leads-scope {
   display: flex;

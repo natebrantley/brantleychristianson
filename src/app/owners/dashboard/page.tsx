@@ -4,6 +4,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isOwnerRole, isBrokerRole, isLenderRole } from '@/lib/roles';
+import { buildMyLeadsBrokerIds } from '@/lib/owner-my-leads-ids';
 import { LEADS_SELECT_PREVIEW } from '@/lib/leads-fields';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
@@ -51,7 +52,7 @@ export default async function OwnersDashboardPage() {
 
     const supabase = await createClerkSupabaseClient();
 
-    const [userRes, leadsRes, countRes, myCountRes] = await Promise.all([
+    const [userRes, leadsRes, countRes] = await Promise.all([
       supabase
         .from('users')
         .select('first_name, last_name, email, role, slug')
@@ -59,13 +60,6 @@ export default async function OwnersDashboardPage() {
         .maybeSingle(),
       supabase.from('leads').select(LEADS_SELECT_PREVIEW).limit(10),
       supabase.from('leads').select('*', { count: 'exact', head: true }),
-      (async () => {
-        const brokerIds = [userId];
-        const u = (await supabase.from('users').select('slug').eq('clerk_id', userId).maybeSingle()).data;
-        if (u?.slug) brokerIds.push(u.slug);
-        const { count } = await supabase.from('leads').select('*', { count: 'exact', head: true }).in('assigned_broker_id', brokerIds);
-        return typeof count === 'number' ? count : 0;
-      })(),
     ]);
 
     user = userRes.data ?? null;
@@ -77,7 +71,16 @@ export default async function OwnersDashboardPage() {
       leads = leadsRes.data as LeadRow[];
     }
     totalCount = typeof countRes.count === 'number' ? countRes.count : 0;
-    myLeadsCount = myCountRes;
+
+    const clerkUserForBrokerIds = await currentUser();
+    const brokerIds = buildMyLeadsBrokerIds(user, userId, clerkUserForBrokerIds);
+    if (brokerIds.length > 0) {
+      const { count: myCount } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .in('assigned_broker_id', brokerIds);
+      myLeadsCount = typeof myCount === 'number' ? myCount : 0;
+    }
   } catch (err) {
     console.error('Unexpected error loading owner dashboard:', { userId, ...formatSupabaseError(err) });
   }
