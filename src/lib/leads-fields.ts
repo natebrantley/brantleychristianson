@@ -1,6 +1,6 @@
 /**
- * Canonical public.leads schema (12 columns + marketing_opted_out_at).
- * Use these constants so all dashboards and APIs stay aligned with the table.
+ * Canonical public.leads schema. Use these constants so all dashboards and APIs stay aligned.
+ * LEADS_SELECT includes created_at, updated_at, last_login — run migration 20260336000000_leads_ensure_activity_columns.sql if those columns are missing.
  */
 
 export const LEADS_TABLE_COLUMNS = [
