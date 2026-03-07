@@ -60,6 +60,7 @@ export default async function LendersDashboardPage() {
       supabase
         .from('leads')
         .select(LEADS_SELECT_LENDER)
+        .is('marketing_opted_out_at', null)
         .eq('assigned_lender_id', userId)
         .limit(20),
     ]);

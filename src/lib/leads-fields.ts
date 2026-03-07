@@ -1,5 +1,5 @@
 /**
- * Canonical public.leads schema (12 columns).
+ * Canonical public.leads schema (12 columns + marketing_opted_out_at).
  * Use these constants so all dashboards and APIs stay aligned with the table.
  */
 
@@ -16,6 +16,7 @@ export const LEADS_TABLE_COLUMNS = [
   'zip',
   'assigned_broker_id',
   'assigned_lender_id',
+  'marketing_opted_out_at',
 ] as const;
 
 export type LeadsTableColumn = (typeof LEADS_TABLE_COLUMNS)[number];

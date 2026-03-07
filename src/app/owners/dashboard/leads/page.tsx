@@ -126,7 +126,7 @@ export default async function OwnerLeadsPage({
       .maybeSingle();
     user = userRes.data ?? null;
 
-    let query = admin.from('leads').select(LEADS_SELECT, { count: 'exact' });
+    let query = admin.from('leads').select(LEADS_SELECT, { count: 'exact' }).is('marketing_opted_out_at', null);
     if (scope === 'mine') {
       const brokerIds = buildMyLeadsBrokerIds(user, userId, clerkUser);
       if (brokerIds.length > 0) {

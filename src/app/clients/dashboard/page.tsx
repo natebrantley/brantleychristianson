@@ -56,7 +56,7 @@ export default async function ClientsDashboardPage() {
         .eq('clerk_id', userId)
         .maybeSingle(),
       userEmail
-        ? supabase.from('leads').select(LEADS_SELECT_CLIENT).eq('email_address', userEmail).limit(10)
+        ? supabase.from('leads').select(LEADS_SELECT_CLIENT).eq('email_address', userEmail).is('marketing_opted_out_at', null).limit(10)
         : Promise.resolve({ data: [], error: null }),
     ]);
 

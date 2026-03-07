@@ -104,8 +104,8 @@ export default async function AgentsDashboardPage() {
     const uniqWithCase = [...new Set([...uniqBrokerIds, ...uniqBrokerIds.map((s) => s.toLowerCase())])];
 
     const [leadsRes, countRes] = await Promise.all([
-      supabase.from('leads').select(LEADS_SELECT_PREVIEW).in('assigned_broker_id', uniqWithCase).limit(10),
-      supabase.from('leads').select('*', { count: 'exact', head: true }).in('assigned_broker_id', uniqWithCase),
+      supabase.from('leads').select(LEADS_SELECT_PREVIEW).in('assigned_broker_id', uniqWithCase).is('marketing_opted_out_at', null).limit(10),
+      supabase.from('leads').select('*', { count: 'exact', head: true }).in('assigned_broker_id', uniqWithCase).is('marketing_opted_out_at', null),
     ]);
 
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {

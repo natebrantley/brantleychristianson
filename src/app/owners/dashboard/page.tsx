@@ -46,7 +46,7 @@ export default async function OwnersDashboardPage() {
     const admin = supabaseAdmin();
     const [userRes, countRes] = await Promise.all([
       admin.from('users').select('first_name, last_name, email, role, slug').eq('clerk_id', userId).maybeSingle(),
-      admin.from('leads').select('*', { count: 'exact', head: true }),
+      admin.from('leads').select('*', { count: 'exact', head: true }).is('marketing_opted_out_at', null),
     ]);
 
     user = userRes.data ?? null;
@@ -61,7 +61,8 @@ export default async function OwnersDashboardPage() {
       const { count: myCount } = await admin
         .from('leads')
         .select('*', { count: 'exact', head: true })
-        .in('assigned_broker_id', brokerIds);
+        .in('assigned_broker_id', brokerIds)
+        .is('marketing_opted_out_at', null);
       myLeadsCount = typeof myCount === 'number' ? myCount : 0;
     }
   } catch (err) {

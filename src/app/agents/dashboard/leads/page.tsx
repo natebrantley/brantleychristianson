@@ -140,7 +140,8 @@ export default async function AgentLeadsPage({
       let query = client
         .from('leads')
         .select(LEAD_SELECT, { count: 'exact' })
-        .in('assigned_broker_id', brokerIds);
+        .in('assigned_broker_id', brokerIds)
+        .is('marketing_opted_out_at', null);
       if (q) {
         const pattern = `%${escapeIlike(q)}%`;
         query = query.or(
@@ -206,7 +207,8 @@ export default async function AgentLeadsPage({
       let fallbackQuery = admin
         .from('leads')
         .select(LEAD_SELECT, { count: 'exact' })
-        .in('assigned_broker_id', uniqWithCase);
+        .in('assigned_broker_id', uniqWithCase)
+        .is('marketing_opted_out_at', null);
       if (q) {
         const pattern = `%${escapeIlike(q)}%`;
         fallbackQuery = fallbackQuery.or(

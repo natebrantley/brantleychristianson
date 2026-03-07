@@ -104,7 +104,22 @@ async function applyMarketingOpt(
     });
   }
 
-  // leads table was simplified and no longer has opted_in_email; users table is source of truth
+  // On opt-out: note in public.leads so they are excluded from sync and dashboard lists
+  if (!optIn) {
+    const { error: leadsError } = await admin
+      .from('leads')
+      .update({ marketing_opted_out_at: new Date().toISOString() })
+      .eq('email_address', email);
+
+    if (leadsError) {
+      const redacted = email ? `${email.slice(0, 2)}***@${(email.split('@')[1] ?? '')}` : '—';
+      console.warn('MailerLite webhook: leads marketing_opted_out_at', {
+        ...logContext,
+        email: redacted,
+        supabaseError: formatSupabaseError(leadsError),
+      });
+    }
+  }
 }
 
 /** GET /api/webhooks/mailerlite — health check. Does not reveal secret. */

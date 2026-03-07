@@ -135,6 +135,7 @@ export async function syncLeadsToMailerLite(
   let query = admin
     .from('leads')
     .select(LEADS_SELECT_MAILERLITE)
+    .is('marketing_opted_out_at', null)
     .limit(limit);
 
   const { data: rows, error } = await query;
