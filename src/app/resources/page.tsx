@@ -51,10 +51,10 @@ export default function ResourcesPage() {
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Featured</p>
             <h2 id="featured-resources-heading" className="section-title">
-              Cornerstone condo guides
+              Featured guides
             </h2>
             <p className="section-lead mx-auto">
-              Start with our flagship Portland condo guide, then connect with a broker to apply the
+              Start with our Portland condo guide or explore the Oregon coast and latest market synthesis; then connect with a broker to apply the
               data to your specific situation.
             </p>
           </header>
@@ -75,6 +75,38 @@ export default function ResourcesPage() {
                 </p>
                 <Button href="/resources/portland-condo-guide" variant="outline">
                   View guide
+                </Button>
+              </article>
+              <article className="resource-card">
+                <h3 className="resource-card-title">
+                  <Link href="/resources/oregon-coast-guide">
+                    Oregon Coast Guide
+                  </Link>
+                </h3>
+                <p className="resource-card-body">
+                  Fifteen of the largest and most popular Oregon coast cities—from Astoria to Brookings. Explore communities and connect with a local broker.
+                </p>
+                <p className="resource-card-meta">
+                  Focus: <strong>Oregon coast</strong>
+                </p>
+                <Button href="/resources/oregon-coast-guide" variant="outline">
+                  View guide
+                </Button>
+              </article>
+              <article className="resource-card">
+                <h3 className="resource-card-title">
+                  <Link href="/resources/market-synthesis-feb2026">
+                    Pacific Northwest Market Synthesis (Feb 2026)
+                  </Link>
+                </h3>
+                <p className="resource-card-body">
+                  A synthesis of RMLS Market Action Reports: affordability ceilings, Portland vs. SW Washington, mid-valley stability, and coastal recalibration.
+                </p>
+                <p className="resource-card-meta">
+                  Focus: <strong>RMLS data, PNW markets</strong>
+                </p>
+                <Button href="/resources/market-synthesis-feb2026" variant="outline">
+                  Read synthesis
                 </Button>
               </article>
             </div>
