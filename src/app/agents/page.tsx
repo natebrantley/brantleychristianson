@@ -4,29 +4,19 @@ import { BrokersList } from '@/components/BrokersList';
 import { assetPaths } from '@/config/theme';
 import { agents } from '@/data/agents';
 import { Suspense } from 'react';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Our Agents';
 const description =
-  'Meet the BCRE team. Licensed in Oregon and Washington. Portland metro, SW Washington, the coast & Mt. Hood. Choose an agent as your main contact or connect for a consultation.';
+  'Meet the BCRE team. Licensed brokers in Oregon and Washington. Portland metro, SW Washington, coast & Mt. Hood. Choose an agent as your main contact or request a consultation.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/agents',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE agents – Oregon and Washington')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE agents – Oregon and Washington').url],
-  },
-};
+  path: '/agents',
+  ogImageAlt: 'BCRE agents – Oregon and Washington',
+});
 
 export default function AgentsListPage() {
   return (

@@ -7,7 +7,7 @@ import { MarketLayout } from '@/components/markets/MarketLayout';
 import { ListingsCta } from '@/components/markets/ListingsCta';
 import { assetPaths } from '@/config/theme';
 import { allMarkets } from '@/data/markets';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const hubItems = allMarkets.map((m) => ({
@@ -30,24 +30,14 @@ const POPULAR_MARKETS = [
 
 const title = 'Our Markets';
 const description =
-  'BCRE serves Oregon and Washington: Portland metro (Multnomah, Washington, Clackamas), SW Washington (Clark, Cowlitz), and beyond. Find your community.';
+  'BCRE serves Oregon and Washington: Portland metro (Multnomah, Washington, Clackamas), SW Washington (Clark, Cowlitz), coast & beyond. Explore cities and connect with a local broker.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/markets',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE markets – Oregon and Washington')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE markets – Oregon and Washington').url],
-  },
-};
+  path: '/markets',
+  ogImageAlt: 'BCRE markets – Oregon and Washington',
+});
 
 export default function MarketsIndexPage() {
   return (

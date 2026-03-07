@@ -11,13 +11,17 @@ import { getAgentBySlug, getAgentByEmail } from '@/data/agents';
 import { getLenderBySlug, getLenderByEmail } from '@/data/lenders';
 import { LEADS_SELECT_CLIENT } from '@/lib/leads-fields';
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/config/site';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Your dashboard',
-  description: 'Your agent, lender, saved homes, and next steps. BCRE client dashboard.',
-};
+  description: 'Your agent, lender, saved homes, and next steps. BCRE client dashboard. Oregon and Washington.',
+  path: '/clients/dashboard',
+  ogImageAlt: 'BCRE client dashboard',
+  robots: { index: false, follow: false },
+});
 
 type UserFields = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
 

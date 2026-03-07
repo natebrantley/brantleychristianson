@@ -11,13 +11,17 @@ import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/config/site';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Agent dashboard',
-  description: 'Your leads database and client activity. BCRE agent dashboard.',
-};
+  description: 'Your leads, client activity, and CRM. BCRE agent dashboard. Oregon and Washington.',
+  path: '/agents/dashboard',
+  ogImageAlt: 'BCRE agent dashboard',
+  robots: { index: false, follow: false },
+});
 
 type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; slug?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
 type LeadRow = {

@@ -5,7 +5,7 @@ import { IntelligenceHubs } from '@/components/IntelligenceHubs';
 import { LazyYouTube } from '@/components/LazyYouTube';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
-import { SITE_URL, defaultOgImage } from '@/config/site';
+import { SITE_URL, buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const MARKETS = [
@@ -25,23 +25,13 @@ const MARKETS = [
   },
 ];
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Pacific Northwest Real Estate',
   description:
-    'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington. Portland metro, SW Washington, coast & Mt. Hood.',
-  openGraph: {
-    url: '/',
-    title: 'Brantley Christianson Real Estate | Pacific Northwest Real Estate',
-    description: 'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington.',
-    images: [defaultOgImage('Pacific Northwest real estate – Oregon and Washington')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Brantley Christianson Real Estate | Pacific Northwest Real Estate',
-    description: 'Fiercely Independent, Strategically Driven. Luxury real estate across Oregon and Washington.',
-    images: [defaultOgImage('Pacific Northwest real estate – Oregon and Washington').url],
-  },
-};
+    'Fiercely independent, strategically driven. Luxury and residential real estate across Oregon and Washington—Portland metro, SW Washington, coast & Mt. Hood. Connect with a local BCRE broker.',
+  path: '/',
+  ogImageAlt: 'Pacific Northwest real estate – Oregon and Washington',
+});
 
 export default function HomePage() {
   const jsonLd = {

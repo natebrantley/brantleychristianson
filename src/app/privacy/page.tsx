@@ -1,29 +1,19 @@
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { assetPaths } from '@/config/theme';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Privacy Policy';
 const description =
-  'Privacy policy for Brantley Christianson Real Estate. How we collect, use, and protect your information.';
+  'How Brantley Christianson Real Estate collects, uses, and protects your information. Oregon and Washington.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/privacy',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage()],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage().url],
-  },
-};
+  path: '/privacy',
+  ogImageAlt: 'BCRE privacy policy',
+});
 
 export default function PrivacyPage() {
   return (

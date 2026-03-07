@@ -3,30 +3,19 @@ import { Button } from '@/components/Button';
 import { LendersFilterable } from '@/components/LendersFilterable';
 import { assetPaths } from '@/config/theme';
 import { lenders } from '@/data/lenders';
-import { SITE_NAME, SITE_URL, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Preferred Lenders';
 const description =
-  'Our trusted lending partners. Connect with a loan officer who understands your market and goals. Purchase, refinance, and investment financing.';
+  'BCRE trusted lending partners. Connect with a loan officer who knows Oregon and Washington markets. Purchase, refinance, and investment financing.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  alternates: { canonical: `${SITE_URL}/lenders` },
-  openGraph: {
-    url: `${SITE_URL}/lenders`,
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE preferred lenders')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE preferred lenders').url],
-  },
-};
+  path: '/lenders',
+  ogImageAlt: 'BCRE preferred lenders',
+});
 
 export default function LendersPage() {
   return (

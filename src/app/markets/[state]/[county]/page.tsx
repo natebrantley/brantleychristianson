@@ -12,7 +12,7 @@ import {
   getAllCountyPaths,
 } from '@/data/markets';
 import { getWhatToKnow } from '@/data/market-copy';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { SITE_NAME, SITE_URL, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 interface PageProps {
@@ -32,13 +32,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
   const title = `${countyData.name} Real Estate | ${stateMarket.name}`;
   const description = `BCRE serves ${countyData.name}. Explore cities: ${countyData.cities.map((c) => c.name).join(', ')}. Connect with a local broker.`;
-  const url = `/markets/${state}/${county}`;
+  const path = `/markets/${state}/${county}`;
+  const canonical = `${SITE_URL}${path}`;
   const socialTitle = `${title} | ${SITE_NAME}`;
+  const image = defaultOgImage(`${countyData.name} real estate`);
   return {
     title,
     description,
-    openGraph: { url, title: socialTitle, description, images: [defaultOgImage(`${countyData.name} real estate`)], },
-    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [defaultOgImage(`${countyData.name} real estate`).url] },
+    alternates: { canonical },
+    openGraph: {
+      type: 'website',
+      url: canonical,
+      siteName: SITE_NAME,
+      title: socialTitle,
+      description,
+      images: [image],
+    },
+    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [image.url] },
   };
 }
 

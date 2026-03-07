@@ -12,6 +12,7 @@ import { assetPaths } from '@/config/theme';
 import { getLeadPulse, getLeadPulseLabel } from '@/lib/getLeadPulse';
 import { LEADS_SELECT } from '@/lib/leads-fields';
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/config/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +22,13 @@ const SORT_OPTIONS = [
   { value: 'first_name-desc', label: 'Name Z–A', column: 'first_name', ascending: false },
 ] as const;
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'All leads | Agent dashboard',
   description: 'All assigned leads – CRM view. BCRE agent dashboard.',
-};
+  path: '/agents/dashboard/leads',
+  ogImageAlt: 'BCRE agent leads',
+  robots: { index: false, follow: false },
+});
 
 type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; slug?: string | null };
 type LeadRow = {

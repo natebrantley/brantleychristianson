@@ -2,29 +2,19 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { SITE_NAME, buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'About Us';
 const description =
-  'A fully licensed, independently owned boutique real estate brokerage in Oregon and Washington. Members of RMLS, EMAR, OAR, WAR, NAR & NWMLS. Portland metro, SW Washington, coast & Mt. Hood.';
+  'Fiercely independent boutique real estate brokerage in Oregon and Washington. Licensed, local expertise. Members of RMLS, EMAR, OAR, WAR, NAR & NWMLS. Portland metro, SW Washington, coast & Mt. Hood.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/about',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('About BCRE – Oregon and Washington real estate')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('About BCRE – Oregon and Washington real estate').url],
-  },
-};
+  path: '/about',
+  ogImageAlt: 'About BCRE – Oregon and Washington real estate',
+});
 
 const PILLARS = [
   {

@@ -2,7 +2,7 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { assetPaths } from '@/config/theme';
 import { site } from '@/data/site';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 /** Extract YouTube playlist ID from a playlist URL for embedding */
@@ -44,24 +44,14 @@ const SOCIAL_LINKS = [
 
 const title = 'Connect on Social';
 const description =
-  'Follow Brantley Christianson Real Estate on Instagram, Facebook, LinkedIn, and YouTube for listings, market insights, broker stories, and featured video tours.';
+  'Follow BCRE on Instagram, Facebook, LinkedIn, and YouTube for listings, market insights, broker stories, and featured video tours across Oregon and Washington.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/social',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE on social')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE on social').url],
-  },
-};
+  path: '/social',
+  ogImageAlt: 'BCRE on social',
+});
 
 export default function SocialPage() {
   const youtubePlaylistId = getYoutubePlaylistId(site.social.youtube ?? '');

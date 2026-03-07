@@ -11,7 +11,7 @@ import {
   getCountiesForRegion,
   getAllOregonRegionSlugs,
 } from '@/data/oregon-regions';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { SITE_NAME, SITE_URL, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
 interface PageProps {
@@ -30,13 +30,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
   const title = `${region.name} Real Estate | Oregon`;
   const description = `${region.description} Explore counties and cities. Connect with a BCRE broker.`;
-  const url = `/markets/oregon/region/${slug}`;
+  const path = `/markets/oregon/region/${slug}`;
+  const canonical = `${SITE_URL}${path}`;
   const socialTitle = `${title} | ${SITE_NAME}`;
+  const image = defaultOgImage(`${region.name} real estate`);
   return {
     title,
     description,
-    openGraph: { url, title: socialTitle, description, images: [defaultOgImage(`${region.name} real estate`)], },
-    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [defaultOgImage(`${region.name} real estate`).url] },
+    alternates: { canonical },
+    openGraph: {
+      type: 'website',
+      url: canonical,
+      siteName: SITE_NAME,
+      title: socialTitle,
+      description,
+      images: [image],
+    },
+    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [image.url] },
   };
 }
 

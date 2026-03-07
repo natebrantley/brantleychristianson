@@ -12,14 +12,17 @@ import { getLenderBySlug, getLenderByEmail } from '@/data/lenders';
 import { getBrokerDisplayNamesByClerkId, resolveLeadAssignedAgentName } from '@/lib/broker-names';
 import { LEADS_SELECT_LENDER } from '@/lib/leads-fields';
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/config/site';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Lender dashboard',
   description: 'Your referrals, agent contact, and resources. BCRE preferred lender dashboard.',
-  robots: { index: false, follow: true },
-};
+  path: '/lenders/dashboard',
+  ogImageAlt: 'BCRE lender dashboard',
+  robots: { index: false, follow: false },
+});
 
 type LenderUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
 type LeadRow = { id: string; email_address: string | null; assigned_broker_id?: string | null };

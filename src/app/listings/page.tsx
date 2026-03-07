@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 import { ListingsSearchClient } from '@/components/listings/ListingsSearchClient';
-import { SITE_NAME } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Search Listings',
-  description: `Search active real estate listings. ${SITE_NAME}.`,
-};
+  description:
+    'Search active real estate listings in Oregon and Washington. Portland metro, SW Washington, coast. Filter by city, price, beds. BCRE.',
+  path: '/listings',
+  ogImageAlt: 'Search listings – BCRE',
+});
 
 export default function ListingsPage() {
   return (

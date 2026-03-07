@@ -4,7 +4,7 @@ import { Button } from '@/components/Button';
 import { PortlandCondoGuideList } from '@/components/PortlandCondoGuideList';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
-import { SITE_URL, SITE_NAME, defaultOgImage } from '@/config/site';
+import { SITE_URL, buildPageMetadata } from '@/config/site';
 import { portlandCondoGuide, portlandCondoNeighborhoods } from '@/data/portland-condo-guide';
 import type { Metadata } from 'next';
 
@@ -12,22 +12,12 @@ const title = '2026 Portland Condo Guide';
 const description =
   'BCRE’s 2026 Portland condo guide. Compare buildings by neighborhood, median price, HOA, and more. Pearl District, Downtown, South Waterfront, East Portland.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
-  description,
-  openGraph: {
-    url: '/resources/portland-condo-guide',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Portland condo guide – BCRE')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Portland condo guide – BCRE').url],
-  },
-};
+  description: 'BCRE 2026 Portland condo guide. Compare buildings by neighborhood, median price, HOA, rent caps. Pearl District, Downtown, South Waterfront, East Portland.',
+  path: '/resources/portland-condo-guide',
+  ogImageAlt: 'Portland condo guide – BCRE',
+});
 
 export default function PortlandCondoGuidePage() {
   const jsonLd = {

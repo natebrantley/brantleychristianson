@@ -10,13 +10,17 @@ import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
 import { assetPaths } from '@/config/theme';
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/config/site';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Owner dashboard',
   description: 'Full access to all leads and team CRM. BCRE owner dashboard.',
-};
+  path: '/owners/dashboard',
+  ogImageAlt: 'BCRE owner dashboard',
+  robots: { index: false, follow: false },
+});
 
 type OwnerUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; slug?: string | null };
 type LeadRow = { id: string; email_address: string | null; assigned_broker_id?: string | null; first_name?: string | null; last_name?: string | null; phone?: string | null };

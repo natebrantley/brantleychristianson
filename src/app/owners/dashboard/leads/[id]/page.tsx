@@ -8,13 +8,17 @@ import { Hero } from '@/components/Hero';
 import { LeadContactForm } from '@/app/agents/dashboard/leads/[id]/LeadContactForm';
 import { assetPaths } from '@/config/theme';
 import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/config/site';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Lead detail | Owner dashboard',
   description: 'View and edit lead contact information. BCRE owner dashboard.',
-};
+  path: '/owners/dashboard/leads',
+  ogImageAlt: 'BCRE owner dashboard – lead',
+  robots: { index: false, follow: false },
+});
 
 type LeadRow = {
   id: string;

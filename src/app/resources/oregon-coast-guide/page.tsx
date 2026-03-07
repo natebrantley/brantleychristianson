@@ -3,7 +3,7 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
-import { SITE_URL, SITE_NAME, defaultOgImage } from '@/config/site';
+import { SITE_URL, buildPageMetadata } from '@/config/site';
 import { oregonCoastGuideCities } from '@/data/oregon-coast-guide';
 import type { Metadata } from 'next';
 
@@ -11,22 +11,12 @@ const title = 'Oregon Coast Guide';
 const description =
   'BCRE’s guide to 15 of the largest and most popular Oregon coast cities—from Astoria to Brookings. Explore real estate and communities on the Pacific.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
-  description,
-  openGraph: {
-    url: '/resources/oregon-coast-guide',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Oregon Coast guide – BCRE')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Oregon Coast guide – BCRE').url],
-  },
-};
+  description: 'BCRE guide to 15 Oregon coast cities—Astoria to Brookings. Explore real estate and communities on the Pacific.',
+  path: '/resources/oregon-coast-guide',
+  ogImageAlt: 'Oregon Coast guide – BCRE',
+});
 
 export default function OregonCoastGuidePage() {
   const jsonLd = {

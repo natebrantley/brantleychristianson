@@ -7,7 +7,7 @@ import { MarketLayout } from '@/components/markets/MarketLayout';
 import { ListingsCta } from '@/components/markets/ListingsCta';
 import { oregonMarket } from '@/data/markets';
 import { oregonRegions } from '@/data/oregon-regions';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const KEY_CITIES = [
@@ -19,24 +19,14 @@ const KEY_CITIES = [
 
 const title = 'Oregon Real Estate';
 const description =
-  'BCRE serves Portland metro, the Willamette Valley, the coast, Central and Eastern Oregon. Explore Oregon regions and connect with a local broker.';
+  'BCRE serves Portland metro, Willamette Valley, Oregon coast, Central and Eastern Oregon. Explore regions and cities; connect with a local broker.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/markets/oregon',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Oregon real estate – BCRE')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Oregon real estate – BCRE').url],
-  },
-};
+  path: '/markets/oregon',
+  ogImageAlt: 'Oregon real estate – BCRE',
+});
 
 export default function OregonMarketsPage() {
   const breadcrumb = (

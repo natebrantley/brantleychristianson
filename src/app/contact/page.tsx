@@ -2,29 +2,19 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { ConsultationForm } from '@/components/ConsultationForm';
 import { assetPaths } from '@/config/theme';
-import { SITE_URL, SITE_NAME, defaultOgImage } from '@/config/site';
+import { SITE_URL, buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Request a Consultation';
 const description =
   'Get a tailored real estate or market consultation. Tell us your goals—buying, selling, or learning the market—and we’ll connect you with a BCRE broker in Oregon or Washington.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: `${SITE_URL}/contact`,
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Request a consultation – BCRE')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Request a consultation – BCRE').url],
-  },
-};
+  path: '/contact',
+  ogImageAlt: 'Request a consultation – BCRE',
+});
 
 const contactJsonLd = {
   '@context': 'https://schema.org',

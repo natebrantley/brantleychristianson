@@ -3,29 +3,19 @@ import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Resources';
 const description =
-  'Guides on buying and selling condos, evaluating HOAs and rent caps, and understanding Portland and Pacific Northwest condo markets. From BCRE.';
+  'Guides on buying and selling condos, HOAs, rent caps, and Portland and Pacific Northwest condo markets. From BCRE—condo guide, coast guide, and market synthesis.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/resources',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE resources and guides')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('BCRE resources and guides').url],
-  },
-};
+  path: '/resources',
+  ogImageAlt: 'BCRE resources and guides',
+});
 
 export default function ResourcesPage() {
   return (

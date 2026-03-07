@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/Button';
 import { PropertyDetails } from '@/components/rmls/PropertyDetails';
-import { SITE_NAME } from '@/config/site';
+import { SITE_NAME, SITE_URL, defaultOgImage } from '@/config/site';
 import { validateMlsNumber } from '@/lib/validate-mls-number';
 import { repliersGetSingleListing } from '@/lib/repliers-client';
 import { supabaseAdmin } from '@/lib/supabase';
@@ -45,9 +45,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const address = (listing.address as string) ?? (listing as Record<string, unknown>).address;
   const city = (listing.city as string) ?? (listing as Record<string, unknown>).city;
   const title = [address, city].filter(Boolean).join(', ') || `Listing ${mlsNumber}`;
+  const pageTitle = `${title} | ${SITE_NAME}`;
+  const description = `For sale: ${title}. Active listing. ${SITE_NAME} – Oregon and Washington real estate.`;
+  const path = `/listings/${mlsNumber}`;
+  const canonical = `${SITE_URL}${path}`;
+  const image = defaultOgImage(`${title} – listing`);
   return {
-    title: `${title} | ${SITE_NAME}`,
-    description: `Property listing ${mlsNumber}. ${SITE_NAME}.`,
+    title: pageTitle,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: 'website',
+      url: canonical,
+      siteName: SITE_NAME,
+      title: pageTitle,
+      description,
+      images: [image],
+    },
+    twitter: { card: 'summary_large_image', title: pageTitle, description, images: [image.url] },
   };
 }
 

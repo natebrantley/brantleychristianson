@@ -9,7 +9,7 @@ import { CondoImageWithFallback } from '@/components/CondoImageWithFallback';
 import { ListingsCta } from '@/components/markets/ListingsCta';
 import { RMLSDisclaimer } from '@/components/rmls/RMLSDisclaimer';
 import { CONDO_FALLBACK_IMAGE } from '@/config/theme';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { SITE_NAME, SITE_URL, defaultOgImage } from '@/config/site';
 import {
   getCondoBySlug,
   getCondoSlugs,
@@ -52,14 +52,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: `Portland Condos | ${SITE_NAME}` };
   }
   const title = `${condo.name} Portland Condos | ${condo.neighborhood}`;
-  const description = `${condo.name} at ${condo.address}. ${condo.neighborhood}. Median price ${formatPrice(condo.medianPrice)}, HOA $${condo.averageMonthlyHoa}/mo. ${condo.stories} stories, built ${condo.yearBuilt}. Rent cap: ${condo.rentCap}. Portland condo guide data.`;
-  const url = `/markets/oregon/pdx/condos/${slug}`;
+  const description = `${condo.name} at ${condo.address}. ${condo.neighborhood}. Median price ${formatPrice(condo.medianPrice)}, HOA $${condo.averageMonthlyHoa}/mo. ${condo.stories} stories, built ${condo.yearBuilt}. Rent cap: ${condo.rentCap}. Portland condo guide.`;
+  const path = `/markets/oregon/pdx/condos/${slug}`;
+  const canonical = `${SITE_URL}${path}`;
   const socialTitle = `${title} | ${SITE_NAME}`;
+  const image = defaultOgImage(`${condo.name} – Portland condo`);
   return {
     title,
     description,
-    openGraph: { url, title: socialTitle, description, images: [defaultOgImage(`${condo.name} – Portland condo`)], },
-    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [defaultOgImage(`${condo.name} – Portland condo`).url] },
+    alternates: { canonical },
+    openGraph: {
+      type: 'website',
+      url: canonical,
+      siteName: SITE_NAME,
+      title: socialTitle,
+      description,
+      images: [image],
+    },
+    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [image.url] },
   };
 }
 

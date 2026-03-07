@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { AgentProfile } from '@/components/AgentProfile';
 import { agents, getAgentBySlug } from '@/data/agents';
-import { SITE_NAME, absoluteUrl } from '@/config/site';
+import { SITE_NAME, SITE_URL, absoluteUrl } from '@/config/site';
 import type { Metadata } from 'next';
 
 interface AgentPageProps {
@@ -20,14 +20,24 @@ export async function generateMetadata({ params }: AgentPageProps): Promise<Meta
   }
   const title = `${agent.name} | Real Estate Agent`;
   const description = `${agent.name}, ${agent.title} at ${SITE_NAME}. Licensed in ${agent.licenses.join(' and ')}. Connect for buying or selling in Oregon and Washington.`;
-  const url = `/agents/${agent.slug}`;
+  const path = `/agents/${agent.slug}`;
+  const canonical = `${SITE_URL}${path}`;
   const imageUrl = absoluteUrl(agent.image);
   const images = [{ url: imageUrl, width: 600, height: 800, alt: `${agent.name}, ${agent.title}` }];
+  const socialTitle = `${title} | ${SITE_NAME}`;
   return {
     title,
     description,
-    openGraph: { url, title, description, images },
-    twitter: { card: 'summary_large_image', title, description, images: [imageUrl] },
+    alternates: { canonical },
+    openGraph: {
+      type: 'profile',
+      url: canonical,
+      siteName: SITE_NAME,
+      title: socialTitle,
+      description,
+      images,
+    },
+    twitter: { card: 'summary_large_image', title: socialTitle, description, images: [imageUrl] },
   };
 }
 

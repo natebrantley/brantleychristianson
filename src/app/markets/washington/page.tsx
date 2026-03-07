@@ -6,7 +6,7 @@ import { RevealSection } from '@/components/RevealSection';
 import { MarketLayout } from '@/components/markets/MarketLayout';
 import { ListingsCta } from '@/components/markets/ListingsCta';
 import { washingtonMarket } from '@/data/markets';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const KEY_CITIES = [
@@ -20,22 +20,12 @@ const title = 'Washington Real Estate';
 const description =
   'BCRE serves Clark and Cowlitz counties—Vancouver, Camas, Longview, Kelso, and Southwest Washington. Local expertise across the Portland-Vancouver metro.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/markets/washington',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Washington real estate – BCRE')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Washington real estate – BCRE').url],
-  },
-};
+  path: '/markets/washington',
+  ogImageAlt: 'Washington real estate – BCRE',
+});
 
 export default function WashingtonMarketsPage() {
   const counties = [...washingtonMarket.counties].sort((a, b) =>

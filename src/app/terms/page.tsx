@@ -1,29 +1,19 @@
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { assetPaths } from '@/config/theme';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
 const title = 'Terms of Use';
 const description =
-  'Terms of use for the Brantley Christianson Real Estate website and services.';
+  'Terms governing use of the Brantley Christianson Real Estate website and services. MLS/VOW and general terms.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/terms',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage()],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage().url],
-  },
-};
+  path: '/terms',
+  ogImageAlt: 'BCRE terms of use',
+});
 
 export default function TermsPage() {
   return (

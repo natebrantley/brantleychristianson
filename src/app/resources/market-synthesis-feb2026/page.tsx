@@ -2,29 +2,19 @@ import Link from 'next/link';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { assetPaths } from '@/config/theme';
-import { SITE_NAME, defaultOgImage } from '@/config/site';
+import { buildPageMetadata } from '@/config/site';
 import type { Metadata } from 'next';
 
-const title = 'The Great Recalibration: Pacific Northwest Market Synthesis (February 2026)';
+const title = 'Pacific Northwest Market Synthesis (Feb 2026)';
 const description =
-  'A synthesis of RMLS Market Action Reports for the Pacific Northwest: affordability ceilings, Portland vs. SW Washington divergence, mid-valley stability, and coastal recalibration.';
+  'RMLS Market Action synthesis: affordability ceilings, Portland vs. SW Washington, mid-valley stability, coastal recalibration. BCRE.';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title,
   description,
-  openGraph: {
-    url: '/resources/market-synthesis-feb2026',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Pacific Northwest market synthesis – BCRE')],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${title} | ${SITE_NAME}`,
-    description,
-    images: [defaultOgImage('Pacific Northwest market synthesis – BCRE').url],
-  },
-};
+  path: '/resources/market-synthesis-feb2026',
+  ogImageAlt: 'Pacific Northwest market synthesis – BCRE',
+});
 
 export default function MarketSynthesisFeb2026Page() {
   return (
