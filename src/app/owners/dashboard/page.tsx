@@ -19,24 +19,13 @@ export const metadata: Metadata = {
 };
 
 type OwnerUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; slug?: string | null };
-type LeadRow = {
-  id: string;
-  email_address: string | null;
-  assigned_broker_id?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  phone?: string | null;
-};
+type LeadRow = { id: string; email_address: string | null; assigned_broker_id?: string | null; first_name?: string | null; last_name?: string | null; phone?: string | null };
 
 export default async function OwnersDashboardPage() {
   const { userId } = await auth();
-
-  if (!userId) {
-    redirect('/sign-in');
-  }
+  if (!userId) redirect('/sign-in');
 
   let user: OwnerUser | null = null;
-  let leads: LeadRow[] = [];
   let totalCount = 0;
   let myLeadsCount = 0;
 
@@ -52,13 +41,8 @@ export default async function OwnersDashboardPage() {
 
     const supabase = await createClerkSupabaseClient();
 
-    const [userRes, leadsRes, countRes] = await Promise.all([
-      supabase
-        .from('users')
-        .select('first_name, last_name, email, role, slug')
-        .eq('clerk_id', userId)
-        .maybeSingle(),
-      supabase.from('leads').select(LEADS_SELECT_PREVIEW).limit(10),
+    const [userRes, countRes] = await Promise.all([
+      supabase.from('users').select('first_name, last_name, email, role, slug').eq('clerk_id', userId).maybeSingle(),
       supabase.from('leads').select('*', { count: 'exact', head: true }),
     ]);
 
@@ -66,14 +50,10 @@ export default async function OwnersDashboardPage() {
     if (userRes.error) {
       console.error('Error loading owner user from Supabase:', { userId, ...formatSupabaseError(userRes.error) });
     }
-
-    if (!leadsRes.error && Array.isArray(leadsRes.data)) {
-      leads = leadsRes.data as LeadRow[];
-    }
     totalCount = typeof countRes.count === 'number' ? countRes.count : 0;
 
-    const clerkUserForBrokerIds = await currentUser();
-    const brokerIds = buildMyLeadsBrokerIds(user, userId, clerkUserForBrokerIds);
+    const clerkUserForIds = await currentUser();
+    const brokerIds = buildMyLeadsBrokerIds(user, userId, clerkUserForIds);
     if (brokerIds.length > 0) {
       const { count: myCount } = await supabase
         .from('leads')
@@ -109,9 +89,7 @@ export default async function OwnersDashboardPage() {
     };
   }
 
-  const displayName = user
-    ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null
-    : null;
+  const displayName = user ? [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || null : null;
 
   return (
     <main className="dashboard-page owner-dashboard" aria-label="Owner dashboard">
@@ -129,9 +107,7 @@ export default async function OwnersDashboardPage() {
             <div className="agent-welcome__inner">
               <div className="agent-welcome__content">
                 <p className="agent-welcome__tag">Welcome back</p>
-                <h1 className="agent-welcome__title">
-                  {displayName ? `${displayName.split(' ')[0]}` : 'Owner'}
-                </h1>
+                <h1 className="agent-welcome__title">{displayName ? displayName.split(' ')[0] : 'Owner'}</h1>
                 {displayName && (
                   <p className="agent-welcome__sub">
                     Signed in as <strong>{displayName}</strong>
@@ -168,17 +144,11 @@ export default async function OwnersDashboardPage() {
             <header className="dashboard-section-header stack--xs">
               <p className="section-tag">Resources</p>
               <h2 id="marketing-heading" className="section-title">Quick links</h2>
-              <p className="section-lead">
-                Share resources and browse team profiles.
-              </p>
+              <p className="section-lead">Share resources and browse team profiles.</p>
             </header>
             <div className="dashboard-actions">
-              <Button href="/resources" variant="outline">
-                Share resources with clients
-              </Button>
-              <Button href="/agents" variant="text">
-                Browse team profiles
-              </Button>
+              <Button href="/resources" variant="outline">Share resources with clients</Button>
+              <Button href="/agents" variant="text">Browse team profiles</Button>
             </div>
           </section>
         </div>

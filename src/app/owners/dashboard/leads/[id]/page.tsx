@@ -12,8 +12,8 @@ import type { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Client detail | Owner dashboard',
-  description: 'View and edit client contact information. BCRE owner dashboard.',
+  title: 'Lead detail | Owner dashboard',
+  description: 'View and edit lead contact information. BCRE owner dashboard.',
 };
 
 type LeadRow = {
@@ -31,11 +31,7 @@ type LeadRow = {
   assigned_lender_id?: string | null;
 };
 
-export default async function OwnerLeadDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function OwnerLeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
   if (!userId) redirect('/sign-in');
 
@@ -85,14 +81,8 @@ export default async function OwnerLeadDetailPage({
   }
 
   return (
-    <main className="dashboard-page lead-detail-page owner-dashboard" aria-label="Lead detail – contact and profile">
-      <Hero
-        variant="short"
-        title="Client detail"
-        lead="View and edit contact information."
-        imageSrc={`${assetPaths.stock}/table.jpeg`}
-        imageAlt="Client detail"
-      />
+    <main className="dashboard-page lead-detail-page owner-dashboard" aria-label="Lead detail">
+      <Hero variant="short" title="Lead detail" lead="View and edit contact information." imageSrc={`${assetPaths.stock}/table.jpeg`} imageAlt="Lead detail" />
       <div className="section owner-dashboard__section">
         <div className="container owner-dashboard__container stack--lg">
           <LeadContactForm lead={lead} backHref="/owners/dashboard/leads" />

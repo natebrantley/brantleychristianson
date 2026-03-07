@@ -1,6 +1,6 @@
 /**
- * Build the list of assigned_broker_id values that mean "this user" for owner/agent "My leads".
- * Matches clerk_id, users.slug, derived slugs (first_last and first-last), agents.json slug by email, and full name variants.
+ * Build assigned_broker_id values that mean "this user" for owner/agent "My leads".
+ * Matches clerk_id, users.slug, underscore + hyphen slugs, agents.json slug, full name.
  */
 
 import { deriveUserSlug, deriveUserSlugHyphen } from '@/lib/user-slug';

@@ -8,11 +8,8 @@ export const dynamic = 'force-dynamic';
 
 /**
  * /dashboard redirects to the correct dashboard based on role.
- * Owner dashboard: /owners/dashboard (full access to all leads).
- * Agent/broker dashboard: /agents/dashboard (pipeline, leads, clients, marketing).
- * Lender dashboard: /lenders/dashboard (lender-specific tools and resources).
- * Client dashboard: /clients/dashboard (saved homes, searches, next steps).
- * Role is read from Supabase (synced by webhook or sign-in sync); if missing, falls back to Clerk public_metadata.role.
+ * Owner dashboard: /owners/dashboard (full access to all leads, My leads / All leads).
+ * Agent/broker: /agents/dashboard. Lender: /lenders/dashboard. Client: /clients/dashboard.
  */
 export default async function DashboardRouterPage() {
   const { userId } = await auth();

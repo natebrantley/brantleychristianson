@@ -1,4 +1,4 @@
-/* Owner dashboard – centered layout, mobile-first, My/All leads toggle */
+/* Owner dashboard – centered layout, quick links, mobile */
 
 .owner-dashboard__section {
   padding-top: var(--space-lg);
@@ -24,16 +24,9 @@
   }
 }
 
-/* Home page: center content */
 .dashboard-page.owner-dashboard:not(.owner-dashboard--crm):not(.lead-detail-page) .owner-dashboard__container {
   text-align: center;
   max-width: 42rem;
-}
-
-@media (min-width: 1280px) {
-  .dashboard-page.owner-dashboard:not(.owner-dashboard--crm):not(.lead-detail-page) .owner-dashboard__container {
-    max-width: 56rem;
-  }
 }
 
 .dashboard-page.owner-dashboard:not(.owner-dashboard--crm) .dashboard-section-header {
@@ -69,7 +62,7 @@
   margin-right: auto;
 }
 
-/* Quick links: My leads | All leads (owner CRM) */
+/* Quick links: My leads | All leads */
 .owner-leads-quick-links {
   display: flex;
   flex-wrap: wrap;
@@ -124,95 +117,10 @@
     flex-direction: column;
     align-items: stretch;
   }
-
-  .owner-leads-quick-links__label {
-    margin-bottom: 0.25rem;
-  }
-
-  .owner-leads-quick-links__btn {
-    justify-content: center;
-  }
+  .owner-leads-quick-links__label { margin-bottom: 0.25rem; }
+  .owner-leads-quick-links__btn { justify-content: center; }
 }
 
-/* My leads / All leads toggle (owner CRM) */
-.owner-leads-scope {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-  width: 100%;
-}
-
-.owner-leads-scope__label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-muted);
-}
-
-.owner-leads-scope__toggle {
-  display: inline-flex;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-strong);
-  background: var(--theme-bg);
-  overflow: hidden;
-}
-
-.owner-leads-scope__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-sm) var(--space-md);
-  min-height: 44px;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--color-muted);
-  background: transparent;
-  text-decoration: none;
-  border: none;
-  border-right: 1px solid var(--border-strong);
-  transition: background 0.2s ease, color 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.owner-leads-scope__btn:last-child {
-  border-right: none;
-}
-
-.owner-leads-scope__btn:hover {
-  color: var(--color-primary);
-  background: rgba(var(--color-accent-rgb), 0.06);
-}
-
-.owner-leads-scope__btn--active {
-  color: var(--color-primary);
-  background: rgba(var(--color-accent-rgb), 0.12);
-  font-weight: 600;
-}
-
-.owner-leads-scope__btn--active:hover {
-  background: rgba(var(--color-accent-rgb), 0.15);
-}
-
-@media (max-width: 599px) {
-  .owner-leads-scope {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .owner-leads-scope__label {
-    margin-bottom: 0.25rem;
-  }
-
-  .owner-leads-scope__toggle {
-    width: 100%;
-  }
-
-  .owner-leads-scope__btn {
-    flex: 1;
-  }
-}
-
-/* CRM page: centered max-width */
 .owner-dashboard--crm .owner-dashboard__container {
   max-width: 56rem;
 }
@@ -223,35 +131,20 @@
   }
 }
 
-/* Lead detail: centered form */
 .owner-dashboard.lead-detail-page .owner-dashboard__container {
   max-width: 42rem;
   margin-inline: auto;
 }
 
-@media (min-width: 768px) {
-  .owner-dashboard.lead-detail-page .owner-dashboard__container {
-    max-width: 48rem;
-  }
-}
-
-/* Mobile: welcome and sections */
 @media (max-width: 599px) {
   .owner-dashboard .agent-welcome {
     padding: var(--space-lg) var(--space-md);
     margin-bottom: var(--space-lg);
   }
-
-  .owner-dashboard .dashboard-section {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
   .owner-dashboard .dashboard-actions {
     flex-direction: column;
     align-items: stretch;
   }
-
   .owner-dashboard .dashboard-actions .button,
   .owner-dashboard .dashboard-actions a.button {
     width: 100%;

@@ -22,7 +22,7 @@ const SORT_OPTIONS = [
 ] as const;
 
 export const metadata: Metadata = {
-  title: 'All leads | Owner dashboard',
+  title: 'Leads | Owner dashboard',
   description: 'All leads – full CRM access. BCRE owner dashboard.',
 };
 
@@ -78,7 +78,7 @@ export default async function OwnerLeadsPage({
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
   const q = (params.q ?? '').trim().slice(0, 100);
   const sortKey = params.sort ?? 'first_name-asc';
-  const scope = (params.scope === 'mine' ? 'mine' : 'all') as 'all' | 'mine';
+  const scope = params.scope === 'mine' ? 'mine' : 'all';
   const sortConfig = SORT_OPTIONS.find((o) => o.value === sortKey) ?? SORT_OPTIONS[0];
 
   const from = (page - 1) * PAGE_SIZE;
@@ -193,59 +193,24 @@ export default async function OwnerLeadsPage({
       <Hero
         variant="short"
         title="Leads"
-        lead={scope === 'mine' ? 'Leads assigned to you. Switch to all leads below.' : 'All leads across the team. Toggle to see only yours.'}
+        lead={scope === 'mine' ? 'Leads assigned to you.' : 'All leads across the team.'}
         imageSrc={`${assetPaths.stock}/table.jpeg`}
         imageAlt="Leads – CRM"
       />
       <div className="section owner-dashboard__section">
         <div className="container owner-dashboard__container stack--lg">
           <div className="leads-toolbar" id="leads-toolbar" role="search" aria-label="Leads search and filters">
-            <Link href="/owners/dashboard" className="leads-toolbar__back">
-              ← Back to dashboard
-            </Link>
+            <Link href="/owners/dashboard" className="leads-toolbar__back">← Back to dashboard</Link>
             <div className="owner-leads-quick-links">
               <span className="owner-leads-quick-links__label">Quick links:</span>
-              <Link
-                href={buildUrl({ page: 1, scope: 'mine' })}
-                className={`owner-leads-quick-links__btn ${scope === 'mine' ? 'owner-leads-quick-links__btn--active' : ''}`}
-              >
-                My leads
-              </Link>
-              <Link
-                href={buildUrl({ page: 1, scope: 'all' })}
-                className={`owner-leads-quick-links__btn ${scope === 'all' ? 'owner-leads-quick-links__btn--active' : ''}`}
-              >
-                All leads
-              </Link>
-            </div>
-            <div className="owner-leads-scope">
-              <span className="owner-leads-scope__label">View:</span>
-              <div className="owner-leads-scope__toggle" role="group" aria-label="Lead scope">
-                <Link
-                  href={buildUrl({ page: 1, scope: 'mine' })}
-                  className={`owner-leads-scope__btn ${scope === 'mine' ? 'owner-leads-scope__btn--active' : ''}`}
-                  aria-pressed={scope === 'mine'}
-                >
-                  My leads
-                </Link>
-                <Link
-                  href={buildUrl({ page: 1, scope: 'all' })}
-                  className={`owner-leads-scope__btn ${scope === 'all' ? 'owner-leads-scope__btn--active' : ''}`}
-                  aria-pressed={scope === 'all'}
-                >
-                  All leads
-                </Link>
-              </div>
+              <Link href={buildUrl({ page: 1, scope: 'mine' })} className={`owner-leads-quick-links__btn ${scope === 'mine' ? 'owner-leads-quick-links__btn--active' : ''}`}>My leads</Link>
+              <Link href={buildUrl({ page: 1, scope: 'all' })} className={`owner-leads-quick-links__btn ${scope === 'all' ? 'owner-leads-quick-links__btn--active' : ''}`}>All leads</Link>
             </div>
             <div className="leads-toolbar__title-row">
-              <h1 className="leads-toolbar__title">
-                {scope === 'mine' ? 'My leads' : 'All leads'}
-              </h1>
+              <h1 className="leads-toolbar__title">{scope === 'mine' ? 'My leads' : 'All leads'}</h1>
               <span className="leads-toolbar__count">
                 {totalCount.toLocaleString()} lead{totalCount !== 1 ? 's' : ''}
-                {q ? (
-                  <> — <Link href={buildUrl({ page: 1, q: '' })}>Clear search</Link></>
-                ) : null}
+                {q ? <> — <Link href={buildUrl({ page: 1, q: '' })}>Clear search</Link></> : null}
               </span>
             </div>
             <div className="leads-filters">
@@ -253,28 +218,11 @@ export default async function OwnerLeadsPage({
                 <input type="hidden" name="sort" value={sortKey} />
                 {scope !== 'all' && <input type="hidden" name="scope" value={scope} />}
                 <label htmlFor="leads-search-q" className="sr-only">Search by name or email</label>
-                <input
-                  id="leads-search-q"
-                  type="search"
-                  name="q"
-                  placeholder="Search by name or email…"
-                  defaultValue={q}
-                  aria-label="Search leads by name or email"
-                  autoComplete="off"
-                />
+                <input id="leads-search-q" type="search" name="q" placeholder="Search by name or email…" defaultValue={q} aria-label="Search leads" autoComplete="off" />
                 <button type="submit" aria-label="Submit search">Search</button>
               </form>
               <div className="leads-filters-group" role="group" aria-label="Sort leads">
-                <LeadsSortForm
-                  basePath={OWNER_LEADS_BASE}
-                  currentScope={scope !== 'all' ? scope : undefined}
-                  options={SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-                  currentSort={sortKey}
-                  currentQ={q}
-                  currentVerified={false}
-                  currentSource=""
-                  currentFavoriteCity=""
-                />
+                <LeadsSortForm basePath={OWNER_LEADS_BASE} currentScope={scope !== 'all' ? scope : undefined} options={SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))} currentSort={sortKey} currentQ={q} currentVerified={false} currentSource="" currentFavoriteCity="" />
               </div>
             </div>
           </div>
@@ -284,13 +232,7 @@ export default async function OwnerLeadsPage({
               <div className="leads-table-card leads-table-card--desktop">
                 <div className="leads-table-scroll">
                   <table className="leads-table">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Contact</th>
-                        <th></th>
-                      </tr>
-                    </thead>
+                    <thead><tr><th>Name</th><th>Contact</th><th></th></tr></thead>
                     <tbody>
                       {leads.map((lead) => {
                         const pulseLevel = getLeadPulse(lead);
@@ -301,35 +243,16 @@ export default async function OwnerLeadsPage({
                             <td className="lead-name">
                               <span className="lead-name__cell">
                                 <span className="lead-avatar" aria-hidden>{initials}</span>
-                                <span
-                                  className={`lead-pulse lead-pulse--${pulseLevel}`}
-                                  role="img"
-                                  aria-label={pulseLabel}
-                                  title={pulseLabel}
-                                />
+                                <span className={`lead-pulse lead-pulse--${pulseLevel}`} role="img" aria-label={pulseLabel} title={pulseLabel} />
                                 <Link href={`${OWNER_LEADS_BASE}/${lead.id}`}>{leadDisplayName(lead)}</Link>
                               </span>
                             </td>
                             <td className="lead-contact">
-                              {lead.email_address ? (
-                                <a href={`mailto:${lead.email_address}`}>{truncate(lead.email_address, 28)}</a>
-                              ) : (
-                                '—'
-                              )}
-                              {lead.phone && (
-                                <span className="lead-contact__sep"> · </span>
-                              )}
-                              {lead.phone ? (
-                                <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a>
-                              ) : (
-                                lead.email_address ? null : '—'
-                              )}
+                              {lead.email_address ? <a href={`mailto:${lead.email_address}`}>{truncate(lead.email_address, 28)}</a> : '—'}
+                              {lead.phone && <span className="lead-contact__sep"> · </span>}
+                              {lead.phone ? <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a> : (lead.email_address ? null : '—')}
                             </td>
-                            <td className="lead-view">
-                              <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="lead-view__btn">
-                                View
-                              </Link>
-                            </td>
+                            <td className="lead-view"><Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="lead-view__btn">View</Link></td>
                           </tr>
                         );
                       })}
@@ -351,12 +274,7 @@ export default async function OwnerLeadsPage({
                           <span className="lead-avatar" aria-hidden>{initials}</span>
                           <span className="leads-mobile-card__name">{leadDisplayName(lead)}</span>
                           <span className="leads-mobile-card__pills">
-                            <span
-                              className={`lead-pulse lead-pulse--${pulseLevel}`}
-                              role="img"
-                              aria-label={pulseLabel}
-                              title={pulseLabel}
-                            />
+                            <span className={`lead-pulse lead-pulse--${pulseLevel}`} role="img" aria-label={pulseLabel} title={pulseLabel} />
                             <span className="lead-badge lead-badge--lead">Lead</span>
                             {recency === 'new' && <span className="lead-pill lead-pill--new">New</span>}
                             {recency === 'active' && <span className="lead-pill lead-pill--active">Active</span>}
@@ -364,42 +282,20 @@ export default async function OwnerLeadsPage({
                           <span className="leads-mobile-card__chevron" aria-hidden>→</span>
                         </div>
                         <div className="leads-mobile-card__body">
-                          {lead.email_address && (
-                            <p className="leads-mobile-card__row">
-                              <span className="leads-mobile-card__label">Email</span>
-                              <span className="leads-mobile-card__value leads-mobile-card__value--email">{lead.email_address}</span>
-                            </p>
-                          )}
-                          {lead.phone && (
-                            <p className="leads-mobile-card__row">
-                              <span className="leads-mobile-card__label">Phone</span>
-                              <span className="leads-mobile-card__value">{lead.phone}</span>
-                            </p>
-                          )}
+                          {lead.email_address && <p className="leads-mobile-card__row"><span className="leads-mobile-card__label">Email</span><span className="leads-mobile-card__value leads-mobile-card__value--email">{lead.email_address}</span></p>}
+                          {lead.phone && <p className="leads-mobile-card__row"><span className="leads-mobile-card__label">Phone</span><span className="leads-mobile-card__value">{lead.phone}</span></p>}
                         </div>
                       </Link>
                       {(lead.email_address || lead.phone) && (
                         <div className="leads-mobile-card__actions">
-                          {lead.phone && (
-                            <a href={`tel:${lead.phone.replace(/\D/g, '')}`} className="leads-mobile-card__btn leads-mobile-card__btn--call" aria-label={`Call ${lead.phone}`}>
-                              Call
-                            </a>
-                          )}
-                          {lead.email_address && (
-                            <a href={`mailto:${lead.email_address}`} className="leads-mobile-card__btn leads-mobile-card__btn--email" aria-label={`Email ${lead.email_address}`}>
-                              Email
-                            </a>
-                          )}
-                          <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view">
-                            View profile
-                          </Link>
+                          {lead.phone && <a href={`tel:${lead.phone.replace(/\D/g, '')}`} className="leads-mobile-card__btn leads-mobile-card__btn--call" aria-label={`Call ${lead.phone}`}>Call</a>}
+                          {lead.email_address && <a href={`mailto:${lead.email_address}`} className="leads-mobile-card__btn leads-mobile-card__btn--email" aria-label={`Email ${lead.email_address}`}>Email</a>}
+                          <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view">View profile</Link>
                         </div>
                       )}
                       {!lead.email_address && !lead.phone && (
                         <div className="leads-mobile-card__actions">
-                          <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view leads-mobile-card__btn--view-solo">
-                            View profile
-                          </Link>
+                          <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view leads-mobile-card__btn--view-solo">View profile</Link>
                         </div>
                       )}
                     </li>
@@ -410,47 +306,22 @@ export default async function OwnerLeadsPage({
               <a href="#leads-toolbar" className="leads-back-to-top">Back to top</a>
 
               <div className="leads-pagination">
-                <p className="leads-pagination__info">
-                  Showing {startRow.toLocaleString()}–{endRow.toLocaleString()} of {totalCount.toLocaleString()}
-                </p>
+                <p className="leads-pagination__info">Showing {startRow.toLocaleString()}–{endRow.toLocaleString()} of {totalCount.toLocaleString()}</p>
                 <nav className="leads-pagination__nav" aria-label="Leads pagination">
-                  {hasPrev && (
-                    <Link href={buildUrl({ page: page - 1 })} className="leads-pagination__prev" aria-label="Previous page">
-                      Previous
-                    </Link>
-                  )}
+                  {hasPrev && <Link href={buildUrl({ page: page - 1 })} className="leads-pagination__prev" aria-label="Previous page">Previous</Link>}
                   {paginationPages.map((p, i) =>
-                    p === 'ellipsis' ? (
-                      <span key={`e-${i}`} className="leads-pagination__ellipsis" aria-hidden>
-                        …
-                      </span>
-                    ) : (
-                      <Link
-                        key={p}
-                        href={buildUrl({ page: p })}
-                        aria-label={`Page ${p}`}
-                        aria-current={p === page ? 'page' : undefined}
-                      >
-                        {p}
-                      </Link>
+                    p === 'ellipsis' ? <span key={`e-${i}`} className="leads-pagination__ellipsis" aria-hidden>…</span> : (
+                      <Link key={p} href={buildUrl({ page: p })} aria-label={`Page ${p}`} aria-current={p === page ? 'page' : undefined}>{p}</Link>
                     )
                   )}
-                  {hasNext && (
-                    <Link href={buildUrl({ page: page + 1 })} className="leads-pagination__next" aria-label="Next page">
-                      Next
-                    </Link>
-                  )}
+                  {hasNext && <Link href={buildUrl({ page: page + 1 })} className="leads-pagination__next" aria-label="Next page">Next</Link>}
                 </nav>
               </div>
             </>
           ) : (
             <div className="empty-state">
               <p>
-                {q
-                  ? `No leads match "${q}". Try a different search or clear the search.`
-                  : scope === 'mine'
-                    ? 'No leads assigned to you yet.'
-                    : 'No leads yet.'}
+                {q ? `No leads match "${q}". Try a different search or clear the search.` : scope === 'mine' ? 'No leads assigned to you yet.' : 'No leads yet.'}
               </p>
               <Link href={q ? buildUrl({ page: 1, q: '' }) : '/owners/dashboard'} className="button button--outline" style={{ marginTop: '0.5rem' }}>
                 {q ? 'Clear search' : 'Back to dashboard'}
