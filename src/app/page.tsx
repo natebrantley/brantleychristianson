@@ -68,7 +68,7 @@ export default function HomePage() {
         <div className="site-announcement" role="region" aria-label="Site announcement">
           <div className="container site-announcement__inner">
             <p className="site-announcement__text">
-              We&apos;re rolling out a new website—full functionality is on the way. Thanks for your patience.
+              We&apos;re rolling out a new website. Thanks for your patience.
             </p>
           </div>
         </div>

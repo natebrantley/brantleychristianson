@@ -398,16 +398,15 @@ async function syncRepliersClientIfNeeded(
 }
 
 /**
- * Clerk webhook: full and robust handler for user lifecycle.
+ * Clerk webhook: user lifecycle (user.created, user.updated, user.deleted).
  *
- * Supported events: user.created, user.updated, user.deleted.
- * - user.deleted: delete row in public.users by clerk_id.
- * - user.created / user.updated: upsert into public.users (role: agent | broker | lender | user); optional MailerLite sync on user.created only; optional lead bridge (no-op: leads table has no clerk_id).
+ * user.deleted: delete row in public.users by clerk_id.
+ * user.created / user.updated: upsert public.users (role: agent | broker | lender | user); optional MailerLite sync on create; lead bridge is no-op (leads have no clerk_id).
  *
  * Env: CLERK_WEBHOOK_SECRET, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
  * Optional: MAILERLITE_API_TOKEN (or MAILERLITE_API_KEY), MAILERLITE_GROUP_ID.
  *
- * Returns 200 for success or for unsupported event types. Returns 4xx/5xx with JSON { error, code?, details? } on failure.
+ * Returns 200 on success or unsupported event; 4xx/5xx with JSON { error, code?, details? } on failure.
  */
 
 /** GET /api/webhooks/clerk — health check for monitoring (env configured, route live). Does not reveal secrets. */

@@ -13,7 +13,6 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Surface unexpected errors in the console for easier debugging.
     // eslint-disable-next-line no-console
     console.error(error);
   }, [error]);
