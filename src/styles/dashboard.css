@@ -169,8 +169,17 @@
   margin-top: var(--space-md);
 }
 
-/* Touch-friendly buttons and links on mobile */
+/* Touch-friendly buttons and links on mobile; safe-area for notched devices */
 @media (max-width: 599px) {
+  .dashboard-page main {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .dashboard-page .section .container {
+    padding-left: max(var(--space-md), env(safe-area-inset-left));
+    padding-right: max(var(--space-md), env(safe-area-inset-right));
+  }
+
   .dashboard-page .dashboard-actions .button,
   .dashboard-page .dashboard-section-header a.button {
     min-height: 48px;
