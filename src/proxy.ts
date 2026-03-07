@@ -8,12 +8,14 @@ const hasClerkKeys =
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
   '/agents/dashboard(.*)',
+  '/owners/dashboard(.*)',
   '/clients/dashboard',
   '/lenders/dashboard',
   '/api/favorites',
   '/api/saved-searches',
   '/api/me/agent',
   '/api/me/lender',
+  '/api/leads(.*)',
   '/listings/saved',
 ]);
 

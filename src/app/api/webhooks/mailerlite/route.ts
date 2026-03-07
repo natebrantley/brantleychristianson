@@ -96,9 +96,10 @@ async function applyMarketingOpt(
     .eq('email', email);
 
   if (userError) {
+    const redacted = email ? `${email.slice(0, 2)}***@${(email.split('@')[1] ?? '')}` : '—';
     console.warn('MailerLite webhook: users update', {
       ...logContext,
-      email,
+      email: redacted,
       supabaseError: formatSupabaseError(userError),
     });
   }

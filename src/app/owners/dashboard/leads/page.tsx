@@ -78,7 +78,20 @@ export default async function OwnerLeadsPage({
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
   const q = (params.q ?? '').trim().slice(0, 100);
   const sortKey = params.sort ?? 'first_name-asc';
-  const scope = params.scope === 'mine' ? 'mine' : 'all';
+  const scopeParam = params.scope;
+  const scope = scopeParam === 'mine' ? 'mine' : 'all';
+
+  // Redirect to canonical URL when scope is invalid (e.g. scope=mine/f2fdebugh301) so the address bar stays clean
+  if (scopeParam !== undefined && scopeParam !== 'mine' && scopeParam !== 'all') {
+    const sp = new URLSearchParams();
+    if (page > 1) sp.set('page', String(page));
+    if (q) sp.set('q', q);
+    if (sortKey !== 'first_name-asc') sp.set('sort', sortKey);
+    if (scope === 'mine') sp.set('scope', 'mine');
+    const query = sp.toString();
+    redirect(query ? `${OWNER_LEADS_BASE}?${query}` : OWNER_LEADS_BASE);
+  }
+
   const sortConfig = SORT_OPTIONS.find((o) => o.value === sortKey) ?? SORT_OPTIONS[0];
   const isDebug = params.debug === '1';
 

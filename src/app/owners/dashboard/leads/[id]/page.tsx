@@ -80,7 +80,7 @@ export default async function OwnerLeadDetailPage({ params }: { params: Promise<
     redirect('/clients/dashboard');
   }
 
-  // Agents list for reassign dropdown (owner only)
+  // Agents list for reassign dropdown (owner only). Use canonical slug (first_last) as value so DB stays synced.
   let agents: { value: string; label: string }[] = [];
   try {
     const admin = supabaseAdmin();
@@ -88,20 +88,14 @@ export default async function OwnerLeadDetailPage({ params }: { params: Promise<
       .from('users')
       .select('clerk_id, slug, first_name, last_name')
       .in('role', ['broker', 'agent', 'owner']);
-    const raw = (users ?? []).map((u) => {
-      const label = [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.slug || u.clerk_id || '—';
-      return { clerk_id: u.clerk_id, slug: u.slug, label };
-    });
     const seen = new Set<string>();
-    for (const u of raw) {
-      if (u.clerk_id && !seen.has(u.clerk_id)) {
-        agents.push({ value: u.clerk_id, label: u.label });
-        seen.add(u.clerk_id);
-      }
-      if (u.slug && u.slug !== u.clerk_id && !seen.has(u.slug)) {
-        agents.push({ value: u.slug, label: u.label });
-        seen.add(u.slug);
-      }
+    for (const u of users ?? []) {
+      const label = [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.slug || u.clerk_id || '—';
+      // Prefer slug (first_last) so assigned_broker_id stays canonical; fallback to clerk_id if no slug
+      const value = (u.slug && u.slug.trim()) ? u.slug.trim() : (u.clerk_id ?? '');
+      if (!value || seen.has(value)) continue;
+      seen.add(value);
+      agents.push({ value, label });
     }
   } catch {
     // ignore
