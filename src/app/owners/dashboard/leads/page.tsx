@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
+import { formatSupabaseError, supabaseAdmin } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isOwnerRole, isBrokerRole, isLenderRole } from '@/lib/roles';
 import { buildMyLeadsBrokerIds } from '@/lib/owner-my-leads-ids';
@@ -98,16 +98,15 @@ export default async function OwnerLeadsPage({
       }
     }
 
-    const supabase = await createClerkSupabaseClient();
-
-    const userRes = await supabase
+    const admin = supabaseAdmin();
+    const userRes = await admin
       .from('users')
       .select('role, slug, first_name, last_name, email')
       .eq('clerk_id', userId)
       .maybeSingle();
     user = userRes.data ?? null;
 
-    let query = supabase.from('leads').select(LEADS_SELECT, { count: 'exact' });
+    let query = admin.from('leads').select(LEADS_SELECT, { count: 'exact' });
     if (scope === 'mine') {
       const brokerIds = buildMyLeadsBrokerIds(user, userId, clerkUser);
       if (brokerIds.length > 0) {

@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
+import { formatSupabaseError, supabaseAdmin } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isOwnerRole, isBrokerRole, isLenderRole } from '@/lib/roles';
 import { LEADS_SELECT } from '@/lib/leads-fields';
@@ -51,10 +51,10 @@ export default async function OwnerLeadDetailPage({ params }: { params: Promise<
       }
     }
 
-    const supabase = await createClerkSupabaseClient();
+    const admin = supabaseAdmin();
     const [userRes, leadRes] = await Promise.all([
-      supabase.from('users').select('role').eq('clerk_id', userId).maybeSingle(),
-      supabase.from('leads').select(LEADS_SELECT).eq('id', id).maybeSingle(),
+      admin.from('users').select('role').eq('clerk_id', userId).maybeSingle(),
+      admin.from('leads').select(LEADS_SELECT).eq('id', id).maybeSingle(),
     ]);
 
     user = userRes.data ?? null;
