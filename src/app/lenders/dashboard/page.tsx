@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
@@ -190,10 +191,12 @@ export default async function LendersDashboardPage() {
                 <ul className="lender-dashboard__list">
                   {assignedLeads.map((lead) => (
                     <li key={lead.id} className="lender-dashboard__list-item">
-                      <span className="lender-dashboard__list-email">{lead.email_address ?? '—'}</span>
-                      <p className="text--muted lender-dashboard__list-meta" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
-                        Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, null, brokerNamesByClerkId)}
-                      </p>
+                      <Link href={`/lenders/dashboard/leads/${lead.id}`} className="lender-dashboard__list-link">
+                        <span className="lender-dashboard__list-email">{lead.email_address ?? '—'}</span>
+                        <p className="text--muted lender-dashboard__list-meta" style={{ margin: '0.25rem 0 0 0', fontSize: '0.8125rem' }}>
+                          Agent: {resolveLeadAssignedAgentName(lead.assigned_broker_id, null, brokerNamesByClerkId)}
+                        </p>
+                      </Link>
                     </li>
                   ))}
                 </ul>

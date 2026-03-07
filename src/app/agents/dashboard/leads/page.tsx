@@ -8,6 +8,7 @@ import { getAgentSlugByEmail } from '@/data/agents';
 import { deriveUserSlug } from '@/lib/user-slug';
 import { Hero } from '@/components/Hero';
 import { LeadsSortForm } from './LeadsSortForm';
+import { LeadsFilterFavoriteCity } from './LeadsFilterFavoriteCity';
 import { assetPaths } from '@/config/theme';
 import { getLeadPulse, getLeadPulseLabel } from '@/lib/getLeadPulse';
 import { LEADS_SELECT } from '@/lib/leads-fields';
@@ -19,8 +20,10 @@ export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
 const SORT_OPTIONS = [
-  { value: 'first_name-asc', label: 'Name A–Z', column: 'first_name', ascending: true },
-  { value: 'first_name-desc', label: 'Name Z–A', column: 'first_name', ascending: false },
+  { value: 'first_name-asc', label: 'Name A–Z', column: 'first_name', ascending: true, nullsFirst: false },
+  { value: 'first_name-desc', label: 'Name Z–A', column: 'first_name', ascending: false, nullsFirst: false },
+  { value: 'cinc_score-desc', label: 'Score (high–low)', column: 'cinc_score', ascending: false, nullsFirst: false },
+  { value: 'cinc_score-asc', label: 'Score (low–high)', column: 'cinc_score', ascending: true, nullsFirst: true },
 ] as const;
 
 export const metadata: Metadata = buildPageMetadata({
@@ -46,6 +49,9 @@ type LeadRow = {
   assigned_broker_id?: string | null;
   assigned_lender_id?: string | null;
   marketing_opted_out_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  last_login?: string | null;
 };
 
 function formatLeadDate(iso: string): string {
@@ -82,8 +88,12 @@ function truncate(str: string | null | undefined, maxLen: number): string {
 const RECENT_DAYS = 7;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-/** Visual feedback: simplified schema has no created_at/last_login; always null. */
-function getLeadRecency(_lead: LeadRow): 'new' | 'active' | null {
+function getLeadRecency(lead: LeadRow): 'new' | 'active' | null {
+  const created = lead.created_at;
+  if (!created) return null;
+  const days = (Date.now() - new Date(created).getTime()) / MS_PER_DAY;
+  if (days <= RECENT_DAYS) return 'new';
+  if (days <= 30) return 'active';
   return null;
 }
 
@@ -108,7 +118,7 @@ function getLeadInitials(lead: LeadRow): string {
 export default async function AgentLeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string; sort?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; sort?: string; favorite_city?: string }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect('/sign-in');
@@ -117,6 +127,7 @@ export default async function AgentLeadsPage({
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
   const q = (params.q ?? '').trim().slice(0, 100);
   const sortKey = params.sort ?? 'first_name-asc';
+  const favoriteCity = (params.favorite_city ?? '').trim();
   const sortConfig = SORT_OPTIONS.find((o) => o.value === sortKey) ?? SORT_OPTIONS[0];
 
   const from = (page - 1) * PAGE_SIZE;
@@ -125,6 +136,7 @@ export default async function AgentLeadsPage({
   let user: AgentUser | null = null;
   let leads: LeadRow[] = [];
   let totalCount = 0;
+  let favoriteCities: string[] = [];
 
   try {
     const clerkUser = await currentUser();
@@ -144,6 +156,9 @@ export default async function AgentLeadsPage({
         .select(LEAD_SELECT, { count: 'exact' })
         .in('assigned_broker_id', brokerIds)
         .is('marketing_opted_out_at', null);
+      if (favoriteCity) {
+        query = query.ilike('city', `%${escapeIlike(favoriteCity)}%`);
+      }
       if (q) {
         const pattern = `%${escapeIlike(q)}%`;
         query = query.or(
@@ -151,7 +166,7 @@ export default async function AgentLeadsPage({
         );
       }
       return query
-        .order(sortConfig.column, { ascending: sortConfig.ascending, nullsFirst: false })
+        .order(sortConfig.column, { ascending: sortConfig.ascending, nullsFirst: sortConfig.nullsFirst ?? false })
         .range(from, to);
     };
 
@@ -176,6 +191,13 @@ export default async function AgentLeadsPage({
     if (agentSlug) brokerIds.push(agentSlug);
     const uniqBrokerIds = [...new Set(brokerIds)];
     const uniqWithCase = [...new Set([...uniqBrokerIds, ...uniqBrokerIds.map((s) => s.toLowerCase())])];
+
+    const { data: citiesData } = await supabase
+      .from('leads')
+      .select('city')
+      .in('assigned_broker_id', uniqWithCase)
+      .not('city', 'is', null);
+    favoriteCities = [...new Set((citiesData ?? []).map((r) => (r as { city: string | null }).city).filter(Boolean) as string[])].sort();
 
     const leadsRes = await buildLeadsQuery(supabase, uniqWithCase);
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
@@ -212,6 +234,9 @@ export default async function AgentLeadsPage({
         .select(LEAD_SELECT, { count: 'exact' })
         .in('assigned_broker_id', uniqWithCase)
         .is('marketing_opted_out_at', null);
+      if (favoriteCity) {
+        fallbackQuery = fallbackQuery.ilike('city', `%${escapeIlike(favoriteCity)}%`);
+      }
       if (q) {
         const pattern = `%${escapeIlike(q)}%`;
         fallbackQuery = fallbackQuery.or(
@@ -219,7 +244,7 @@ export default async function AgentLeadsPage({
         );
       }
       const { data: fallbackLeads, count: fallbackCount } = await fallbackQuery
-        .order(sortConfig.column, { ascending: sortConfig.ascending, nullsFirst: false })
+        .order(sortConfig.column, { ascending: sortConfig.ascending, nullsFirst: sortConfig.nullsFirst ?? false })
         .range(from, to);
 
       if (Array.isArray(fallbackLeads)) {
@@ -259,18 +284,21 @@ export default async function AgentLeadsPage({
   const hasNext = page < totalPages;
   const startRow = totalCount === 0 ? 0 : from + 1;
   const endRow = Math.min(from + PAGE_SIZE, totalCount);
+  const showScore = sortKey === 'cinc_score-desc' || sortKey === 'cinc_score-asc';
 
-  const filterParams = { q, sort: sortKey };
+  const filterParams = { q, sort: sortKey, favorite_city: favoriteCity };
 
-  function buildUrl(updates: Partial<{ page: number; q: string; sort: string }>) {
+  function buildUrl(updates: Partial<{ page: number; q: string; sort: string; favorite_city: string }>) {
     const base = '/agents/dashboard/leads';
     const sp = new URLSearchParams();
     const pageVal = updates.page != null ? updates.page : page;
     const qVal = updates.q !== undefined ? updates.q : filterParams.q;
     const sortVal = updates.sort !== undefined ? updates.sort : filterParams.sort;
+    const favCityVal = updates.favorite_city !== undefined ? updates.favorite_city : filterParams.favorite_city;
     if (pageVal > 1) sp.set('page', String(pageVal));
     if (qVal) sp.set('q', qVal);
     if (sortVal !== 'first_name-asc') sp.set('sort', sortVal);
+    if (favCityVal) sp.set('favorite_city', favCityVal);
     const qs = sp.toString();
     return qs ? `${base}?${qs}` : base;
   }
@@ -314,6 +342,7 @@ export default async function AgentLeadsPage({
             <div className="leads-filters">
               <form method="get" action="/agents/dashboard/leads" className="leads-search-form" aria-label="Search leads">
                 <input type="hidden" name="sort" value={sortKey} />
+                <input type="hidden" name="favorite_city" value={favoriteCity} readOnly />
                 <label htmlFor="leads-search-q" className="sr-only">Search by name or email</label>
                 <input
                   id="leads-search-q"
@@ -326,14 +355,22 @@ export default async function AgentLeadsPage({
                 />
                 <button type="submit" aria-label="Submit search">Search</button>
               </form>
-              <div className="leads-filters-group" role="group" aria-label="Sort leads">
+              <div className="leads-filters-group" role="group" aria-label="Sort and filter leads">
+                <LeadsFilterFavoriteCity
+                  favoriteCities={favoriteCities}
+                  currentFavoriteCity={favoriteCity}
+                  currentQ={q}
+                  currentSort={sortKey}
+                  currentVerified={false}
+                  currentSource=""
+                />
                 <LeadsSortForm
                   options={SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                   currentSort={sortKey}
                   currentQ={q}
                   currentVerified={false}
                   currentSource=""
-                  currentFavoriteCity=""
+                  currentFavoriteCity={favoriteCity}
                 />
               </div>
             </div>
@@ -349,6 +386,7 @@ export default async function AgentLeadsPage({
                       <tr>
                         <th>Name</th>
                         <th>Contact</th>
+                        {showScore && <th>Score</th>}
                         <th></th>
                       </tr>
                     </thead>
@@ -380,6 +418,11 @@ export default async function AgentLeadsPage({
                                 variant="table"
                               />
                             </td>
+                            {showScore && (
+                              <td className="lead-score">
+                                {lead.cinc_score != null ? lead.cinc_score.toLocaleString() : '—'}
+                              </td>
+                            )}
                             <td className="lead-view">
                               <Link href={`/agents/dashboard/leads/${lead.id}`} className="lead-view__btn">
                                 View
@@ -430,6 +473,12 @@ export default async function AgentLeadsPage({
                           <p className="leads-mobile-card__row">
                             <span className="leads-mobile-card__label">Phone</span>
                             <span className="leads-mobile-card__value">{lead.phone}</span>
+                          </p>
+                        )}
+                        {showScore && (
+                          <p className="leads-mobile-card__row">
+                            <span className="leads-mobile-card__label">Score</span>
+                            <span className="leads-mobile-card__value">{lead.cinc_score != null ? lead.cinc_score.toLocaleString() : '—'}</span>
                           </p>
                         )}
                       </div>

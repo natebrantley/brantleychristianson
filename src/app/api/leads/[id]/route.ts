@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, { params }: LeadIdParams) {
   return NextResponse.json(data);
 }
 
-const PATCH_BODY_KEYS = ['first_name', 'last_name', 'email_address', 'phone', 'address', 'city', 'state', 'zip'] as const;
+const PATCH_BODY_KEYS = ['first_name', 'last_name', 'email_address', 'phone', 'address', 'city', 'state', 'zip', 'notes'] as const;
 
 /** Allowed for owners only. */
 const PATCH_OWNER_KEYS = ['assigned_broker_id'] as const;
@@ -67,6 +67,7 @@ function sanitizePatchBody(body: unknown): Record<string, string | null> {
     first_name: 120,
     last_name: 120,
     assigned_broker_id: 500,
+    notes: 20000,
   };
 
   for (const key of PATCH_BODY_KEYS) {
@@ -188,7 +189,7 @@ export async function PATCH(request: NextRequest, { params }: LeadIdParams) {
     .from('leads')
     .update(updates)
     .eq('id', id)
-    .select('id, first_name, last_name, email_address, phone, address, city, state, zip, assigned_broker_id')
+    .select('id, first_name, last_name, email_address, phone, address, city, state, zip, assigned_broker_id, notes')
     .single();
 
   if (error) {

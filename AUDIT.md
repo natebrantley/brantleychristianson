@@ -398,7 +398,7 @@ All pages rely on the same design system; no page-specific CSS imports.
 | `npm run build` | ✅ Pass (Next.js 16.1.6 Turbopack, 375 static pages) |
 | `npm audit` | ✅ 0 vulnerabilities |
 | `npm run lint` / `npx next lint` | ⚠️ On Windows, `npm run lint` can fail with "Invalid project directory provided" (Next CLI treats `lint` as path). CI runs `npm run lint` on Linux; if CI passes, treat as environment quirk. |
-| E2E | `e2e/smoke.spec.ts`: homepage 200, title, main content; run with `npm run test:e2e` after `npx playwright install` |
+| E2E | `e2e/smoke.spec.ts`: homepage 200, title, main content; dashboard redirect when unauthenticated; run with `npm run test:e2e` after `npx playwright install`. Full dashboard/CRM flows (sign-in, leads list, lead detail) are manually tested. |
 
 ### Stack & config
 

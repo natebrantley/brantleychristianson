@@ -47,6 +47,9 @@ type LeadRow = {
   assigned_broker_id?: string | null;
   assigned_lender_id?: string | null;
   marketing_opted_out_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  last_login?: string | null;
 };
 
 function truncate(str: string | null | undefined, maxLen: number): string {

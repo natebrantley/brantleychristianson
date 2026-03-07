@@ -33,6 +33,10 @@ type LeadRow = {
   zip?: string | null;
   assigned_broker_id?: string | null;
   assigned_lender_id?: string | null;
+  notes?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  last_login?: string | null;
 };
 
 export default async function OwnerLeadDetailPage({ params }: { params: Promise<{ id: string }> }) {

@@ -1219,6 +1219,36 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+.lead-detail__section-desc {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  margin: -0.5rem 0 var(--space-md);
+}
+.lead-detail__input--notes {
+  width: 100%;
+  min-height: 8rem;
+  resize: vertical;
+  margin-bottom: var(--space-sm);
+}
+.lead-detail__notes-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+}
+.lead-detail__notes-actions .lead-detail__message {
+  margin: 0;
+}
+.lead-detail__notes-readonly {
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  margin: 0;
+  padding: var(--space-md);
+  background: var(--surface-muted);
+  border-radius: var(--radius-md);
+}
 
 /* Recent activity timeline */
 .lead-recent-activity {

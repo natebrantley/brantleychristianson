@@ -18,6 +18,10 @@ export type LeadContactData = {
   zip?: string | null;
   assigned_broker_id?: string | null;
   assigned_lender_id?: string | null;
+  notes?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  last_login?: string | null;
 };
 
 function getInitials(lead: LeadContactData): string {
@@ -54,6 +58,9 @@ export function LeadContactForm({
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [assignedBrokerId, setAssignedBrokerId] = useState(lead.assigned_broker_id ?? '');
   const [reassigning, setReassigning] = useState(false);
+  const [notes, setNotes] = useState(lead.notes ?? '');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [notesMessage, setNotesMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -90,6 +97,26 @@ export function LeadContactForm({
   const pulseLabel = getLeadPulseLabel(pulseLevel);
   const initials = getInitials(lead);
 
+  async function handleSaveNotes() {
+    setSavingNotes(true);
+    setNotesMessage(null);
+    try {
+      const res = await fetch(`/api/leads/${lead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: notes.trim() || null }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setNotesMessage({ type: 'error', text: (data.error as string) || 'Failed to save notes' });
+        return;
+      }
+      setNotesMessage({ type: 'success', text: 'Notes saved.' });
+    } finally {
+      setSavingNotes(false);
+    }
+  }
+
   return (
     <div className="lead-detail">
       <nav className="lead-detail__back" aria-label="Back to leads">
@@ -112,6 +139,38 @@ export function LeadContactForm({
           </span>
         </div>
       </header>
+
+      <section className="lead-detail__section lead-detail__section--notes" aria-label="Notes">
+        <h2 className="lead-detail__section-title">Notes</h2>
+        <p className="lead-detail__section-desc">Add notes about this lead. Saved to the lead record.</p>
+        <textarea
+          id="lead-notes"
+          className="lead-detail__input lead-detail__input--notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Call notes, preferences, follow-up reminders…"
+          rows={6}
+          aria-label="Lead notes"
+        />
+        <div className="lead-detail__notes-actions">
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={handleSaveNotes}
+            disabled={savingNotes}
+          >
+            {savingNotes ? 'Saving…' : 'Save notes'}
+          </button>
+          {notesMessage && (
+            <span
+              role="alert"
+              className={notesMessage.type === 'success' ? 'lead-detail__message lead-detail__message--success' : 'lead-detail__message lead-detail__message--error'}
+            >
+              {notesMessage.text}
+            </span>
+          )}
+        </div>
+      </section>
 
       {(lead.city || lead.address) && (
         <section className="lead-detail__section" aria-label="Location">

@@ -162,6 +162,10 @@ export async function POST(request: NextRequest) {
           zip: null,
           assigned_broker_id: null,
           assigned_lender_id: null,
+          notes: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          last_login: null,
         });
       }
     } catch (leadErr) {

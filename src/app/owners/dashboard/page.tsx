@@ -142,6 +142,24 @@ export default async function OwnersDashboardPage() {
                 All leads ({totalCount.toLocaleString()})
               </Link>
             </div>
+            {process.env.MAILERLITE_API_TOKEN && (
+              <p className="owner-dashboard__mailerlite-note" style={{ marginTop: 'var(--space-md)', fontSize: '0.875rem', color: 'var(--color-muted)' }}>
+                Leads sync to MailerLite hourly.
+                {process.env.MAILERLITE_GROUP_ID && (
+                  <>
+                    {' '}
+                    <a
+                      href={`https://app.mailerlite.com/subscribers/${process.env.MAILERLITE_GROUP_ID}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: 'var(--color-accent)' }}
+                    >
+                      Open in MailerLite
+                    </a>
+                  </>
+                )}
+              </p>
+            )}
           </section>
 
           <section className="dashboard-section" aria-labelledby="marketing-heading">

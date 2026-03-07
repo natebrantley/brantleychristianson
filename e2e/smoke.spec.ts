@@ -15,4 +15,11 @@ test.describe("Smoke", () => {
     await page.goto("/");
     await expect(page.getByRole("main")).toBeVisible({ timeout: 10_000 });
   });
+
+  test("dashboard route redirects when unauthenticated", async ({ request }) => {
+    const res = await request.get("/dashboard", { maxRedirects: 0 });
+    expect([302, 307]).toContain(res.status());
+    const location = res.headers()["location"] ?? "";
+    expect(location).toMatch(/sign-in|dashboard/);
+  });
 });

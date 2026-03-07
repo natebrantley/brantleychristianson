@@ -36,6 +36,10 @@ export type Database = {
           assigned_broker_id: string | null;
           assigned_lender_id: string | null;
           marketing_opted_out_at: string | null;
+          notes: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          last_login: string | null;
         };
         Insert: Omit<Database['public']['Tables']['leads']['Row'], 'id' | 'marketing_opted_out_at'> & { id?: string; marketing_opted_out_at?: string | null };
         Update: Partial<Database['public']['Tables']['leads']['Row']>;

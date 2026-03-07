@@ -228,6 +228,24 @@ export default async function AgentsDashboardPage() {
                 Open leads database
               </Link>
             </div>
+            {process.env.MAILERLITE_API_TOKEN && (
+              <p className="agent-dashboard__mailerlite-note" style={{ marginTop: 'var(--space-md)', fontSize: '0.875rem', color: 'var(--color-muted)' }}>
+                Leads sync to MailerLite hourly.
+                {process.env.MAILERLITE_GROUP_ID && (
+                  <>
+                    {' '}
+                    <a
+                      href={`https://app.mailerlite.com/subscribers/${process.env.MAILERLITE_GROUP_ID}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: 'var(--color-accent)' }}
+                    >
+                      Open in MailerLite
+                    </a>
+                  </>
+                )}
+              </p>
+            )}
           </section>
 
         {/* Client saved searches */}
@@ -274,18 +292,44 @@ export default async function AgentsDashboardPage() {
             </p>
           </header>
           <div className="agent-upsell">
-            <h3>Coming soon</h3>
-            <p>
-              Views and engagement metrics for your listings and market pages. We&apos;ll show which content drives consultations.
-            </p>
-            <div className="dashboard-actions">
-              <Button href="/resources" variant="outline">
-                Share resources with clients
-              </Button>
-              <Button href="/agents" variant="text">
-                Browse team profiles
-              </Button>
-            </div>
+            {process.env.MAILERLITE_API_TOKEN ? (
+              <>
+                <p>
+                  Leads sync to MailerLite hourly. View subscribers and campaign performance in MailerLite.
+                </p>
+                <div className="dashboard-actions">
+                  {process.env.MAILERLITE_GROUP_ID && (
+                    <Button
+                      href={`https://app.mailerlite.com/subscribers/${process.env.MAILERLITE_GROUP_ID}`}
+                      variant="primary"
+                    >
+                      View subscribers in MailerLite
+                    </Button>
+                  )}
+                  <Button href="/resources" variant="outline">
+                    Share resources with clients
+                  </Button>
+                  <Button href="/agents" variant="text">
+                    Browse team profiles
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3>Coming soon</h3>
+                <p>
+                  Views and engagement metrics for your listings and market pages. We&apos;ll show which content drives consultations.
+                </p>
+                <div className="dashboard-actions">
+                  <Button href="/resources" variant="outline">
+                    Share resources with clients
+                  </Button>
+                  <Button href="/agents" variant="text">
+                    Browse team profiles
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </section>
         </div>

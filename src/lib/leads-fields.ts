@@ -17,6 +17,10 @@ export const LEADS_TABLE_COLUMNS = [
   'assigned_broker_id',
   'assigned_lender_id',
   'marketing_opted_out_at',
+  'notes',
+  'created_at',
+  'updated_at',
+  'last_login',
 ] as const;
 
 export type LeadsTableColumn = (typeof LEADS_TABLE_COLUMNS)[number];
