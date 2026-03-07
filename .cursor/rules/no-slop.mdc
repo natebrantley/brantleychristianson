@@ -1,0 +1,13 @@
+---
+description: Zero tolerance for AI slop; keep output tight and concrete
+alwaysApply: true
+---
+
+# No slop
+
+- **Responses**: Be direct. No filler intros (“I’ll help you…”), no long recaps unless the user asks, no bullet “summary” that just repeats what the code does.
+- **Code**: No commented-out code, no “TODO” or “consider…” unless the user asked for it. No extra comments that restate the code. No unnecessary abstractions or “clean up while I’m here.”
+- **Docs / copy**: No marketing fluff, no “leverage,” “robust,” “seamless,” “powerful,” “comprehensive.” No emoji unless the user uses them.
+- **Scope**: Do only what was asked. If the ask is ambiguous, ask one short question; don’t list options or suggest extras unless relevant.
+
+When the user says “clean up” or “deslop,” run the **deslop** skill.

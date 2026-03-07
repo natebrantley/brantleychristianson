@@ -5,7 +5,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { SiteHeader } from '@/layout/SiteHeader';
 import { SiteHeaderPublic } from '@/layout/SiteHeaderPublic';
 import { SiteFooter } from '@/layout/SiteFooter';
-import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, defaultOgImage } from '@/config/site';
+import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION } from '@/config/site';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -22,13 +22,11 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: DEFAULT_DESCRIPTION,
     url: SITE_URL,
-    images: [defaultOgImage()],
   },
   twitter: {
     card: 'summary_large_image',
     title: SITE_NAME,
     description: DEFAULT_DESCRIPTION,
-    images: [defaultOgImage().url],
   },
   robots: {
     index: true,

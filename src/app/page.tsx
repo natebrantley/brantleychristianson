@@ -31,6 +31,7 @@ export const metadata: Metadata = buildPageMetadata({
     'Fiercely independent, strategically driven. Luxury and residential real estate across Oregon and Washington—Portland metro, SW Washington, coast & Mt. Hood. Connect with a local BCRE broker.',
   path: '/',
   ogImageAlt: 'Pacific Northwest real estate – Oregon and Washington',
+  omitImage: true,
 });
 
 export default function HomePage() {

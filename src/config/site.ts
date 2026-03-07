@@ -8,8 +8,8 @@ import type { Metadata } from 'next';
 export const SITE_URL = 'https://brantleychristianson.com';
 export const SITE_NAME = 'Brantley Christianson Real Estate';
 
-/** Default OG/Twitter share image (1200×630 recommended for best display) */
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/media/img/markets/pdx_skyline_2.jpeg`;
+/** Default OG/Twitter share image (1200×630 recommended for best display). Query param helps Facebook treat it as a new URL after cache refresh. */
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/media/img/markets/pdx_skyline_2.jpeg?og=1`;
 export const OG_IMAGE_WIDTH = 1200;
 export const OG_IMAGE_HEIGHT = 630;
 
@@ -43,6 +43,8 @@ export interface PageMetadataOptions {
   description: string;
   path: string;
   ogImageAlt?: string;
+  /** When true, omit og/twitter images so the route uses the segment opengraph-image file (e.g. app/opengraph-image.jpeg). */
+  omitImage?: boolean;
   robots?: Metadata['robots'];
 }
 
@@ -52,6 +54,7 @@ export function buildPageMetadata({
   description,
   path,
   ogImageAlt,
+  omitImage,
   robots,
 }: PageMetadataOptions): Metadata {
   const canonical = path.startsWith('http') ? path : `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
@@ -68,13 +71,13 @@ export function buildPageMetadata({
       siteName: SITE_NAME,
       title: ogTitle,
       description,
-      images: [image],
+      ...(omitImage ? {} : { images: [image] }),
     },
     twitter: {
       card: 'summary_large_image',
       title: ogTitle,
       description,
-      images: [image.url],
+      ...(omitImage ? {} : { images: [image.url] }),
     },
     ...(robots && { robots }),
   };
