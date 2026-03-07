@@ -157,11 +157,11 @@ export default async function AgentLeadsPage({
 
     const brokerIds: string[] = [userId];
     if (user?.slug) brokerIds.push(user.slug);
-    else if (user?.first_name != null || user?.last_name != null) {
+    if (user?.first_name != null || user?.last_name != null) {
       const derived = deriveUserSlug(user.first_name, user.last_name);
       if (derived) brokerIds.push(derived);
     }
-    if (clerkUser && brokerIds.length <= 1) {
+    if (clerkUser) {
       const derived = deriveUserSlug(clerkUser.firstName, clerkUser.lastName);
       if (derived) brokerIds.push(derived);
     }
@@ -175,10 +175,12 @@ export default async function AgentLeadsPage({
     }
     totalCount = typeof leadsRes.count === 'number' ? leadsRes.count : leads.length;
 
+    const canonicalBrokerId =
+      (user?.slug && user.slug.trim()) ? user.slug.trim() : (getAgentSlugByEmail(user?.email ?? clerkUser?.emailAddresses?.[0]?.emailAddress ?? undefined) ?? userId);
     if (leads.length > 0) {
-      const idsToNormalize = leads.filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
+      const idsToNormalize = leads.filter((l) => l.assigned_broker_id !== canonicalBrokerId).map((l) => l.id);
       if (idsToNormalize.length > 0) {
-        await supabaseAdmin().from('leads').update({ assigned_broker_id: userId }).in('id', idsToNormalize);
+        await supabaseAdmin().from('leads').update({ assigned_broker_id: canonicalBrokerId }).in('id', idsToNormalize);
       }
     }
 
@@ -214,9 +216,9 @@ export default async function AgentLeadsPage({
       if (Array.isArray(fallbackLeads)) {
         leads = fallbackLeads as unknown as LeadRow[];
         totalCount = typeof fallbackCount === 'number' ? fallbackCount : leads.length;
-        const idsToUpdate = (fallbackLeads as unknown as LeadRow[]).filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
+        const idsToUpdate = (fallbackLeads as unknown as LeadRow[]).filter((l) => l.assigned_broker_id !== canonicalBrokerId).map((l) => l.id);
         if (idsToUpdate.length > 0) {
-          await admin.from('leads').update({ assigned_broker_id: userId }).in('id', idsToUpdate);
+          await admin.from('leads').update({ assigned_broker_id: canonicalBrokerId }).in('id', idsToUpdate);
         }
       }
     }

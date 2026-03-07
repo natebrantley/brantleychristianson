@@ -6,7 +6,7 @@ import {
   SignInButton,
   UserButton,
 } from '@clerk/nextjs';
-import { useScrollState, useNavToggle } from '@/hooks/useScrollState';
+import { useNavToggle } from '@/hooks/useScrollState';
 import Link from 'next/link';
 import Image from 'next/image';
 import { assetPaths } from '@/config/theme';
@@ -21,7 +21,6 @@ const NAV_LINKS = [
 ];
 
 export function SiteHeader() {
-  const isScrolled = useScrollState(60);
   const { isOpen, toggle, close } = useNavToggle();
 
   useEffect(() => {
@@ -34,10 +33,7 @@ export function SiteHeader() {
   }, [isOpen, close]);
 
   return (
-    <header
-      className={`site-header ${isScrolled ? 'is-scrolled' : ''}`}
-      aria-label="Site header"
-    >
+    <header className="site-header" aria-label="Site header">
       <div className="site-header-inner container">
         <Link href="/" className="site-logo" onClick={close} aria-label="Brantley Christianson Real Estate – Home">
           <Image

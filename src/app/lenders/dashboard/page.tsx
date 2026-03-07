@@ -250,7 +250,7 @@ export default async function LendersDashboardPage() {
                       <div className="dashboard-actions lender-dashboard__contact-actions">
                         {agentContact.phone && <Button href={`tel:${agentContact.phone.replace(/\D/g, '')}`} variant="primary">Call</Button>}
                         <Button href={`mailto:${agentContact.email}`} variant="outline">Email</Button>
-                        <Button href={agentContact.url} variant="text">Profile</Button>
+                        <Button href={`/agents/${agentContact.slug}`} variant="text">Profile</Button>
                       </div>
                     </div>
                   </div>

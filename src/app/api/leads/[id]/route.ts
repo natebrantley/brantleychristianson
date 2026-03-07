@@ -166,7 +166,8 @@ export async function PATCH(request: NextRequest, { params }: LeadIdParams) {
       .maybeSingle();
     const assignedTrimmed = rescueRow?.assigned_broker_id?.trim();
     if (rescueRow && assignedTrimmed && (uniqWithCase.has(assignedTrimmed) || uniqWithCase.has(assignedTrimmed.toLowerCase()))) {
-      await admin.from('leads').update({ assigned_broker_id: userId }).eq('id', id);
+      const valueToStore = slug && slug.trim() ? slug.trim() : userId;
+      await admin.from('leads').update({ assigned_broker_id: valueToStore }).eq('id', id);
       const { data: retryExisting } = await supabase.from('leads').select('id').eq('id', id).maybeSingle();
       existing = retryExisting;
     }

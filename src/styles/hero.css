@@ -10,10 +10,9 @@
   background:
     radial-gradient(circle at top, rgba(var(--color-accent-rgb), 0.16) 0, transparent 55%),
     var(--color-primary);
-  padding-top: var(--header-height);
   padding-bottom: var(--space-xxl);
-  /* Safe area for notched devices (iPhone X+, Safari) – only top so bg stays full-bleed */
-  padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+  /* Safe area for notched devices (iPhone X+, Safari). Header is sticky so no extra top offset. */
+  padding-top: calc(var(--space-md) + env(safe-area-inset-top, 0px));
   /* Prevent Safari from collapsing when address bar shows */
   min-height: min(420px, 50vh);
 }

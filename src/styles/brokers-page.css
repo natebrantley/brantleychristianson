@@ -281,6 +281,24 @@
   display: block;
 }
 
+.broker-detail-photo-wrap {
+  display: inline-block;
+  width: 280px;
+  height: 280px;
+  border-radius: var(--radius-lg);
+  border: 2px solid rgba(var(--color-accent-rgb), 0.25);
+  overflow: hidden;
+  margin-bottom: var(--space-md);
+  background: var(--color-light-alt);
+}
+.broker-detail-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+}
+
 /* Broker profile page – image-only hero (couch stock image) */
 .broker-hero-image {
   position: relative;

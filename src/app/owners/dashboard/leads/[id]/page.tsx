@@ -80,7 +80,7 @@ export default async function OwnerLeadDetailPage({ params }: { params: Promise<
     redirect('/clients/dashboard');
   }
 
-  // Agents list for reassign dropdown (owner only). Use canonical slug (first_last) as value so DB stays synced.
+  // Agents list for reassign dropdown (owner only). Value = users.slug (firstname_lastname) so assigned_broker_id stays aligned.
   let agents: { value: string; label: string }[] = [];
   try {
     const admin = supabaseAdmin();

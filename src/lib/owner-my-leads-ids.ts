@@ -1,10 +1,9 @@
 /**
  * Build assigned_broker_id values that mean "this user" for owner/agent "My leads".
- * Canonical broker slug is first_last (e.g. nate_brantley); we also match clerk_id,
- * users.slug, hyphen variant (nate-brantley), agents.json slug (legacy), and full-name variants.
+ * Canonical slug is firstname_lastname (e.g. nate_brantley). We match clerk_id, users.slug, and full-name variants.
  */
 
-import { deriveUserSlug, deriveUserSlugHyphen } from '@/lib/user-slug';
+import { deriveUserSlug } from '@/lib/user-slug';
 import { getAgentSlugByEmail } from '@/data/agents';
 
 type UserLike = {
@@ -26,15 +25,11 @@ export function buildMyLeadsBrokerIds(
   clerkUser: ClerkUserLike | null
 ): string[] {
   const ids: string[] = [clerkUserId];
-  // Canonical broker slug: first_last (e.g. nate_brantley) from users.slug or derived from name
   if (user?.slug) ids.push(user.slug);
   const first = user?.first_name ?? clerkUser?.firstName;
   const last = user?.last_name ?? clerkUser?.lastName;
-  const derived = deriveUserSlug(first, last); // first_last
-  if (derived) ids.push(derived);
-  const derivedHyphen = deriveUserSlugHyphen(first, last); // first-last
-  if (derivedHyphen) ids.push(derivedHyphen);
-  // Legacy: agents.json slug (e.g. nate, corey-allen) in case leads still use it
+  const slug = deriveUserSlug(first, last);
+  if (slug) ids.push(slug);
   const email = user?.email ?? clerkUser?.emailAddresses?.[0]?.emailAddress;
   const agentSlug = getAgentSlugByEmail(email ?? undefined);
   if (agentSlug) ids.push(agentSlug);

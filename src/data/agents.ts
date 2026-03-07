@@ -1,13 +1,26 @@
 import type { Agent } from './types';
 import agentsJson from './agents.json';
 
-export const agents: Agent[] = agentsJson as Agent[];
+const raw = agentsJson as Agent[];
+raw.forEach((a, i) => {
+  const expected = `/agents/${a.slug}`;
+  if (a.url !== expected) {
+    throw new Error(`agents.json[${i}] ${a.name}: url must be "${expected}", got "${a.url}"`);
+  }
+});
+export const agents: Agent[] = raw;
 
+/** Slug is firstname_lastname (e.g. nate_brantley, morgan_wiley). */
 export function getAgentBySlug(slug: string): Agent | undefined {
   return agents.find((a) => a.slug === slug);
 }
 
-/** Resolve agent slug from email (e.g. nate@brantleychristianson.com → "nate"). */
+/** Agent profile path. Use this instead of agent.url so links never drift. */
+export function getAgentProfilePath(slug: string): string {
+  return `/agents/${slug}`;
+}
+
+/** Resolve agent slug from email. Returns firstname_lastname. */
 export function getAgentSlugByEmail(email: string | null | undefined): string | null {
   if (!email || !email.trim()) return null;
   const normalized = email.trim().toLowerCase();

@@ -203,7 +203,7 @@ export default async function ClientsDashboardPage() {
                         <Button href={`mailto:${assignedAgent.email}`} variant="outline">
                           Email
                         </Button>
-                        <Button href={assignedAgent.url} variant="text">
+                        <Button href={`/agents/${assignedAgent.slug}`} variant="text">
                           Profile
                         </Button>
                       </div>

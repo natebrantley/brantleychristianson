@@ -102,8 +102,9 @@ export default async function LeadDetailPage({
           assignedTrimmed &&
           (uniqWithCase.has(assignedTrimmed) || uniqWithCase.has(assignedTrimmed.toLowerCase()));
         const isUnassigned = rescueRow && !assignedTrimmed;
+        const canonicalBrokerId = (user?.slug && user.slug.trim()) ? user.slug.trim() : (getAgentSlugByEmail(currentClerkUser?.emailAddresses?.[0]?.emailAddress ?? undefined) ?? userId);
         if (rescueRow && (isLegacyMatch || isUnassigned)) {
-          await admin.from('leads').update({ assigned_broker_id: userId }).eq('id', id);
+          await admin.from('leads').update({ assigned_broker_id: canonicalBrokerId }).eq('id', id);
           const { data: refetched } = await supabase
             .from('leads')
             .select(LEADS_SELECT)

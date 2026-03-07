@@ -1,7 +1,7 @@
 /**
  * PATCH /api/me/agent — set the current user's assigned broker (by slug).
- * Client-only: requires Clerk auth. Used from brokers page "Choose as my agent".
- * Stores canonical broker slug (users.slug, first_last) when the agent has a users row; otherwise stores agents.json slug for display.
+ * Client-only: requires Clerk auth. Used from agents page "Choose as my agent".
+ * Stores firstname_lastname (users.slug) when the agent has a users row; otherwise clerk_id or agents.json slug.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -36,7 +36,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const supabase = supabaseAdmin();
-  // Resolve broker's canonical slug (first_last) from users so leads and clients stay in sync
+  // Prefer broker's users.slug (firstname_lastname) so leads and clients stay in sync
   const { data: brokerUser } = await supabase
     .from('users')
     .select('clerk_id, slug')

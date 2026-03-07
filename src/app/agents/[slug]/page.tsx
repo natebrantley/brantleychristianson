@@ -5,7 +5,7 @@ import { SITE_NAME, absoluteUrl } from '@/config/site';
 import type { Metadata } from 'next';
 
 interface AgentPageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export function generateStaticParams() {
@@ -13,7 +13,8 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: AgentPageProps): Promise<Metadata> {
-  const agent = getAgentBySlug(params.slug);
+  const { slug } = await params;
+  const agent = getAgentBySlug(slug);
   if (!agent) {
     return { title: `Agent | ${SITE_NAME}` };
   }
@@ -30,12 +31,10 @@ export async function generateMetadata({ params }: AgentPageProps): Promise<Meta
   };
 }
 
-export default function AgentProfilePage({ params }: AgentPageProps) {
-  const agent = getAgentBySlug(params.slug);
-
-  if (!agent) {
-    notFound();
-  }
+export default async function AgentProfilePage({ params }: AgentPageProps) {
+  const { slug } = await params;
+  const agent = getAgentBySlug(slug);
+  if (!agent) notFound();
 
   return (
     <AgentProfile

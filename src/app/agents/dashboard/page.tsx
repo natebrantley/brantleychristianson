@@ -5,6 +5,7 @@ import { createClerkSupabaseClient, formatSupabaseError, supabaseAdmin } from '@
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { getAgentSlugByEmail } from '@/data/agents';
+import { deriveUserSlug } from '@/lib/user-slug';
 import { LEADS_SELECT_PREVIEW } from '@/lib/leads-fields';
 import { Button } from '@/components/Button';
 import { Hero } from '@/components/Hero';
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
   description: 'Your leads database and client activity. BCRE agent dashboard.',
 };
 
-type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
+type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; slug?: string | null; assigned_broker_id?: string | null; assigned_lender_id?: string | null };
 type LeadRow = {
   id: string;
   email_address: string | null;
@@ -78,71 +79,40 @@ export default async function AgentsDashboardPage() {
 
     const supabase = await createClerkSupabaseClient();
 
-    const [userRes, leadsRes, countRes] = await Promise.all([
-      supabase
-        .from('users')
-        .select('first_name, last_name, email, role, assigned_broker_id, assigned_lender_id')
-        .eq('clerk_id', userId)
-        .maybeSingle(),
-      supabase
-        .from('leads')
-        .select(LEADS_SELECT_PREVIEW)
-        .eq('assigned_broker_id', userId)
-        .limit(10),
-      supabase
-        .from('leads')
-        .select('*', { count: 'exact', head: true })
-        .eq('assigned_broker_id', userId),
-    ]);
+    const userRes = await supabase
+      .from('users')
+      .select('first_name, last_name, email, role, slug, assigned_broker_id, assigned_lender_id')
+      .eq('clerk_id', userId)
+      .maybeSingle();
 
     if (userRes.error) {
       console.error('Error loading agent user from Supabase:', { userId, ...formatSupabaseError(userRes.error) });
     }
     user = userRes.data ?? null;
 
+    const brokerIds: string[] = [userId];
+    if (user?.slug?.trim()) brokerIds.push(user.slug.trim());
+    const derived = deriveUserSlug(user?.first_name, user?.last_name) ?? deriveUserSlug(clerkUser?.firstName, clerkUser?.lastName);
+    if (derived) brokerIds.push(derived);
+    const agentSlug = getAgentSlugByEmail(user?.email ?? clerkUser?.emailAddresses?.[0]?.emailAddress ?? undefined);
+    if (agentSlug) brokerIds.push(agentSlug);
+    const uniqBrokerIds = [...new Set(brokerIds)];
+    const uniqWithCase = [...new Set([...uniqBrokerIds, ...uniqBrokerIds.map((s) => s.toLowerCase())])];
+
+    const [leadsRes, countRes] = await Promise.all([
+      supabase.from('leads').select(LEADS_SELECT_PREVIEW).in('assigned_broker_id', uniqWithCase).limit(10),
+      supabase.from('leads').select('*', { count: 'exact', head: true }).in('assigned_broker_id', uniqWithCase),
+    ]);
+
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       leads = leadsRes.data as LeadRow[];
     }
-
     totalAssignedCount = typeof countRes.count === 'number' ? countRes.count : 0;
 
-    // Fallback: if no leads by Clerk ID, fetch by name/slug/email (legacy imports) and backfill
-    const forFallback = user ?? (clerkUser ? { first_name: clerkUser.firstName, last_name: clerkUser.lastName, email: clerkUser.emailAddresses?.[0]?.emailAddress } : null);
-    if (leads.length === 0 && forFallback) {
-      const fullName = [forFallback.first_name, forFallback.last_name].filter(Boolean).join(' ').trim();
-      const slug = getAgentSlugByEmail(forFallback.email ?? undefined);
-      const possibleIds: string[] = [userId];
-      if (forFallback.email) possibleIds.push(String(forFallback.email).trim());
-      if (fullName) possibleIds.push(fullName);
-      if (slug) possibleIds.push(slug);
-      const uniq = [...new Set(possibleIds)];
-      // Include lowercase variants so we match regardless of casing in DB (e.g. "NATE BRANTLEY", "nate")
-      const uniqWithCase = [...new Set([...uniq, ...uniq.map((s) => s.toLowerCase())])];
-
-      const admin = supabaseAdmin();
-      const { data: fallbackLeads, error: fallbackErr } = await admin
-        .from('leads')
-        .select(LEADS_SELECT_PREVIEW)
-        .in('assigned_broker_id', uniqWithCase)
-        .limit(10);
-
-      if (fallbackErr) {
-        console.warn('Agent dashboard fallback query failed', { possibleIdsCount: uniqWithCase.length, error: fallbackErr.message });
-      } else if (Array.isArray(fallbackLeads) && fallbackLeads.length > 0) {
-        leads = fallbackLeads as LeadRow[];
-        const { count: fallbackCount } = await admin
-          .from('leads')
-          .select('*', { count: 'exact', head: true })
-          .in('assigned_broker_id', uniqWithCase);
-        totalAssignedCount = typeof fallbackCount === 'number' ? fallbackCount : leads.length;
-        // Backfill so next load uses Clerk ID
-        const idsToUpdate = (fallbackLeads as LeadRow[]).filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
-        if (idsToUpdate.length > 0) {
-          await admin.from('leads').update({ assigned_broker_id: userId }).in('id', idsToUpdate);
-        }
-      } else {
-        console.info('Agent dashboard: no leads by Clerk ID or fallback (name/email/slug). Check leads.assigned_broker_id in Supabase.', { possibleIdsCount: uniqWithCase.length });
-      }
+    const canonicalBrokerId = (user?.slug?.trim()) ? user.slug!.trim() : (agentSlug ?? userId);
+    const idsToNormalize = leads.filter((l) => l.assigned_broker_id !== canonicalBrokerId).map((l) => l.id);
+    if (idsToNormalize.length > 0) {
+      await supabaseAdmin().from('leads').update({ assigned_broker_id: canonicalBrokerId }).in('id', idsToNormalize);
     }
 
     // Saved searches: leads no longer have clerk_id; skip fetching by lead client

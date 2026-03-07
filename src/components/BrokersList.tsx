@@ -85,14 +85,16 @@ function filterByLanguage(agents: Agent[], language: string): Agent[] {
   );
 }
 
+const AGENTS_BASE = '/agents';
+
 export interface BrokersListProps {
   agents: Agent[];
-  /** When set, agent links use this path (e.g. "/agents") instead of agent.url (e.g. "/brokers/slug"). */
+  /** Base path for agent profile links. Defaults to /agents so all broker links are consistent. */
   basePath?: string;
 }
 
-export function BrokersList({ agents, basePath }: BrokersListProps) {
-  const agentHref = (agent: Agent) => (basePath ? `${basePath}/${agent.slug}` : agent.url);
+export function BrokersList({ agents, basePath = AGENTS_BASE }: BrokersListProps) {
+  const agentHref = (agent: Agent) => `${basePath}/${encodeURIComponent(agent.slug)}`;
   const searchParams = useSearchParams();
   const cities = useMemo(() => getBrokerCities(), []);
   const languages = useMemo(() => getBrokerLanguages(), []);
