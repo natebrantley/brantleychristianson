@@ -93,8 +93,8 @@ export default async function OwnerLeadDetailPage({
         imageSrc={`${assetPaths.stock}/table.jpeg`}
         imageAlt="Client detail"
       />
-      <div className="section">
-        <div className="container stack--lg">
+      <div className="section owner-dashboard__section">
+        <div className="container owner-dashboard__container stack--lg">
           <LeadContactForm lead={lead} backHref="/owners/dashboard/leads" />
         </div>
       </div>

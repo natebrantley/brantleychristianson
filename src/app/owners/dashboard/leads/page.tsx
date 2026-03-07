@@ -68,7 +68,7 @@ function getLeadInitials(lead: LeadRow): string {
 export default async function OwnerLeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; q?: string; sort?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; sort?: string; scope?: string }>;
 }) {
   const { userId } = await auth();
   if (!userId) redirect('/sign-in');
@@ -77,12 +77,13 @@ export default async function OwnerLeadsPage({
   const page = Math.max(1, parseInt(params.page ?? '1', 10) || 1);
   const q = (params.q ?? '').trim().slice(0, 100);
   const sortKey = params.sort ?? 'first_name-asc';
+  const scope = (params.scope === 'mine' ? 'mine' : 'all') as 'all' | 'mine';
   const sortConfig = SORT_OPTIONS.find((o) => o.value === sortKey) ?? SORT_OPTIONS[0];
 
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  let user: { role?: string | null } | null = null;
+  let user: { role?: string | null; slug?: string | null } | null = null;
   let leads: LeadRow[] = [];
   let totalCount = 0;
 
@@ -100,12 +101,17 @@ export default async function OwnerLeadsPage({
 
     const userRes = await supabase
       .from('users')
-      .select('role')
+      .select('role, slug')
       .eq('clerk_id', userId)
       .maybeSingle();
     user = userRes.data ?? null;
 
     let query = supabase.from('leads').select(LEADS_SELECT, { count: 'exact' });
+    if (scope === 'mine') {
+      const brokerIds = [userId];
+      if (user?.slug) brokerIds.push(user.slug);
+      query = query.in('assigned_broker_id', brokerIds);
+    }
     if (q) {
       const pattern = `%${escapeIlike(q)}%`;
       query = query.or(
@@ -150,16 +156,18 @@ export default async function OwnerLeadsPage({
   const startRow = totalCount === 0 ? 0 : from + 1;
   const endRow = Math.min(from + PAGE_SIZE, totalCount);
 
-  const filterParams = { q, sort: sortKey };
+  const filterParams = { q, sort: sortKey, scope };
 
-  function buildUrl(updates: Partial<{ page: number; q: string; sort: string }>) {
+  function buildUrl(updates: Partial<{ page: number; q: string; sort: string; scope: string }>) {
     const sp = new URLSearchParams();
     const pageVal = updates.page != null ? updates.page : page;
     const qVal = updates.q !== undefined ? updates.q : filterParams.q;
     const sortVal = updates.sort !== undefined ? updates.sort : filterParams.sort;
+    const scopeVal = updates.scope !== undefined ? updates.scope : filterParams.scope;
     if (pageVal > 1) sp.set('page', String(pageVal));
     if (qVal) sp.set('q', qVal);
     if (sortVal !== 'first_name-asc') sp.set('sort', sortVal);
+    if (scopeVal !== 'all') sp.set('scope', scopeVal);
     const qs = sp.toString();
     return qs ? `${OWNER_LEADS_BASE}?${qs}` : OWNER_LEADS_BASE;
   }
@@ -177,22 +185,43 @@ export default async function OwnerLeadsPage({
   }
 
   return (
-    <main className="dashboard-page leads-page owner-dashboard" aria-label="Leads – all leads">
+    <main className="dashboard-page leads-page owner-dashboard owner-dashboard--crm" aria-label="Leads – CRM">
       <Hero
         variant="short"
         title="Leads"
-        lead="All leads across the team. Search, sort, and manage any lead."
+        lead={scope === 'mine' ? 'Leads assigned to you. Switch to all leads below.' : 'All leads across the team. Toggle to see only yours.'}
         imageSrc={`${assetPaths.stock}/table.jpeg`}
         imageAlt="Leads – CRM"
       />
-      <div className="section">
-        <div className="container stack--lg">
+      <div className="section owner-dashboard__section">
+        <div className="container owner-dashboard__container stack--lg">
           <div className="leads-toolbar" id="leads-toolbar" role="search" aria-label="Leads search and filters">
             <Link href="/owners/dashboard" className="leads-toolbar__back">
               ← Back to dashboard
             </Link>
+            <div className="owner-leads-scope">
+              <span className="owner-leads-scope__label">View:</span>
+              <div className="owner-leads-scope__toggle" role="group" aria-label="Lead scope">
+                <Link
+                  href={buildUrl({ page: 1, scope: 'mine' })}
+                  className={`owner-leads-scope__btn ${scope === 'mine' ? 'owner-leads-scope__btn--active' : ''}`}
+                  aria-pressed={scope === 'mine'}
+                >
+                  My leads
+                </Link>
+                <Link
+                  href={buildUrl({ page: 1, scope: 'all' })}
+                  className={`owner-leads-scope__btn ${scope === 'all' ? 'owner-leads-scope__btn--active' : ''}`}
+                  aria-pressed={scope === 'all'}
+                >
+                  All leads
+                </Link>
+              </div>
+            </div>
             <div className="leads-toolbar__title-row">
-              <h1 className="leads-toolbar__title">All leads</h1>
+              <h1 className="leads-toolbar__title">
+                {scope === 'mine' ? 'My leads' : 'All leads'}
+              </h1>
               <span className="leads-toolbar__count">
                 {totalCount.toLocaleString()} lead{totalCount !== 1 ? 's' : ''}
                 {q ? (
@@ -203,6 +232,7 @@ export default async function OwnerLeadsPage({
             <div className="leads-filters">
               <form method="get" action={OWNER_LEADS_BASE} className="leads-search-form" aria-label="Search leads">
                 <input type="hidden" name="sort" value={sortKey} />
+                {scope !== 'all' && <input type="hidden" name="scope" value={scope} />}
                 <label htmlFor="leads-search-q" className="sr-only">Search by name or email</label>
                 <input
                   id="leads-search-q"
@@ -218,6 +248,7 @@ export default async function OwnerLeadsPage({
               <div className="leads-filters-group" role="group" aria-label="Sort leads">
                 <LeadsSortForm
                   basePath={OWNER_LEADS_BASE}
+                  currentScope={scope !== 'all' ? scope : undefined}
                   options={SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                   currentSort={sortKey}
                   currentQ={q}
@@ -398,7 +429,9 @@ export default async function OwnerLeadsPage({
               <p>
                 {q
                   ? `No leads match "${q}". Try a different search or clear the search.`
-                  : 'No leads yet.'}
+                  : scope === 'mine'
+                    ? 'No leads assigned to you yet.'
+                    : 'No leads yet.'}
               </p>
               <Link href={q ? buildUrl({ page: 1, q: '' }) : '/owners/dashboard'} className="button button--outline" style={{ marginTop: '0.5rem' }}>
                 {q ? 'Clear search' : 'Back to dashboard'}
