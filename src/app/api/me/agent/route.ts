@@ -41,7 +41,7 @@ export async function PATCH(request: NextRequest) {
     .from('users')
     .select('clerk_id')
     .eq('email', agent.email)
-    .in('role', ['agent', 'broker'])
+    .in('role', ['agent', 'broker', 'owner'])
     .maybeSingle();
   const valueToStore = (brokerUser?.clerk_id as string) ?? slug;
 

@@ -4,6 +4,9 @@ import { notFound } from 'next/navigation';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
+import { MarketLayout } from '@/components/markets/MarketLayout';
+import { ListingsCta } from '@/components/markets/ListingsCta';
+import { MarketStats } from '@/components/markets/MarketStats';
 import { PortlandMarketHighlights } from '@/components/portland/PortlandMarketHighlights';
 import { PortlandFinancingBreakdown } from '@/components/portland/PortlandFinancingBreakdown';
 import { PortlandNeighborhoodSpotlight } from '@/components/portland/PortlandNeighborhoodSpotlight';
@@ -12,6 +15,8 @@ import {
   getAllCityPaths,
   getOtherCitiesInCounty,
 } from '@/data/markets';
+import { getMarketStatsForCity } from '@/lib/fetch-market-stats';
+import { getWhatToKnow } from '@/data/market-copy';
 import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
@@ -59,6 +64,20 @@ export default async function CityPage({ params }: PageProps) {
   const isPortland = state === 'oregon' && county === 'multnomah' && city === 'portland';
   const canonicalUrl = `https://brantleychristianson.com/markets/${state}/${county}/${city}`;
 
+  const marketStats =
+    !isPortland ? await getMarketStatsForCity(cityData.name) : null;
+
+  const breadcrumb = (
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <ol className="breadcrumb-list">
+        <li><Link href="/markets">Markets</Link></li>
+        <li><Link href={stateHref}>{stateMarket.name}</Link></li>
+        <li><Link href={countyHref}>{countyData.name}</Link></li>
+        <li aria-current="page">{cityData.name}</li>
+      </ol>
+    </nav>
+  );
+
   const breadcrumbLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -91,7 +110,25 @@ export default async function CityPage({ params }: PageProps) {
   };
 
   return (
-    <main className="city-page">
+    <MarketLayout
+      breadcrumb={breadcrumb}
+      ctaStrip={
+        <div className="stack--md text-center">
+          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
+            Ready to find your place in {cityData.name}?
+          </h2>
+          <p className="section-lead mx-auto" style={{ marginBottom: '1rem', maxWidth: '36ch' }}>
+            Connect with a BCRE broker or browse active listings in {cityData.name}.
+          </p>
+          <div className="market-layout-cta-actions">
+            <Button href="/contact" variant="white">
+              Get in touch
+            </Button>
+            <ListingsCta areaName={cityData.name} city={cityData.name} variant="white" />
+          </div>
+        </div>
+      }
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
@@ -114,6 +151,7 @@ export default async function CityPage({ params }: PageProps) {
         <Button href="/contact" variant="white">
           Get in touch
         </Button>
+        <ListingsCta areaName={cityData.name} city={cityData.name} variant="white" />
       </Hero>
 
       {isPortland && (
@@ -122,25 +160,14 @@ export default async function CityPage({ params }: PageProps) {
         </>
       )}
 
-      {/* Breadcrumb */}
-      <section className="section city-page-breadcrumb" aria-label="Breadcrumb">
-        <div className="container">
-          <nav className="breadcrumb" aria-label="Breadcrumb">
-            <ol className="breadcrumb-list">
-              <li>
-                <Link href="/markets">Markets</Link>
-              </li>
-              <li>
-                <Link href={stateHref}>{stateMarket.name}</Link>
-              </li>
-              <li>
-                <Link href={countyHref}>{countyData.name}</Link>
-              </li>
-              <li aria-current="page">{cityData.name}</li>
-            </ol>
-          </nav>
-        </div>
-      </section>
+      {marketStats != null && (
+        <MarketStats
+          stats={marketStats}
+          sourceLabel="RMLS"
+          asOf="Active listings"
+          headingId="city-market-stats-heading"
+        />
+      )}
 
       {/* About this city & county */}
       <section className="section" aria-labelledby="city-about-heading">
@@ -157,6 +184,9 @@ export default async function CityPage({ params }: PageProps) {
                 </>
               )}
               {countyData.description}
+              {getWhatToKnow(cityData.slug) && (
+                <> {getWhatToKnow(cityData.slug)}</>
+              )}
             </p>
           </header>
 
@@ -176,6 +206,7 @@ export default async function CityPage({ params }: PageProps) {
             <Button href="/contact" variant="primary">
               Connect with a broker in {cityData.name}
             </Button>
+            <ListingsCta areaName={cityData.name} city={cityData.name} variant="outline" />
             <p>
               <Link href={countyHref} className="button button--text">
                 View all cities in {countyData.name}
@@ -246,22 +277,6 @@ export default async function CityPage({ params }: PageProps) {
           </div>
         </section>
       )}
-
-      {/* CTA */}
-      <section className="section section--cta" aria-label="Get in touch">
-        <div className="container text-center stack--md">
-          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
-            Ready to find your place in {cityData.name}?
-          </h2>
-          <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Connect with a BCRE broker. We serve {countyData.name} and the
-            greater {stateMarket.name} market.
-          </p>
-          <Button href="/contact" variant="white">
-            Get in touch
-          </Button>
-        </div>
-      </section>
-    </main>
+    </MarketLayout>
   );
 }

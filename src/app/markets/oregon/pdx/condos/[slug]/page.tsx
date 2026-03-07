@@ -6,6 +6,7 @@ import { CondoMapSection } from '@/components/CondoMapSection';
 import { WalkScoreSection } from '@/components/WalkScoreSection';
 import { ConsultationForm } from '@/components/ConsultationForm';
 import { CondoImageWithFallback } from '@/components/CondoImageWithFallback';
+import { ListingsCta } from '@/components/markets/ListingsCta';
 import { RMLSDisclaimer } from '@/components/rmls/RMLSDisclaimer';
 import { CONDO_FALLBACK_IMAGE } from '@/config/theme';
 import { SITE_NAME, defaultOgImage } from '@/config/site';
@@ -238,6 +239,7 @@ export default async function CondoBuildingPage({ params }: PageProps) {
           <Button href="#request-assistance" variant="white">
             Request assistance
           </Button>
+          <ListingsCta areaName="Portland" city="Portland" variant="white" />
           <Button href={guideHref} variant="white">
             Back to condo guide
           </Button>
@@ -581,11 +583,14 @@ export default async function CondoBuildingPage({ params }: PageProps) {
             Interested in {condo.name}?
           </h2>
           <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Our brokers know Portland condos. Request assistance above or get in touch for a conversation.
+            Our brokers know Portland condos. Request assistance above, browse active listings, or get in touch.
           </p>
-          <Button href="#request-assistance" variant="white">
-            Request assistance
-          </Button>
+          <div className="market-layout-cta-actions" style={{ justifyContent: 'center' }}>
+            <Button href="#request-assistance" variant="white">
+              Request assistance
+            </Button>
+            <ListingsCta areaName="Portland" city="Portland" variant="white" />
+          </div>
         </div>
       </section>
 

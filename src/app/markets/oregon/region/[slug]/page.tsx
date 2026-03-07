@@ -4,12 +4,13 @@ import { notFound } from 'next/navigation';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
+import { MarketLayout } from '@/components/markets/MarketLayout';
+import { ListingsCta } from '@/components/markets/ListingsCta';
 import {
   getRegionBySlug,
   getCountiesForRegion,
   getAllOregonRegionSlugs,
 } from '@/data/oregon-regions';
-import { oregonMarket } from '@/data/markets';
 import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
@@ -50,8 +51,36 @@ export default async function OregonRegionPage({ params }: PageProps) {
 
   const oregonHref = '/markets/oregon';
 
+  const breadcrumb = (
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <ol className="breadcrumb-list">
+        <li><Link href="/markets">Markets</Link></li>
+        <li><Link href={oregonHref}>Oregon</Link></li>
+        <li aria-current="page">{region.name}</li>
+      </ol>
+    </nav>
+  );
+
   return (
-    <main>
+    <MarketLayout
+      breadcrumb={breadcrumb}
+      ctaStrip={
+        <div className="stack--md text-center">
+          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
+            Ready to find your place in {region.name}?
+          </h2>
+          <p className="section-lead mx-auto" style={{ marginBottom: '1rem', maxWidth: '36ch' }}>
+            Connect with a BCRE broker or browse active listings in this region.
+          </p>
+          <div className="market-layout-cta-actions">
+            <Button href="/contact" variant="white">
+              Get in touch
+            </Button>
+            <ListingsCta areaName={region.name} variant="white" />
+          </div>
+        </div>
+      }
+    >
       <Hero
         title={region.name}
         lead={region.description}
@@ -68,15 +97,19 @@ export default async function OregonRegionPage({ params }: PageProps) {
         </Button>
       </Hero>
 
+      <section className="section" aria-labelledby="about-region-heading">
+        <div className="container container-narrow">
+          <h2 id="about-region-heading" className="section-title text-center">
+            About {region.name}
+          </h2>
+          <p className="section-lead text-center">
+            We serve {counties.length} {counties.length === 1 ? 'county' : 'counties'} across {region.name}. Click a county below to see its cities and connect with a broker who knows the area.
+          </p>
+        </div>
+      </section>
+
       <section className="section" aria-labelledby="counties-heading">
         <div className="container stack--xl">
-          <nav className="breadcrumb" aria-label="Breadcrumb">
-            <ol className="breadcrumb-list">
-              <li><Link href="/markets">Markets</Link></li>
-              <li><Link href={oregonHref}>Oregon</Link></li>
-              <li aria-current="page">{region.name}</li>
-            </ol>
-          </nav>
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Counties in this region</p>
             <h2 id="counties-heading" className="section-title">
@@ -116,20 +149,6 @@ export default async function OregonRegionPage({ params }: PageProps) {
           </RevealSection>
         </div>
       </section>
-
-      <section className="section section--cta" aria-label="Get in touch">
-        <div className="container text-center stack--md">
-          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
-            Ready to find your place in {region.name}?
-          </h2>
-          <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Connect with a BCRE broker in your county.
-          </p>
-          <Button href="/contact" variant="white">
-            Get in touch
-          </Button>
-        </div>
-      </section>
-    </main>
+    </MarketLayout>
   );
 }

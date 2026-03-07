@@ -3,10 +3,19 @@ import Image from 'next/image';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
+import { MarketLayout } from '@/components/markets/MarketLayout';
+import { ListingsCta } from '@/components/markets/ListingsCta';
 import { oregonMarket } from '@/data/markets';
 import { oregonRegions } from '@/data/oregon-regions';
 import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
+
+const KEY_CITIES = [
+  { name: 'Portland', href: '/markets/oregon/multnomah/portland', cityParam: 'Portland' },
+  { name: 'Eugene', href: '/markets/oregon/lane/eugene', cityParam: 'Eugene' },
+  { name: 'Bend', href: '/markets/oregon/deschutes/bend', cityParam: 'Bend' },
+  { name: 'Salem', href: '/markets/oregon/marion/salem', cityParam: 'Salem' },
+] as const;
 
 const title = 'Oregon Real Estate';
 const description =
@@ -30,8 +39,35 @@ export const metadata: Metadata = {
 };
 
 export default function OregonMarketsPage() {
+  const breadcrumb = (
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <ol className="breadcrumb-list">
+        <li><Link href="/markets">Markets</Link></li>
+        <li aria-current="page">Oregon</li>
+      </ol>
+    </nav>
+  );
+
   return (
-    <main>
+    <MarketLayout
+      breadcrumb={breadcrumb}
+      ctaStrip={
+        <div className="stack--md text-center">
+          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
+            Ready to find your place in Oregon?
+          </h2>
+          <p className="section-lead mx-auto" style={{ marginBottom: '1rem', maxWidth: '36ch' }}>
+            Connect with a BCRE broker in your region or browse active listings.
+          </p>
+          <div className="market-layout-cta-actions">
+            <Button href="/contact" variant="white">
+              Get in touch
+            </Button>
+            <ListingsCta areaName="Oregon" variant="white" />
+          </div>
+        </div>
+      }
+    >
       <Hero
         title="Oregon"
         lead="From Portland metro to the coast, valley, and high desert. Explore by region and find your community."
@@ -48,14 +84,19 @@ export default function OregonMarketsPage() {
         </Button>
       </Hero>
 
+      <section className="section" aria-labelledby="about-oregon-heading">
+        <div className="container container-narrow">
+          <h2 id="about-oregon-heading" className="section-title text-center">
+            About Oregon markets
+          </h2>
+          <p className="section-lead text-center">
+            We serve Portland metro, the Willamette Valley, the coast, Central Oregon, and Eastern Oregon. From urban condos to rural acreage, our brokers help buyers and sellers navigate each region with local knowledge and a strategic approach.
+          </p>
+        </div>
+      </section>
+
       <section className="section" aria-labelledby="regions-heading">
         <div className="container stack--xl">
-          <nav className="breadcrumb" aria-label="Breadcrumb">
-            <ol className="breadcrumb-list">
-              <li><Link href="/markets">Markets</Link></li>
-              <li aria-current="page">Oregon</li>
-            </ol>
-          </nav>
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Explore by region</p>
             <h2 id="regions-heading" className="section-title">
@@ -96,38 +137,45 @@ export default function OregonMarketsPage() {
         </div>
       </section>
 
+      <section className="section" aria-labelledby="key-cities-heading">
+        <div className="container stack--lg">
+          <h2 id="key-cities-heading" className="section-title text-center">
+            Key cities
+          </h2>
+          <ul className="popular-markets-list" role="list" style={{ maxWidth: '48rem', margin: '0 auto' }}>
+            {KEY_CITIES.map((c) => (
+              <li key={c.name} className="popular-markets-list__item">
+                <Link href={c.href} className="popular-markets-list__link">
+                  {c.name}
+                </Link>
+                <ListingsCta areaName={c.name} city={c.cityParam} variant="outline" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       <section className="section section--alt" aria-labelledby="condo-guide-heading">
         <div className="container stack--xl">
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Resource</p>
             <h2 id="condo-guide-heading" className="section-title">
-              2026 Portland Condo Guide
+              Market guides
             </h2>
             <p className="section-lead mx-auto">
-              Explore our data-driven guide to Portland condominium buildings.
+              Data-driven and regional guides to help you explore Oregon markets.
             </p>
           </header>
-          <p className="text-center">
+          <div className="text-center stack--md" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             <Button href="/resources/portland-condo-guide" variant="outline">
               2026 Portland Condo Guide
             </Button>
-          </p>
+            <Button href="/resources/oregon-coast-guide" variant="outline">
+              Oregon Coast Guide
+            </Button>
+          </div>
         </div>
       </section>
-
-      <section className="section section--cta" aria-label="Get in touch">
-        <div className="container text-center stack--md">
-          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
-            Ready to find your place in Oregon?
-          </h2>
-          <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Connect with a BCRE broker in your region.
-          </p>
-          <Button href="/contact" variant="white">
-            Get in touch
-          </Button>
-        </div>
-      </section>
-    </main>
+    </MarketLayout>
   );
 }

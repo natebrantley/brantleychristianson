@@ -1,10 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PropertyCard, type PropertyCardListing } from '@/components/rmls/PropertyCard';
 import { RMLSDisclaimer } from '@/components/rmls/RMLSDisclaimer';
 import { SearchFilters } from './SearchFilters';
+
+const SEARCH_SORT_OPTIONS = [
+  'listDate-desc',
+  'listPrice-asc',
+  'listPrice-desc',
+  'sqft-desc',
+] as const;
 
 interface SearchState {
   pageNum: number;
@@ -23,6 +31,24 @@ const defaultState: SearchState = {
   city: '',
   sort: 'listDate-desc',
 };
+
+function getInitialStateFromSearchParams(searchParams: URLSearchParams | null): SearchState {
+  if (!searchParams) return defaultState;
+  const pageNum = Math.min(1000, Math.max(1, parseInt(searchParams.get('pageNum') ?? '1', 10) || 1));
+  const resultsPerPage = Math.min(100, Math.max(1, parseInt(searchParams.get('resultsPerPage') ?? '20', 10) || 20));
+  const sort = searchParams.get('sort')?.trim();
+  return {
+    pageNum,
+    resultsPerPage,
+    minPrice: searchParams.get('minPrice')?.trim() ?? '',
+    maxPrice: searchParams.get('maxPrice')?.trim() ?? '',
+    city: searchParams.get('city')?.trim() ?? '',
+    sort:
+      sort && SEARCH_SORT_OPTIONS.includes(sort as (typeof SEARCH_SORT_OPTIONS)[number])
+        ? sort
+        : defaultState.sort,
+  };
+}
 
 function mapApiListingToCard(item: Record<string, unknown>): PropertyCardListing | null {
   const mlsId = item.mlsNumber ?? item.mls_listing_id;
@@ -69,7 +95,10 @@ function mapApiListingToCard(item: Record<string, unknown>): PropertyCardListing
 }
 
 export function ListingsSearchClient() {
-  const [state, setState] = useState<SearchState>(defaultState);
+  const searchParams = useSearchParams();
+  const [state, setState] = useState<SearchState>(() =>
+    getInitialStateFromSearchParams(searchParams)
+  );
   const [listings, setListings] = useState<PropertyCardListing[]>([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);

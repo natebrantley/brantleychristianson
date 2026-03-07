@@ -1,5 +1,79 @@
 /* Markets: breadcrumb, county city grid, city cards */
 
+/* Market layout wrapper (optional breadcrumb + content + CTA strip) */
+.market-layout__breadcrumb {
+  padding-top: var(--space-lg);
+  padding-bottom: 0;
+}
+.market-layout__breadcrumb .container {
+  padding-bottom: var(--space-md);
+}
+.market-layout__cta-strip {
+  padding: var(--space-xxl) 0;
+  text-align: center;
+  background: var(--color-primary);
+  color: var(--color-light);
+}
+.market-layout__cta-strip .section-title,
+.market-layout__cta-strip .section-lead {
+  color: inherit;
+}
+.market-layout__cta-strip .section-lead {
+  opacity: 0.95;
+}
+.market-layout-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+/* Popular markets quick links (markets index) */
+.popular-markets-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  max-width: 56rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (min-width: 640px) {
+  .popular-markets-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 900px) {
+  .popular-markets-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.popular-markets-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--theme-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+.popular-markets-list__link {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.popular-markets-list__link:hover {
+  color: var(--color-accent);
+}
+
 .breadcrumb {
   margin-bottom: var(--space-lg);
 }

@@ -4,11 +4,14 @@ import { notFound } from 'next/navigation';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
+import { MarketLayout } from '@/components/markets/MarketLayout';
+import { ListingsCta } from '@/components/markets/ListingsCta';
 import {
   getCountyBySlug,
   getStateBySlug,
   getAllCountyPaths,
 } from '@/data/markets';
+import { getWhatToKnow } from '@/data/market-copy';
 import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
 
@@ -76,7 +79,33 @@ export default async function CountyPage({ params }: PageProps) {
   };
 
   return (
-    <main>
+    <MarketLayout
+      breadcrumb={
+        <nav className="breadcrumb" aria-label="Breadcrumb">
+          <ol className="breadcrumb-list">
+            <li><Link href="/markets">Markets</Link></li>
+            <li><Link href={stateHref}>{stateMarket.name}</Link></li>
+            <li aria-current="page">{countyData.name}</li>
+          </ol>
+        </nav>
+      }
+      ctaStrip={
+        <div className="stack--md text-center">
+          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
+            Ready to find your place?
+          </h2>
+          <p className="section-lead mx-auto" style={{ marginBottom: '1rem', maxWidth: '36ch' }}>
+            Connect with a BCRE broker in {countyData.name} or browse active listings.
+          </p>
+          <div className="market-layout-cta-actions">
+            <Button href="/contact" variant="white">
+              Get in touch
+            </Button>
+            <ListingsCta areaName={countyData.name} variant="white" />
+          </div>
+        </div>
+      }
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
@@ -97,15 +126,24 @@ export default async function CountyPage({ params }: PageProps) {
         </Button>
       </Hero>
 
+      <section className="section" aria-labelledby="about-county-heading">
+        <div className="container container-narrow">
+          <h2 id="about-county-heading" className="section-title text-center">
+            About {countyData.name}
+          </h2>
+          <p className="section-lead text-center">
+            {countyData.description} We serve {cities.length} {cities.length === 1 ? 'city' : 'cities'} here—click any city below to learn more and connect with a broker who knows the area.
+          </p>
+          {getWhatToKnow(countyData.slug) && (
+            <p className="section-lead text-center" style={{ marginTop: 'var(--space-md)' }}>
+              {getWhatToKnow(countyData.slug)}
+            </p>
+          )}
+        </div>
+      </section>
+
       <section className="section" aria-labelledby="cities-heading">
         <div className="container stack--xl">
-          <nav className="breadcrumb" aria-label="Breadcrumb">
-            <ol className="breadcrumb-list">
-              <li><Link href="/markets">Markets</Link></li>
-              <li><Link href={stateHref}>{stateMarket.name}</Link></li>
-              <li aria-current="page">{countyData.name}</li>
-            </ol>
-          </nav>
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Cities & communities</p>
             <h2 id="cities-heading" className="section-title">
@@ -147,20 +185,6 @@ export default async function CountyPage({ params }: PageProps) {
           </RevealSection>
         </div>
       </section>
-
-      <section className="section section--cta" aria-label="Get in touch">
-        <div className="container text-center stack--md">
-          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
-            Ready to find your place?
-          </h2>
-          <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Connect with a BCRE broker in {countyData.name}.
-          </p>
-          <Button href="/contact" variant="white">
-            Get in touch
-          </Button>
-        </div>
-      </section>
-    </main>
+    </MarketLayout>
   );
 }

@@ -9,6 +9,7 @@ export function LeadsSortForm({
   currentVerified,
   currentSource,
   currentFavoriteCity,
+  basePath = '/agents/dashboard/leads',
 }: {
   options: Option[];
   currentSort: string;
@@ -16,6 +17,8 @@ export function LeadsSortForm({
   currentVerified?: boolean;
   currentSource?: string;
   currentFavoriteCity?: string;
+  /** Base path for form action and redirect (e.g. /owners/dashboard/leads for owner dashboard) */
+  basePath?: string;
 }) {
   function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const params = new URLSearchParams();
@@ -24,11 +27,11 @@ export function LeadsSortForm({
     if (currentVerified) params.set('verified', '1');
     if (currentSource) params.set('source', currentSource);
     if (currentFavoriteCity) params.set('favorite_city', currentFavoriteCity);
-    window.location.href = `/agents/dashboard/leads?${params.toString()}`;
+    window.location.href = `${basePath}?${params.toString()}`;
   }
 
   return (
-    <form method="get" action="/agents/dashboard/leads" className="leads-sort-form" role="group" aria-label="Sort leads">
+    <form method="get" action={basePath} className="leads-sort-form" role="group" aria-label="Sort leads">
       <input type="hidden" name="q" value={currentQ} readOnly />
       {currentVerified && <input type="hidden" name="verified" value="1" readOnly />}
       <input type="hidden" name="source" value={currentSource ?? ''} readOnly />

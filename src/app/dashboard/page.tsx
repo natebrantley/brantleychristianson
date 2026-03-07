@@ -2,12 +2,13 @@ import { redirect } from 'next/navigation';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
-import { isBrokerRole, isLenderRole } from '@/lib/roles';
+import { isBrokerRole, isLenderRole, isOwnerRole } from '@/lib/roles';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * /dashboard redirects to the correct dashboard based on role.
+ * Owner dashboard: /owners/dashboard (full access to all leads).
  * Agent/broker dashboard: /agents/dashboard (pipeline, leads, clients, marketing).
  * Lender dashboard: /lenders/dashboard (lender-specific tools and resources).
  * Client dashboard: /clients/dashboard (saved homes, searches, next steps).
@@ -47,6 +48,9 @@ export default async function DashboardRouterPage() {
       roleFromSupabase = user?.role;
     }
 
+    if (isOwnerRole(roleFromSupabase)) {
+      redirect('/owners/dashboard');
+    }
     if (isBrokerRole(roleFromSupabase)) {
       redirect('/agents/dashboard');
     }
@@ -54,6 +58,9 @@ export default async function DashboardRouterPage() {
       redirect('/lenders/dashboard');
     }
   } catch (err) {
+    if (err != null && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'NEXT_REDIRECT') {
+      throw err;
+    }
     console.error('Unexpected error during dashboard routing:', { userId, ...formatSupabaseError(err) });
   }
 
@@ -64,6 +71,9 @@ export default async function DashboardRouterPage() {
     roleFromClerk = typeof clerkUser?.publicMetadata?.role === 'string' ? clerkUser.publicMetadata.role : undefined;
   } catch (clerkErr) {
     console.warn('Could not fetch Clerk user for role fallback:', (clerkErr as Error)?.message ?? clerkErr);
+  }
+  if (typeof roleFromClerk === 'string' && isOwnerRole(roleFromClerk)) {
+    redirect('/owners/dashboard');
   }
   if (typeof roleFromClerk === 'string' && isBrokerRole(roleFromClerk)) {
     redirect('/agents/dashboard');

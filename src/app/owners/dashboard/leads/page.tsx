@@ -1,13 +1,11 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { createClerkSupabaseClient, formatSupabaseError, supabaseAdmin } from '@/lib/supabase';
+import { createClerkSupabaseClient, formatSupabaseError } from '@/lib/supabase';
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
-import { isBrokerRole, isLenderRole } from '@/lib/roles';
-import { getAgentSlugByEmail } from '@/data/agents';
-import { deriveUserSlug } from '@/lib/user-slug';
+import { isOwnerRole, isBrokerRole, isLenderRole } from '@/lib/roles';
 import { Hero } from '@/components/Hero';
-import { LeadsSortForm } from './LeadsSortForm';
+import { LeadsSortForm } from '@/app/agents/dashboard/leads/LeadsSortForm';
 import { assetPaths } from '@/config/theme';
 import { getLeadPulse, getLeadPulseLabel } from '@/lib/getLeadPulse';
 import { LEADS_SELECT } from '@/lib/leads-fields';
@@ -16,17 +14,17 @@ import type { Metadata } from 'next';
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 50;
+const OWNER_LEADS_BASE = '/owners/dashboard/leads';
 const SORT_OPTIONS = [
   { value: 'first_name-asc', label: 'Name A–Z', column: 'first_name', ascending: true },
   { value: 'first_name-desc', label: 'Name Z–A', column: 'first_name', ascending: false },
 ] as const;
 
 export const metadata: Metadata = {
-  title: 'All leads | Agent dashboard',
-  description: 'All assigned leads – CRM view. BCRE agent dashboard.',
+  title: 'All leads | Owner dashboard',
+  description: 'All leads – full CRM access. BCRE owner dashboard.',
 };
 
-type AgentUser = { first_name?: string | null; last_name?: string | null; email?: string | null; role?: string | null; slug?: string | null };
 type LeadRow = {
   id: string;
   first_name?: string | null;
@@ -42,52 +40,20 @@ type LeadRow = {
   assigned_lender_id?: string | null;
 };
 
-function formatLeadDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  } catch {
-    return iso;
-  }
-}
-
-function formatLastActive(iso: string | null | undefined): string {
-  if (!iso) return '—';
-  try {
-    const d = new Date(iso);
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  } catch {
-    return '—';
-  }
-}
-
 function truncate(str: string | null | undefined, maxLen: number): string {
   if (!str || !str.trim()) return '—';
   const t = str.trim();
   return t.length <= maxLen ? t : t.slice(0, maxLen) + '…';
 }
 
-const RECENT_DAYS = 7;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-/** Visual feedback: simplified schema has no created_at/last_login; always null. */
 function getLeadRecency(_lead: LeadRow): 'new' | 'active' | null {
   return null;
 }
 
-/** Escape for Postgres ilike: % and _ are wildcards. Comma would break .or() so strip it. */
 function escapeIlike(s: string): string {
   const noComma = s.replace(/,/g, ' ').trim();
   return noComma.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
 }
-
-const LEAD_SELECT = LEADS_SELECT;
 
 function getLeadInitials(lead: LeadRow): string {
   const first = (lead.first_name ?? '').trim().slice(0, 1).toUpperCase();
@@ -99,7 +65,7 @@ function getLeadInitials(lead: LeadRow): string {
   return '?';
 }
 
-export default async function AgentLeadsPage({
+export default async function OwnerLeadsPage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string; q?: string; sort?: string }>;
@@ -116,7 +82,7 @@ export default async function AgentLeadsPage({
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  let user: AgentUser | null = null;
+  let user: { role?: string | null } | null = null;
   let leads: LeadRow[] = [];
   let totalCount = 0;
 
@@ -132,96 +98,30 @@ export default async function AgentLeadsPage({
 
     const supabase = await createClerkSupabaseClient();
 
-    const buildLeadsQuery = (client: Awaited<ReturnType<typeof createClerkSupabaseClient>>, brokerIds: string[]) => {
-      let query = client
-        .from('leads')
-        .select(LEAD_SELECT, { count: 'exact' })
-        .in('assigned_broker_id', brokerIds);
-      if (q) {
-        const pattern = `%${escapeIlike(q)}%`;
-        query = query.or(
-          `first_name.ilike.${pattern},last_name.ilike.${pattern},email_address.ilike.${pattern}`
-        );
-      }
-      return query
-        .order(sortConfig.column, { ascending: sortConfig.ascending, nullsFirst: false })
-        .range(from, to);
-    };
-
     const userRes = await supabase
       .from('users')
-      .select('first_name, last_name, email, role, slug')
+      .select('role')
       .eq('clerk_id', userId)
       .maybeSingle();
-    if (userRes.data != null) user = userRes.data as AgentUser;
+    user = userRes.data ?? null;
 
-    const brokerIds: string[] = [userId];
-    if (user?.slug) brokerIds.push(user.slug);
-    else if (user?.first_name != null || user?.last_name != null) {
-      const derived = deriveUserSlug(user.first_name, user.last_name);
-      if (derived) brokerIds.push(derived);
+    let query = supabase.from('leads').select(LEADS_SELECT, { count: 'exact' });
+    if (q) {
+      const pattern = `%${escapeIlike(q)}%`;
+      query = query.or(
+        `first_name.ilike.${pattern},last_name.ilike.${pattern},email_address.ilike.${pattern}`
+      );
     }
-    if (clerkUser && brokerIds.length <= 1) {
-      const derived = deriveUserSlug(clerkUser.firstName, clerkUser.lastName);
-      if (derived) brokerIds.push(derived);
-    }
-    const agentSlug = getAgentSlugByEmail(user?.email ?? clerkUser?.emailAddresses?.[0]?.emailAddress ?? undefined);
-    if (agentSlug) brokerIds.push(agentSlug);
-    const uniqBrokerIds = [...new Set(brokerIds)];
+    const leadsRes = await query
+      .order(sortConfig.column, { ascending: sortConfig.ascending, nullsFirst: false })
+      .range(from, to);
 
-    const leadsRes = await buildLeadsQuery(supabase, uniqBrokerIds);
     if (!leadsRes.error && Array.isArray(leadsRes.data)) {
       leads = leadsRes.data as unknown as LeadRow[];
     }
     totalCount = typeof leadsRes.count === 'number' ? leadsRes.count : leads.length;
-
-    if (leads.length > 0) {
-      const idsToNormalize = leads.filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
-      if (idsToNormalize.length > 0) {
-        await supabaseAdmin().from('leads').update({ assigned_broker_id: userId }).in('id', idsToNormalize);
-      }
-    }
-
-    const forFallback = user ?? (clerkUser ? { first_name: clerkUser.firstName, last_name: clerkUser.lastName, email: clerkUser.emailAddresses?.[0]?.emailAddress } : null);
-    if (leads.length === 0 && totalCount === 0 && forFallback) {
-      const fullName = [forFallback.first_name, forFallback.last_name].filter(Boolean).join(' ').trim();
-      const slug = getAgentSlugByEmail(forFallback.email ?? undefined);
-      const possibleIds: string[] = [userId];
-      if (forFallback.email) possibleIds.push(String(forFallback.email).trim());
-      if (fullName) possibleIds.push(fullName);
-      if (slug) possibleIds.push(slug);
-      if (user?.slug) possibleIds.push(user.slug);
-      const derivedSlug = deriveUserSlug(forFallback.first_name, forFallback.last_name);
-      if (derivedSlug) possibleIds.push(derivedSlug);
-      const uniq = [...new Set(possibleIds)];
-      const uniqWithCase = [...new Set([...uniq, ...uniq.map((s) => s.toLowerCase())])];
-
-      const admin = supabaseAdmin();
-      let fallbackQuery = admin
-        .from('leads')
-        .select(LEAD_SELECT, { count: 'exact' })
-        .in('assigned_broker_id', uniqWithCase);
-      if (q) {
-        const pattern = `%${escapeIlike(q)}%`;
-        fallbackQuery = fallbackQuery.or(
-          `first_name.ilike.${pattern},last_name.ilike.${pattern},email_address.ilike.${pattern}`
-        );
-      }
-      const { data: fallbackLeads, count: fallbackCount } = await fallbackQuery
-        .order(sortConfig.column, { ascending: sortConfig.ascending, nullsFirst: false })
-        .range(from, to);
-
-      if (Array.isArray(fallbackLeads)) {
-        leads = fallbackLeads as unknown as LeadRow[];
-        totalCount = typeof fallbackCount === 'number' ? fallbackCount : leads.length;
-        const idsToUpdate = (fallbackLeads as unknown as LeadRow[]).filter((l) => l.assigned_broker_id !== userId).map((l) => l.id);
-        if (idsToUpdate.length > 0) {
-          await admin.from('leads').update({ assigned_broker_id: userId }).in('id', idsToUpdate);
-        }
-      }
-    }
   } catch (err) {
-    console.error('Error loading agent leads:', formatSupabaseError(err));
+    console.error('Error loading owner leads:', formatSupabaseError(err));
   }
 
   let clerkUser: Awaited<ReturnType<typeof currentUser>> = null;
@@ -231,9 +131,10 @@ export default async function AgentLeadsPage({
     // ignore
   }
   const roleFromClerk = typeof clerkUser?.publicMetadata?.role === 'string' ? clerkUser.publicMetadata.role : null;
-  const isAgent = isBrokerRole(user?.role) || isBrokerRole(roleFromClerk);
+  const isOwner = isOwnerRole(user?.role) || isOwnerRole(roleFromClerk);
 
-  if (!isAgent) {
+  if (!isOwner) {
+    if (isBrokerRole(user?.role) || isBrokerRole(roleFromClerk)) redirect('/agents/dashboard');
     if (isLenderRole(user?.role) || isLenderRole(roleFromClerk)) redirect('/lenders/dashboard');
     redirect('/clients/dashboard');
   }
@@ -252,7 +153,6 @@ export default async function AgentLeadsPage({
   const filterParams = { q, sort: sortKey };
 
   function buildUrl(updates: Partial<{ page: number; q: string; sort: string }>) {
-    const base = '/agents/dashboard/leads';
     const sp = new URLSearchParams();
     const pageVal = updates.page != null ? updates.page : page;
     const qVal = updates.q !== undefined ? updates.q : filterParams.q;
@@ -261,7 +161,7 @@ export default async function AgentLeadsPage({
     if (qVal) sp.set('q', qVal);
     if (sortVal !== 'first_name-asc') sp.set('sort', sortVal);
     const qs = sp.toString();
-    return qs ? `${base}?${qs}` : base;
+    return qs ? `${OWNER_LEADS_BASE}?${qs}` : OWNER_LEADS_BASE;
   }
 
   const paginationPages: (number | 'ellipsis')[] = [];
@@ -277,18 +177,18 @@ export default async function AgentLeadsPage({
   }
 
   return (
-    <main className="dashboard-page leads-page agent-dashboard" aria-label="Leads – all assigned leads">
+    <main className="dashboard-page leads-page owner-dashboard" aria-label="Leads – all leads">
       <Hero
         variant="short"
         title="Leads"
-        lead="Search, sort, and manage your assigned leads."
+        lead="All leads across the team. Search, sort, and manage any lead."
         imageSrc={`${assetPaths.stock}/table.jpeg`}
         imageAlt="Leads – CRM"
       />
       <div className="section">
         <div className="container stack--lg">
           <div className="leads-toolbar" id="leads-toolbar" role="search" aria-label="Leads search and filters">
-            <Link href="/agents/dashboard" className="leads-toolbar__back">
+            <Link href="/owners/dashboard" className="leads-toolbar__back">
               ← Back to dashboard
             </Link>
             <div className="leads-toolbar__title-row">
@@ -301,7 +201,7 @@ export default async function AgentLeadsPage({
               </span>
             </div>
             <div className="leads-filters">
-              <form method="get" action="/agents/dashboard/leads" className="leads-search-form" aria-label="Search leads">
+              <form method="get" action={OWNER_LEADS_BASE} className="leads-search-form" aria-label="Search leads">
                 <input type="hidden" name="sort" value={sortKey} />
                 <label htmlFor="leads-search-q" className="sr-only">Search by name or email</label>
                 <input
@@ -317,6 +217,7 @@ export default async function AgentLeadsPage({
               </form>
               <div className="leads-filters-group" role="group" aria-label="Sort leads">
                 <LeadsSortForm
+                  basePath={OWNER_LEADS_BASE}
                   options={SORT_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                   currentSort={sortKey}
                   currentQ={q}
@@ -330,7 +231,6 @@ export default async function AgentLeadsPage({
 
           {leads.length > 0 ? (
             <>
-              {/* Desktop: simple table with status feedback and clear View action */}
               <div className="leads-table-card leads-table-card--desktop">
                 <div className="leads-table-scroll">
                   <table className="leads-table">
@@ -343,7 +243,6 @@ export default async function AgentLeadsPage({
                     </thead>
                     <tbody>
                       {leads.map((lead) => {
-                        const recency = getLeadRecency(lead);
                         const pulseLevel = getLeadPulse(lead);
                         const pulseLabel = getLeadPulseLabel(pulseLevel);
                         const initials = getLeadInitials(lead);
@@ -358,7 +257,7 @@ export default async function AgentLeadsPage({
                                   aria-label={pulseLabel}
                                   title={pulseLabel}
                                 />
-                                <Link href={`/agents/dashboard/leads/${lead.id}`}>{leadDisplayName(lead)}</Link>
+                                <Link href={`${OWNER_LEADS_BASE}/${lead.id}`}>{leadDisplayName(lead)}</Link>
                               </span>
                             </td>
                             <td className="lead-contact">
@@ -377,7 +276,7 @@ export default async function AgentLeadsPage({
                               )}
                             </td>
                             <td className="lead-view">
-                              <Link href={`/agents/dashboard/leads/${lead.id}`} className="lead-view__btn">
+                              <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="lead-view__btn">
                                 View
                               </Link>
                             </td>
@@ -389,16 +288,15 @@ export default async function AgentLeadsPage({
                 </div>
               </div>
 
-              {/* Mobile: simple tappable cards with status feedback */}
               <ul className="leads-mobile-cards" aria-label="Leads list">
                 {leads.map((lead) => {
-                  const recency = getLeadRecency(lead);
                   const pulseLevel = getLeadPulse(lead);
                   const pulseLabel = getLeadPulseLabel(pulseLevel);
                   const initials = getLeadInitials(lead);
+                  const recency = getLeadRecency(lead);
                   return (
                     <li key={lead.id} className="leads-mobile-card">
-                      <Link href={`/agents/dashboard/leads/${lead.id}`} className="leads-mobile-card__link" aria-label={`View ${leadDisplayName(lead)}`}>
+                      <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__link" aria-label={`View ${leadDisplayName(lead)}`}>
                         <div className="leads-mobile-card__header">
                           <span className="lead-avatar" aria-hidden>{initials}</span>
                           <span className="leads-mobile-card__name">{leadDisplayName(lead)}</span>
@@ -415,46 +313,46 @@ export default async function AgentLeadsPage({
                           </span>
                           <span className="leads-mobile-card__chevron" aria-hidden>→</span>
                         </div>
-                      <div className="leads-mobile-card__body">
-                        {lead.email_address && (
-                          <p className="leads-mobile-card__row">
-                            <span className="leads-mobile-card__label">Email</span>
-                            <span className="leads-mobile-card__value leads-mobile-card__value--email">{lead.email_address}</span>
-                          </p>
-                        )}
-                        {lead.phone && (
-                          <p className="leads-mobile-card__row">
-                            <span className="leads-mobile-card__label">Phone</span>
-                            <span className="leads-mobile-card__value">{lead.phone}</span>
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-                    {(lead.email_address || lead.phone) && (
-                      <div className="leads-mobile-card__actions">
-                        {lead.phone && (
-                          <a href={`tel:${lead.phone.replace(/\D/g, '')}`} className="leads-mobile-card__btn leads-mobile-card__btn--call" aria-label={`Call ${lead.phone}`}>
-                            Call
-                          </a>
-                        )}
-                        {lead.email_address && (
-                          <a href={`mailto:${lead.email_address}`} className="leads-mobile-card__btn leads-mobile-card__btn--email" aria-label={`Email ${lead.email_address}`}>
-                            Email
-                          </a>
-                        )}
-                        <Link href={`/agents/dashboard/leads/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view">
-                          View profile
-                        </Link>
-                      </div>
-                    )}
-                    {!lead.email_address && !lead.phone && (
-                      <div className="leads-mobile-card__actions">
-                        <Link href={`/agents/dashboard/leads/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view leads-mobile-card__btn--view-solo">
-                          View profile
-                        </Link>
-                      </div>
-                    )}
-                  </li>
+                        <div className="leads-mobile-card__body">
+                          {lead.email_address && (
+                            <p className="leads-mobile-card__row">
+                              <span className="leads-mobile-card__label">Email</span>
+                              <span className="leads-mobile-card__value leads-mobile-card__value--email">{lead.email_address}</span>
+                            </p>
+                          )}
+                          {lead.phone && (
+                            <p className="leads-mobile-card__row">
+                              <span className="leads-mobile-card__label">Phone</span>
+                              <span className="leads-mobile-card__value">{lead.phone}</span>
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                      {(lead.email_address || lead.phone) && (
+                        <div className="leads-mobile-card__actions">
+                          {lead.phone && (
+                            <a href={`tel:${lead.phone.replace(/\D/g, '')}`} className="leads-mobile-card__btn leads-mobile-card__btn--call" aria-label={`Call ${lead.phone}`}>
+                              Call
+                            </a>
+                          )}
+                          {lead.email_address && (
+                            <a href={`mailto:${lead.email_address}`} className="leads-mobile-card__btn leads-mobile-card__btn--email" aria-label={`Email ${lead.email_address}`}>
+                              Email
+                            </a>
+                          )}
+                          <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view">
+                            View profile
+                          </Link>
+                        </div>
+                      )}
+                      {!lead.email_address && !lead.phone && (
+                        <div className="leads-mobile-card__actions">
+                          <Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="leads-mobile-card__btn leads-mobile-card__btn--view leads-mobile-card__btn--view-solo">
+                            View profile
+                          </Link>
+                        </div>
+                      )}
+                    </li>
                   );
                 })}
               </ul>
@@ -500,9 +398,9 @@ export default async function AgentLeadsPage({
               <p>
                 {q
                   ? `No leads match "${q}". Try a different search or clear the search.`
-                  : 'No leads assigned to you yet. When leads are assigned to you, they’ll appear here.'}
+                  : 'No leads yet.'}
               </p>
-              <Link href={q ? buildUrl({ page: 1, q: '' }) : '/agents/dashboard'} className="button button--outline" style={{ marginTop: '0.5rem' }}>
+              <Link href={q ? buildUrl({ page: 1, q: '' }) : '/owners/dashboard'} className="button button--outline" style={{ marginTop: '0.5rem' }}>
                 {q ? 'Clear search' : 'Back to dashboard'}
               </Link>
             </div>

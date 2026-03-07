@@ -15,13 +15,13 @@ const AGENT_EMAIL_DOMAIN = 'brantleychristianson.com';
 const SUPPORTED_EVENTS = ['user.created', 'user.updated', 'user.deleted'] as const;
 type SupportedEventType = (typeof SUPPORTED_EVENTS)[number];
 
-/** Row we write to public.users. Role is always set (agent | broker | lender | user). */
+/** Row we write to public.users. Role is always set (agent | broker | lender | user | owner). */
 interface UsersRow {
   clerk_id: string;
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  role: 'agent' | 'broker' | 'lender' | 'user';
+  role: 'agent' | 'broker' | 'lender' | 'user' | 'owner';
 }
 
 /** App-managed columns we must preserve on webhook upsert (set by client or other flows). */
@@ -78,23 +78,23 @@ function getPrimaryEmail(data: WebhookEvent['data']): string | null {
   return typeof email === 'string' && email.trim().length > 0 ? email.trim().toLowerCase() : null;
 }
 
-/** Extract dashboard role from public_metadata (agent | broker | lender); undefined = not set */
-function getRoleFromMetadata(data: WebhookEvent['data']): 'agent' | 'broker' | 'lender' | null | undefined {
+/** Extract dashboard role from public_metadata (agent | broker | lender | owner); undefined = not set */
+function getRoleFromMetadata(data: WebhookEvent['data']): 'agent' | 'broker' | 'lender' | 'owner' | null | undefined {
   if (!data || typeof data !== 'object' || !('public_metadata' in data)) return undefined;
   const meta = (data as { public_metadata?: unknown }).public_metadata;
   if (meta == null || typeof meta !== 'object' || !('role' in meta)) return undefined;
   const r = (meta as { role?: unknown }).role;
   if (typeof r !== 'string') return undefined;
   const lower = r.trim().toLowerCase();
-  if (lower === 'agent' || lower === 'broker' || lower === 'lender') return lower;
+  if (lower === 'agent' || lower === 'broker' || lower === 'lender' || lower === 'owner') return lower;
   return null;
 }
 
 /** Log role resolution for debugging (no PII). Call when processing user.created / user.updated. */
 function logRoleResolution(
   logContext: Record<string, unknown>,
-  resolvedRole: 'agent' | 'broker' | 'lender' | 'user',
-  fromMetadata: 'agent' | 'broker' | 'lender' | null | undefined
+  resolvedRole: 'agent' | 'broker' | 'lender' | 'user' | 'owner',
+  fromMetadata: 'agent' | 'broker' | 'lender' | 'owner' | null | undefined
 ): void {
   console.log('Clerk webhook: role resolved', {
     ...logContext,
@@ -122,8 +122,8 @@ function buildUsersRow(
   const isAgentDomain =
     typeof email === 'string' &&
     email.trim().toLowerCase().endsWith('@' + AGENT_EMAIL_DOMAIN);
-  const role: 'agent' | 'broker' | 'lender' | 'user' =
-    roleFromMeta === 'agent' || roleFromMeta === 'broker' || roleFromMeta === 'lender'
+  const role: 'agent' | 'broker' | 'lender' | 'user' | 'owner' =
+    roleFromMeta === 'agent' || roleFromMeta === 'broker' || roleFromMeta === 'lender' || roleFromMeta === 'owner'
       ? roleFromMeta
       : isAgentDomain
         ? 'agent'
@@ -233,7 +233,7 @@ async function handleUserUpsert(
 
   // Preserve app-managed columns: assigned_broker_id, assigned_lender_id, repliers_client_id, marketing_opt_in.
   // Do not overwrite when Clerk sends user.updated.
-  const isAgentOrLender = row.role === 'agent' || row.role === 'broker' || row.role === 'lender';
+  const isAgentOrLender = row.role === 'agent' || row.role === 'broker' || row.role === 'lender' || row.role === 'owner';
   let upsertPayload: Record<string, unknown> = {
     clerk_id: row.clerk_id,
     email: row.email,

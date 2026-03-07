@@ -2,6 +2,7 @@ import { Hero } from '@/components/Hero';
 import Image from 'next/image';
 import { Button } from '@/components/Button';
 import { IntelligenceHubs } from '@/components/IntelligenceHubs';
+import { LazyYouTube } from '@/components/LazyYouTube';
 import { RevealSection } from '@/components/RevealSection';
 import { assetPaths } from '@/config/theme';
 import { SITE_URL, defaultOgImage } from '@/config/site';
@@ -82,6 +83,35 @@ export default function HomePage() {
           </div>
         </div>
 
+        <section className="section featured-listing" aria-labelledby="ridgefield-video-heading">
+          <div className="container stack--xl">
+            <header className="stack--md text-center mx-auto">
+              <p className="section-tag">Featured</p>
+              <h2 id="ridgefield-video-heading" className="section-title">
+                Ridgefield, Washington
+              </h2>
+              <p className="section-lead mx-auto">
+                Clark County is the fastest-growing county in Washington. This video spotlights Ridgefield—one of its most sought-after communities—from small-town character and strong schools to easy access to Portland and Vancouver.
+              </p>
+            </header>
+            <RevealSection>
+              <div className="stack--md" style={{ alignItems: 'center' }}>
+                <div className="featured-listing__video-wrap" style={{ maxWidth: '900px', marginInline: 'auto' }}>
+                <LazyYouTube
+                  videoId="fNqcEYtUDBg"
+                  title="Ridgefield, Washington – fastest-growing county in Washington"
+                />
+              </div>
+              <p className="text-center">
+                <Button href="/markets/washington/clark/ridgefield" variant="outline">
+                  Explore Ridgefield real estate
+                </Button>
+              </p>
+              </div>
+            </RevealSection>
+          </div>
+        </section>
+
         <section className="section section--alt" aria-labelledby="who-we-are-heading">
           <div className="container stack--md text-center mx-auto" style={{ maxWidth: '42rem' }}>
             <p className="section-tag">Who we are</p>
@@ -90,28 +120,6 @@ export default function HomePage() {
             </h2>
             <p className="section-lead">
               We&apos;re real people with a community focus—not stock-market owned. We promise safe, quality service for all walks of life and circumstances.
-            </p>
-          </div>
-        </section>
-
-        <section className="section" aria-labelledby="markets-heading">
-          <div className="container stack--xl">
-            <header className="stack--md text-center mx-auto">
-              <p className="section-tag">Explore</p>
-              <h2 id="markets-heading" className="section-title">
-                Our Markets
-              </h2>
-              <p className="section-lead mx-auto">
-                Portland metro and Southwest Washington are at the heart of our service area. We also serve the Oregon coast and Mt. Hood.
-              </p>
-            </header>
-            <RevealSection>
-              <IntelligenceHubs hubs={MARKETS} />
-            </RevealSection>
-            <p className="text-center" style={{ marginTop: 'var(--space-lg)' }}>
-              <Button href="/markets" variant="outline">
-                All markets
-              </Button>
             </p>
           </div>
         </section>
@@ -141,6 +149,28 @@ export default function HomePage() {
                 View the 2026 Portland Condo Guide
               </Button>
             </RevealSection>
+          </div>
+        </section>
+
+        <section className="section" aria-labelledby="markets-heading">
+          <div className="container stack--xl">
+            <header className="stack--md text-center mx-auto">
+              <p className="section-tag">Explore</p>
+              <h2 id="markets-heading" className="section-title">
+                Our Markets
+              </h2>
+              <p className="section-lead mx-auto">
+                Portland metro and Southwest Washington are at the heart of our service area. We also serve the Oregon coast and Mt. Hood.
+              </p>
+            </header>
+            <RevealSection>
+              <IntelligenceHubs hubs={MARKETS} />
+            </RevealSection>
+            <p className="text-center" style={{ marginTop: 'var(--space-lg)' }}>
+              <Button href="/markets" variant="outline">
+                All markets
+              </Button>
+            </p>
           </div>
         </section>
 

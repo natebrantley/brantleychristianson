@@ -4,6 +4,7 @@ import { createClerkSupabaseClient, formatSupabaseError, supabaseAdmin } from '@
 import { ensureUserInSupabase } from '@/lib/sync-clerk-user';
 import { isBrokerRole, isLenderRole } from '@/lib/roles';
 import { getAgentSlugByEmail } from '@/data/agents';
+import { deriveUserSlug } from '@/lib/user-slug';
 import { LEADS_SELECT } from '@/lib/leads-fields';
 import { Hero } from '@/components/Hero';
 import { LeadContactForm } from './LeadContactForm';
@@ -43,7 +44,7 @@ export default async function LeadDetailPage({
   const { id } = await params;
   if (!id) notFound();
 
-  let user: { role?: string | null } | null = null;
+  let user: { role?: string | null; slug?: string | null; first_name?: string | null; last_name?: string | null } | null = null;
   let lead: LeadRow | null = null;
 
   try {
@@ -58,7 +59,7 @@ export default async function LeadDetailPage({
 
     const supabase = await createClerkSupabaseClient();
     const [userRes, leadRes] = await Promise.all([
-      supabase.from('users').select('role').eq('clerk_id', userId).maybeSingle(),
+      supabase.from('users').select('role, slug, first_name, last_name').eq('clerk_id', userId).maybeSingle(),
       supabase
         .from('leads')
         .select(LEADS_SELECT)
@@ -85,6 +86,9 @@ export default async function LeadDetailPage({
         if (email) possibleIds.push(String(email).trim());
         if (fullName) possibleIds.push(fullName);
         if (slug) possibleIds.push(slug);
+        if (user?.slug) possibleIds.push(user.slug);
+        const derivedSlug = deriveUserSlug(user?.first_name, user?.last_name) ?? deriveUserSlug(currentClerkUser.firstName, currentClerkUser.lastName);
+        if (derivedSlug) possibleIds.push(derivedSlug);
         const uniq = [...new Set(possibleIds)];
         const uniqWithCase = new Set([...uniq, ...uniq.map((s) => s.toLowerCase())]);
         const admin = supabaseAdmin();

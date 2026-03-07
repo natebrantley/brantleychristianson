@@ -3,9 +3,18 @@ import Image from 'next/image';
 import { Hero } from '@/components/Hero';
 import { Button } from '@/components/Button';
 import { RevealSection } from '@/components/RevealSection';
+import { MarketLayout } from '@/components/markets/MarketLayout';
+import { ListingsCta } from '@/components/markets/ListingsCta';
 import { washingtonMarket } from '@/data/markets';
 import { SITE_NAME, defaultOgImage } from '@/config/site';
 import type { Metadata } from 'next';
+
+const KEY_CITIES = [
+  { name: 'Vancouver', href: '/markets/washington/clark/vancouver', cityParam: 'Vancouver' },
+  { name: 'Camas', href: '/markets/washington/clark/camas', cityParam: 'Camas' },
+  { name: 'Longview', href: '/markets/washington/cowlitz/longview', cityParam: 'Longview' },
+  { name: 'Kelso', href: '/markets/washington/cowlitz/kelso', cityParam: 'Kelso' },
+] as const;
 
 const title = 'Washington Real Estate';
 const description =
@@ -33,8 +42,35 @@ export default function WashingtonMarketsPage() {
     a.name.localeCompare(b.name)
   );
 
+  const breadcrumb = (
+    <nav className="breadcrumb" aria-label="Breadcrumb">
+      <ol className="breadcrumb-list">
+        <li><Link href="/markets">Markets</Link></li>
+        <li aria-current="page">Washington</li>
+      </ol>
+    </nav>
+  );
+
   return (
-    <main>
+    <MarketLayout
+      breadcrumb={breadcrumb}
+      ctaStrip={
+        <div className="stack--md text-center">
+          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
+            Ready to find your place in Washington?
+          </h2>
+          <p className="section-lead mx-auto" style={{ marginBottom: '1rem', maxWidth: '36ch' }}>
+            Connect with a BCRE broker in your county or browse active listings.
+          </p>
+          <div className="market-layout-cta-actions">
+            <Button href="/contact" variant="white">
+              Get in touch
+            </Button>
+            <ListingsCta areaName="Washington" variant="white" />
+          </div>
+        </div>
+      }
+    >
       <Hero
         title="Washington"
         lead="Southwest Washington. We serve Clark and Cowlitz counties—Vancouver, Camas, Longview, Kelso, and the Lower Columbia."
@@ -51,14 +87,19 @@ export default function WashingtonMarketsPage() {
         </Button>
       </Hero>
 
+      <section className="section" aria-labelledby="about-washington-heading">
+        <div className="container container-narrow">
+          <h2 id="about-washington-heading" className="section-title text-center">
+            About Southwest Washington
+          </h2>
+          <p className="section-lead text-center">
+            Clark and Cowlitz counties are part of the Portland-Vancouver metro. We help buyers and sellers in Vancouver, Camas, Battle Ground, Longview, Kelso, and the Lower Columbia with local expertise and clear guidance.
+          </p>
+        </div>
+      </section>
+
       <section className="section" aria-labelledby="counties-heading">
         <div className="container stack--xl">
-          <nav className="breadcrumb" aria-label="Breadcrumb">
-            <ol className="breadcrumb-list">
-              <li><Link href="/markets">Markets</Link></li>
-              <li aria-current="page">Washington</li>
-            </ol>
-          </nav>
           <header className="stack--md text-center mx-auto">
             <p className="section-tag">Counties we serve</p>
             <h2 id="counties-heading" className="section-title">
@@ -99,19 +140,23 @@ export default function WashingtonMarketsPage() {
         </div>
       </section>
 
-      <section className="section section--cta" aria-label="Get in touch">
-        <div className="container text-center stack--md">
-          <h2 className="section-title" style={{ marginBottom: '0.5rem' }}>
-            Ready to find your place in Washington?
+      <section className="section" aria-labelledby="key-cities-heading">
+        <div className="container stack--lg">
+          <h2 id="key-cities-heading" className="section-title text-center">
+            Key cities
           </h2>
-          <p className="section-lead mx-auto" style={{ marginBottom: '1.5rem' }}>
-            Connect with a BCRE broker in your county.
-          </p>
-          <Button href="/contact" variant="white">
-            Get in touch
-          </Button>
+          <ul className="popular-markets-list" role="list" style={{ maxWidth: '48rem', margin: '0 auto' }}>
+            {KEY_CITIES.map((c) => (
+              <li key={c.name} className="popular-markets-list__item">
+                <Link href={c.href} className="popular-markets-list__link">
+                  {c.name}
+                </Link>
+                <ListingsCta areaName={c.name} city={c.cityParam} variant="outline" />
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
-    </main>
+    </MarketLayout>
   );
 }
