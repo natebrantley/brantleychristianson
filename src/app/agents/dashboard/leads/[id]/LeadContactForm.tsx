@@ -30,7 +30,18 @@ function getInitials(lead: LeadContactData): string {
   return '?';
 }
 
-export function LeadContactForm({ lead, backHref }: { lead: LeadContactData; backHref: string }) {
+export function LeadContactForm({
+  lead,
+  backHref,
+  showReassign = false,
+  agents = [],
+}: {
+  lead: LeadContactData;
+  backHref: string;
+  /** Show "Assigned to" and reassign dropdown (owner dashboard) */
+  showReassign?: boolean;
+  agents?: { value: string; label: string }[];
+}) {
   const [first_name, setFirst_name] = useState(lead.first_name ?? '');
   const [last_name, setLast_name] = useState(lead.last_name ?? '');
   const [email_address, setEmail_address] = useState(lead.email_address ?? '');
@@ -41,6 +52,8 @@ export function LeadContactForm({ lead, backHref }: { lead: LeadContactData; bac
   const [zip, setZip] = useState(lead.zip ?? '');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [assignedBrokerId, setAssignedBrokerId] = useState(lead.assigned_broker_id ?? '');
+  const [reassigning, setReassigning] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -104,6 +117,54 @@ export function LeadContactForm({ lead, backHref }: { lead: LeadContactData; bac
         <section className="lead-detail__section" aria-label="Location">
           <h2 className="lead-detail__section-title">Location</h2>
           <p className="lead-detail__meta-list">{[lead.address, lead.city, lead.state].filter(Boolean).join(', ')}{lead.zip ? ` ${lead.zip}` : ''}</p>
+        </section>
+      )}
+
+      {showReassign && (
+        <section className="lead-detail__section" aria-label="Assignment">
+          <h2 className="lead-detail__section-title">Assigned to</h2>
+          <div className="lead-detail__grid">
+            <label htmlFor="lead-assigned_broker_id" className="lead-detail__label">Broker / agent</label>
+            <div className="lead-detail__reassign-row">
+              <select
+                id="lead-assigned_broker_id"
+                className="lead-detail__input lead-detail__input--select"
+                value={assignedBrokerId}
+                onChange={async (e) => {
+                  const value = e.target.value;
+                  setReassigning(true);
+                  setMessage(null);
+                  try {
+                    const res = await fetch(`/api/leads/${lead.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ assigned_broker_id: value || null }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                      setMessage({ type: 'error', text: (data.error as string) || 'Failed to reassign' });
+                      return;
+                    }
+                    setAssignedBrokerId(value);
+                    setMessage({ type: 'success', text: 'Lead reassigned.' });
+                  } finally {
+                    setReassigning(false);
+                  }
+                }}
+                disabled={reassigning || agents.length === 0}
+                aria-label="Reassign lead to broker or agent"
+              >
+                <option value="">— Unassigned —</option>
+                {assignedBrokerId && !agents.some((a) => a.value === assignedBrokerId) && (
+                  <option value={assignedBrokerId}>Current: {assignedBrokerId}</option>
+                )}
+                {agents.map((a) => (
+                  <option key={a.value} value={a.value}>{a.label}</option>
+                ))}
+              </select>
+              {reassigning && <span className="lead-detail__reassign-status">Saving…</span>}
+            </div>
+          </div>
         </section>
       )}
 

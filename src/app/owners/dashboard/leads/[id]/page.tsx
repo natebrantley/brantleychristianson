@@ -80,12 +80,39 @@ export default async function OwnerLeadDetailPage({ params }: { params: Promise<
     redirect('/clients/dashboard');
   }
 
+  // Agents list for reassign dropdown (owner only)
+  let agents: { value: string; label: string }[] = [];
+  try {
+    const admin = supabaseAdmin();
+    const { data: users } = await admin
+      .from('users')
+      .select('clerk_id, slug, first_name, last_name')
+      .in('role', ['broker', 'agent', 'owner']);
+    const raw = (users ?? []).map((u) => {
+      const label = [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.slug || u.clerk_id || '—';
+      return { clerk_id: u.clerk_id, slug: u.slug, label };
+    });
+    const seen = new Set<string>();
+    for (const u of raw) {
+      if (u.clerk_id && !seen.has(u.clerk_id)) {
+        agents.push({ value: u.clerk_id, label: u.label });
+        seen.add(u.clerk_id);
+      }
+      if (u.slug && u.slug !== u.clerk_id && !seen.has(u.slug)) {
+        agents.push({ value: u.slug, label: u.label });
+        seen.add(u.slug);
+      }
+    }
+  } catch {
+    // ignore
+  }
+
   return (
     <main className="dashboard-page lead-detail-page owner-dashboard" aria-label="Lead detail">
       <Hero variant="short" title="Lead detail" lead="View and edit contact information." imageSrc={`${assetPaths.stock}/table.jpeg`} imageAlt="Lead detail" />
       <div className="section owner-dashboard__section">
         <div className="container owner-dashboard__container stack--lg">
-          <LeadContactForm lead={lead} backHref="/owners/dashboard/leads" />
+          <LeadContactForm lead={lead} backHref="/owners/dashboard/leads" showReassign agents={agents} />
         </div>
       </div>
     </main>

@@ -87,6 +87,7 @@ export default async function OwnerLeadsPage({
   let user: { role?: string | null; slug?: string | null; first_name?: string | null; last_name?: string | null; email?: string | null } | null = null;
   let leads: LeadRow[] = [];
   let totalCount = 0;
+  let brokerIdToName: Record<string, string> = {};
 
   try {
     const clerkUser = await currentUser();
@@ -129,6 +130,22 @@ export default async function OwnerLeadsPage({
       leads = leadsRes.data as unknown as LeadRow[];
     }
     totalCount = typeof leadsRes.count === 'number' ? leadsRes.count : leads.length;
+
+    // Resolve assigned_broker_id to display names for owner CRM (this page only)
+    brokerIdToName = {};
+    const brokerIds = [...new Set(leads.map((l) => l.assigned_broker_id).filter(Boolean))] as string[];
+    if (brokerIds.length > 0) {
+      const byClerk = await admin.from('users').select('clerk_id, first_name, last_name').in('clerk_id', brokerIds);
+      const bySlug = await admin.from('users').select('slug, first_name, last_name').in('slug', brokerIds);
+      for (const u of byClerk.data ?? []) {
+        const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
+        if (u.clerk_id && name) brokerIdToName[u.clerk_id] = name;
+      }
+      for (const u of bySlug.data ?? []) {
+        const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim();
+        if (u.slug && name) brokerIdToName[u.slug] = name;
+      }
+    }
   } catch (err) {
     console.error('Error loading owner leads:', formatSupabaseError(err));
   }
@@ -151,6 +168,12 @@ export default async function OwnerLeadsPage({
   function leadDisplayName(lead: LeadRow): string {
     const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ').trim();
     return name || (lead.email_address ?? '') || '—';
+  }
+
+  function assignedToLabel(lead: LeadRow): string {
+    const id = lead.assigned_broker_id?.trim();
+    if (!id) return '—';
+    return brokerIdToName[id] ?? truncate(id, 24);
   }
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -231,7 +254,7 @@ export default async function OwnerLeadsPage({
               <div className="leads-table-card leads-table-card--desktop">
                 <div className="leads-table-scroll">
                   <table className="leads-table">
-                    <thead><tr><th>Name</th><th>Contact</th><th></th></tr></thead>
+                    <thead><tr><th>Name</th><th>Contact</th><th>Assigned to</th><th></th></tr></thead>
                     <tbody>
                       {leads.map((lead) => {
                         const pulseLevel = getLeadPulse(lead);
@@ -251,6 +274,7 @@ export default async function OwnerLeadsPage({
                               {lead.phone && <span className="lead-contact__sep"> · </span>}
                               {lead.phone ? <a href={`tel:${lead.phone.replace(/\D/g, '')}`}>{lead.phone}</a> : (lead.email_address ? null : '—')}
                             </td>
+                            <td className="lead-assigned">{assignedToLabel(lead)}</td>
                             <td className="lead-view"><Link href={`${OWNER_LEADS_BASE}/${lead.id}`} className="lead-view__btn">View</Link></td>
                           </tr>
                         );
@@ -283,6 +307,7 @@ export default async function OwnerLeadsPage({
                         <div className="leads-mobile-card__body">
                           {lead.email_address && <p className="leads-mobile-card__row"><span className="leads-mobile-card__label">Email</span><span className="leads-mobile-card__value leads-mobile-card__value--email">{lead.email_address}</span></p>}
                           {lead.phone && <p className="leads-mobile-card__row"><span className="leads-mobile-card__label">Phone</span><span className="leads-mobile-card__value">{lead.phone}</span></p>}
+                          <p className="leads-mobile-card__row"><span className="leads-mobile-card__label">Assigned to</span><span className="leads-mobile-card__value">{assignedToLabel(lead)}</span></p>
                         </div>
                       </Link>
                       {(lead.email_address || lead.phone) && (
