@@ -1,0 +1,36 @@
+---
+description: Use Cursor Team Kit skills and subagents for CI, PRs, and shipping
+alwaysApply: true
+---
+
+# Cursor Team Kit
+
+This repo is set up to use every **Cursor Team Kit** plugin skill and the **ci-watcher** subagent. Prefer invoking them instead of reimplementing their behavior.
+
+## Skills to invoke
+
+- **check-compiler-errors** — Run `npm run typecheck` (or `npm run build`) and report failures. Use before or with fix-ci.
+- **deslop** — Remove AI slop and tidy code style when the user asks for cleanup or polish.
+- **fix-ci** — When CI is failing: find the job, inspect logs, apply a focused fix.
+- **fix-merge-conflicts** — When there are merge conflicts: resolve non-interactively, validate build/tests, finish resolution.
+- **get-pr-comments** — When the user wants a summary of review comments on the active PR.
+- **loop-on-ci** — When the user wants CI to pass: watch runs and iterate until all checks pass.
+- **new-branch-and-pr** — When the user wants a new branch, work completed, and a PR opened.
+- **pr-review-canvas** — When the user pastes a GitHub PR URL or asks to "review this PR": generate the interactive PR review.
+- **review-and-ship** — When the user wants a full review, key issues fixed, and changes shipped via PR.
+- **run-smoke-tests** — When the user wants to run or fix Playwright smoke tests (`npm run test:e2e`).
+- **weekly-review** — When the user wants a weekly summary of their commits (bugfix, tech debt, new work).
+- **what-did-i-get-done** — When the user wants a summary of their commits over a given time period.
+
+## Subagent
+
+- **ci-watcher** — Use when waiting for CI results or when CI has failed; use proactively to monitor branch CI.
+
+## Plugin rules (automatic)
+
+The plugin enforces:
+
+- **no-inline-imports** — Imports at top of file only.
+- **typescript-exhaustive-switch** — Exhaustive switch for TS unions/enums.
+
+No extra configuration needed; follow these by default.

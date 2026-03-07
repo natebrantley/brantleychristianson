@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
     "supabase": "supabase",
     "supabase:link": "supabase link",
     "supabase:push": "supabase db push"
@@ -23,6 +25,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
