@@ -240,6 +240,18 @@
     "languages": ["English", "Mandarin"]
   },
   {
+    "name": "Morgan Wiley",
+    "slug": "morgan-wiley",
+    "title": "Real Estate Broker",
+    "phone": "",
+    "email": "morgan@brantleychristianson.com",
+    "image": "/media/img/brokers/morgan.jpg",
+    "url": "/brokers/morgan-wiley",
+    "licenses": ["OR", "WA"],
+    "cities": ["Vancouver", "Portland", "Camas", "Lake Oswego", "Beaverton", "Ridgefield", "West Linn", "Happy Valley", "Washougal", "Tigard"],
+    "languages": ["English"]
+  },
+  {
     "name": "Jane Ye",
     "slug": "jane",
     "title": "Real Estate Broker",
